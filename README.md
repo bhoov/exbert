@@ -84,7 +84,7 @@ This central display shows how tokens attend to other tokens in the same sentenc
 
 ### 2) Corpus Explorer
 
-Right now, the only available corpus to search is the Wizard of Oz (WoZ). This corpus has been split into sentences, parsed for language features such as part of speech (POS), dependency (DEP), and entity information using SPACY, merged into the BERT tokenization scheme, stored into an HDF5 file, and indexed by FAISS for quick lookup. This same procedure will need to be applied to other corpi to be searched.
+Right now, the only available corpus to search is the Wizard of Oz (WoZ). This corpus has been split into sentences, parsed for language features such as part of speech (POS), dependency (DEP), and entity information using SPACY, merged into the BERT tokenization scheme, stored into an HDF5 file, and indexed by FAISS for quick lookup. This same procedure will need to be applied to other corpora to be searched.
 
 
 #### 2a) Search Buttons:

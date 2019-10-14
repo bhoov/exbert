@@ -15,4 +15,4 @@ Then in the `main.py` file, change the `WozFaissWrapper.load_info()` method to p
 
 Again, this workflow will be improved.
 
-You will then need to link these corpi into your application 
+You will then need to link these corpora into your application 
