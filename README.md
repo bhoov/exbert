@@ -1,1 +1,3 @@
-# exbert
+# exBERT
+
+CODE COMING SOON. Check back 1800 EST Oct 14.
