@@ -1,0 +1,193 @@
+.input-description {
+	font-weight: 800
+}
+
+.connector-controls {
+	display: grid;
+	grid-template-columns: 0.5fr 0.5fr;
+}
+
+.slide-container {
+	grid-column-start: 1;
+	grid-column-end: 2;
+	grid-row-start: 1;
+	grid-row-end: 2;
+	margin: auto;
+	text-align: center;
+	width: 75%; 
+}
+
+.slider {
+	-webkit-appearance: none;
+	width: 10px;
+	height: 10px;
+	border-radius: 5px;
+	background: #d3d3d3;
+	outline: none;
+	opacity: 0.7;
+	-webkit-transition: .2s;
+	transition: opacity .2s;
+}
+
+.slider:hover {
+	opacity: 1;
+}
+
+.slider::-webkit-slider-thumb {
+	-webkit-appearance: none;
+	appearance: none;
+	width: 15px;
+	height: 15px;
+	border-radius: 50%;
+	background: #666666;
+	cursor: pointer;
+}
+
+#layer-selection {
+	grid-column-start: 1;
+	grid-column-end: 2;
+	grid-row-start: 2;
+	grid-row-end: 3;
+
+}
+.layer-select {
+	margin-bottom: 2em;
+}
+
+#atn-container {
+	display: flex;
+	flex-direction: row;
+	flex-wrap: nowrap;
+	justify-content: center;
+	align-items: center;
+
+	margin: 0 auto;
+	width: 100%;
+	vertical-align: top;
+
+	#left-att-heads {
+		order:1;
+		display: inline-block;
+		vertical-align: top;
+	}
+
+	#left-tokens {
+		order: 2;
+		text-align: right;
+		vertical-align: top;
+	}
+
+
+	#atn-display {
+		order: 3;
+		vertical-align: top;
+	}
+
+	#right-tokens {
+		order: 4;
+		text-align: left;
+		vertical-align: top;
+	}
+
+	#right-att-heads {
+		order: 5;
+		vertical-align: top;
+	}
+	
+}
+
+.att-rect {
+	transition: fill 0.1s;
+}
+
+.token {
+	display: block;
+}
+
+.atn-curve {
+	fill: none;
+	// stroke-width: 3;
+	stroke: purple;
+}
+
+.masked-token {
+	color: rgba(0,0,0,0.2)
+}
+
+.unselected {
+	fill: gray;
+}
+
+.selected-token {
+	border-style: solid;
+	border-width: 3px;
+	border-color: rgb(153, 196, 0);
+}
+
+/* The switch - the box around the slider */
+.switch {
+	position: relative;
+	display: inline-block;
+	width: 60px;
+	height: 34px;
+
+/* Hide default HTML checkbox */
+	input {
+		opacity: 0;
+		width: 0;
+		height: 0;
+	}
+}
+
+/* The slider */
+.short-slider {
+	position: absolute;
+	cursor: pointer;
+	top: 0;
+	left: 0;
+	right: 0;
+	bottom: 0;
+	background-color: #ccc;
+	-webkit-transition: .4s;
+	transition: .4s;
+
+	&:before {
+		position: absolute;
+		content: "";
+		height: 26px;
+		width: 26px;
+		left: 4px;
+		bottom: 4px;
+		background-color: white;
+		-webkit-transition: .4s;
+		transition: .4s;
+	}
+}
+
+input:checked + .short-slider {
+	background-color: #2196F3;
+}
+
+input:focus + .short-slider {
+	box-shadow: 0 0 1px #2196F3;
+}
+
+input:checked + .short-slider:before {
+	-webkit-transform: translateX(26px);
+	-ms-transform: translateX(26px);
+	transform: translateX(26px);
+}
+
+/* Rounded sliders */
+.short-slider.round {
+	border-radius: 34px;
+}
+
+.short-slider.round:before {
+	border-radius: 50%;
+}
+
+#select-all-heads{ 
+	margin-top: 20px;
+	margin-bottom: 20px;
+}

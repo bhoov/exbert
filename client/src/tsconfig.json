@@ -1,0 +1,26 @@
+{
+  "allowSyntheticDefaultImports": true,
+  "compilerOptions": {
+    "outDir": "../dist/",
+    "module": "esnext",
+    "target": "es2015",
+    "moduleResolution": "node",
+    "sourceMap": true,
+    "lib": [
+      "es2016",
+      "dom"
+    ],
+    "typeRoots": [
+      "./customTypings",
+      "node_modules/@types"
+    ]
+  },
+  "include": [
+    "ts/**/*.ts"
+  ],
+  "exclude": [
+    "node_modules",
+    "types",
+    "ts/test.ts"
+  ]
+}

@@ -1,0 +1,1 @@
+export const scaleLinearWidth = opacity => 5 * opacity^0.33;

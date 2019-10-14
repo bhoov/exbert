@@ -1,0 +1,31 @@
+
+
+#histograms {
+    display: block;
+    max-width: 100%;
+
+    .histogram {
+      display: inline-block;
+      overflow-x: auto;
+    }
+    
+    div {
+      margin-top: 10px;
+    }
+
+    #matched-histogram { 
+      .bar {
+
+       }
+    }
+  
+    #max-att-histogram { 
+      .bar {
+          fill: black;
+      }
+    }
+  }
+
+  .pos-selector {
+    margin-bottom: 40px;
+  }

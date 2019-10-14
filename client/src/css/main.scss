@@ -1,0 +1,155 @@
+@import "palette.scss";
+//@import "LatoLight.scss";
+@import "../fonts/plex_sans.css";
+@import "base";
+@import "SentenceInput";
+@import "AttentionConnectorControls";
+@import "CorpusVis";
+@import "Histograms";
+
+body {
+  font-family: 'IBM Plex Sans';
+}
+
+.layerCheckbox {
+  background-color: lightgrey;
+  padding-left: 8px;
+  padding-right: 8px;
+
+  &.active{
+    color: #fff;
+    background-color: #6c7067;
+  }
+}
+
+.main-grid {
+  width: 100%;
+  display: grid;
+  grid-template-columns: 0.18fr 0.2fr 0.2fr 0.04fr 0.2fr 0.2fr 0.18fr;
+  overflow: auto;
+  max-height: 100vh;
+}
+
+.left-half {
+  grid-column-start: 1;
+  grid-column-end: 4;
+  margin-left: 10px;
+  margin-right: 10px;
+}
+
+.vpartial-90 {
+  max-height: 90vh;
+}
+
+.vpartial-95 {
+  max-height: 95vh;
+}
+
+.right-half {
+  grid-column-start: 5;
+  grid-column-end: 9;
+  max-height: 98vh;
+}
+
+.vertical-separator {
+  border-left: thick solid #42222298;
+  margin: 0 auto;
+  margin-top: 10px;
+  margin-bottom: 10px;
+  border-radius: 3px;
+  grid-column-start: 4;
+  grid-column-end: 5;
+  grid-row-start: 1;
+  grid-row-end: 5;
+}
+
+#vis-break {
+  height: 15px;
+}
+
+label {
+  margin-left: 5px;
+}
+
+// header {
+//   font-size: 2em;
+// }
+
+#header {
+  width: 100%;
+  background-color: lightgray;
+  height: 40px;
+  margin-bottom: 5px;
+
+  .header-logo{
+    height: 20px;
+    display:inline-block;
+    margin-left: 10px;
+    margin-top: 5px;
+    margin-bottom: 5px;
+  }
+  .header-info{
+    font-size: 9pt;
+    height: 30px;
+    display:inline-block;
+    float:right;
+    margin-right: 10px;
+    margin-top: 10px;
+    //margin-bottom: 5px;
+  }
+
+
+  #headertext{
+    text-align: center ;
+    display: inline-block;
+    font-size: 18px;
+    margin-left: 30%;
+    margin-top: 5px;
+    margin-bottom: 5px;
+  }
+}
+
+.highlighted {
+  background: rgba(152, 83, 216, 0.8);
+}
+
+#meta-dropdown {
+  margin-bottom: 0.75em;
+  margin-left: 4em;
+}
+
+#position-meta-dropdown {
+  margin-bottom: 0.75em;
+  margin-left: 4em;
+}
+
+
+#corpus-control-buttons {
+  margin-bottom: 1em;
+  position: fixed relative;
+  span {
+    margin-left:5px;
+  }
+}
+
+#selected-heads {
+  margin-bottom: 1em;
+}
+
+#corpus-selection-description {
+  display: inline-block;
+  margin-right: 15px;
+}
+
+#corpus-querying {
+  display: inline-block;
+  .btn {
+    display: inline-block;
+  }
+}
+
+#usage-info {
+  margin-top: 10px;
+  color: rgb(87, 87, 87);
+  font-size: 14px;
+}

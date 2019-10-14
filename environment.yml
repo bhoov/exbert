@@ -1,0 +1,21 @@
+name: exbert
+channels:
+  - pytorch
+  - conda-forge
+  - defaults
+  - anaconda
+dependencies:
+  - connexion=1.5.3
+  - h5py
+  - spacy
+  - boto3
+  - regex
+  - flask-cors
+  - faiss-cpu
+  - jinja2=2.10=py36_0
+  - numpy=1.16.2
+  - olefile=0.46=py36_0
+  - pickleshare=0.7.5=py36_0
+  - pillow=5.4.1
+  - pip=19.0.3=py36_0
+  - pytorch=1.0.1

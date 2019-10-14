@@ -1,0 +1,149 @@
+# see also: https://github.com/hjacobs/connexion-example
+
+swagger: '2.0'
+info:
+  title: BERT-viz API
+  version: "0.0.1"
+consumes:
+  - application/json
+produces:
+  - application/json
+basePath: /api
+
+# ===============================================================================
+## DEFINE API ##
+# ===============================================================================
+paths:
+
+  /attend+meta:
+    get:
+      tags: [All]
+      operationId: main.get_attention_and_meta
+      summary: Get the attention information, BERT Embeddings, and spacy meta info for an input sentence
+      parameters:
+        - name: sentenceA
+          description: First sentence to analyze
+          in: query
+          type: string
+        - name: sentenceB
+          description: Second sentence to analyze
+          in: query
+          type: string
+        - name: layer
+          description: Layer to get attentions at
+          in: query
+          type: number
+      responses:
+        200:
+          description: Returns attentions, embeddings, and metadata
+
+  /update-meta-mask:
+    post:
+      tags: [All]
+      operationId: main.update_masked_meta_attention
+      summary: Get the masked attention information of tokens given indices to mask
+      parameters:
+        - name: payload
+          description: Main contents
+          in: body
+          schema:
+            $ref: '#/definitions/maskPayload'
+      responses:
+        200:
+          description: Update BERT's masked behavior for passed tokens
+
+  /woz-k-nearest-embeddings:
+    get:
+      tags: [All]
+      operationId: main.woz_nearest_embedding_search
+      summary: Search for the nearest embeddings to a token sent from the frontend by layer
+      parameters:
+        - name: embedding
+          description: Query vector on which to search the dataset
+          in: query
+          type: array
+          items:
+              type: number
+        - name: layer
+          description: Which layer to search the nearest for
+          in: query
+          type: number
+        - name: heads
+          description: List of heads to search for
+          in: query
+          type: array
+          items:
+            type: number
+        - name: k
+          description: How many nearest neighbors to grab
+          in: query
+          type: number
+      responses:
+        200:
+          description: Return related embeddings and associated metadata
+
+  /woz-k-nearest-contexts:
+    get:
+      tags: [All]
+      operationId: main.woz_nearest_context_search
+      summary: Search for the nearest embeddings BY SELECTED HEADS to a token sent from the frontend by layer
+      parameters:
+        - name: context
+          description: Query vector on which to search the dataset
+          in: query
+          type: array
+          items:
+              type: number
+        - name: layer
+          description: Which layer to search the nearest for
+          in: query
+          type: number
+        - name: heads
+          description: List of heads to search for
+          in: query
+          type: array
+          items:
+            type: number
+        - name: k
+          description: How many nearest neighbors to grab
+          in: query
+          type: number
+      responses:
+        200:
+          description: Return related embeddings by that head and the associated metadata
+
+
+definitions:
+  maskPayload:
+    type: object
+    properties:
+      tokensA:
+        type: array
+        items: 
+          type: string
+        description: Main sentence tokens to analyze
+      tokensB:
+        type: array
+        items: 
+          type: string
+        description: Contains '[SEP]' in current implementation
+      maskA:
+        type: array
+        items: 
+          type: number
+        description: Indices of tokens to mask
+      maskB:
+        type: array
+        items: 
+          type: number
+        description: Contains -1 indicating no masking
+      layer:
+        type: number
+        description: Layer to get results for
+      
+    required:
+      - tokensA
+      - tokensB
+      - maskA
+      - maskB
+      - layer

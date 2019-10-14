@@ -1,0 +1,218 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <script async src="https://www.googletagmanager.com/gtag/js?id=UA-149275901-1"></script>
+    <script>
+        window.dataLayer = window.dataLayer || [];
+        function gtag(){dataLayer.push(arguments);}
+        gtag('js', new Date());
+
+        gtag('config', 'UA-149275901-2');
+    </script>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>exBERT</title>
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css"
+        integrity="sha384-BVYiiSIFeK1dGmJRAkycuHAHRg32OmUcww7on3RYdg4Va+PmSTsz/K68vbdEjh4u" crossorigin="anonymous">
+    <link rel="stylesheet" type="text/css" href="main.css">
+    <link rel="shortcut icon" href="./img/exBERT_favicon.png" type="image/png">
+</head>
+
+<body>
+    <div class="section-header" id="header">
+        <div class="header-logo">
+            <a href="/"><img src="./img/exBERT.png" alt="exBERT Logo" height="30px"></a>
+        </div>
+       <div id="headertext">
+            An Explorable BERT
+        </div>
+
+        <div class="header-info">
+            IBM Research & HarvardNLP
+        </div>
+
+    </div>
+
+    <div class="main-grid">
+        <div class="left-half vpartial-95 scrolling">
+
+            <div class="text-center">
+
+                <div id="sentence-input">
+                    <form>
+                        <div class="form-group">
+                            <label for="form-sentence-a"> Input Sentence </label>
+                            <input id="form-sentence-a" type="text" name="sent-a-input"> </p>
+                        </div>
+                        <div class="padding"></div>
+                        <button class="btn btn-primary" id="update-sentence" type="button">Update</button>
+                    </form>
+                </div>
+                <hr />
+
+                <div id="connector-container">
+
+                    <div class="connector-controls">
+                        <div class="left-control-half">
+                        <div class="slide-container">
+                            <div>
+                                <label for="my-range">
+                                    Display top <span id="my-range-value">…</span>% of attention
+                                </label>
+                                <input type="range" min="0" max="100" value="70" class="slider" id="my-range"> <br>
+                            </div>
+                        </div>
+
+                        <div id="layer-selection">
+                            <div class="input-description">
+                                Layer:
+                            </div>
+
+                            <div class="layer-select btn-group btn-group-toggle" data-toggle="buttons" id="layer-select"> </div>
+                        </div>
+                        <div id="cls-toggle">
+                            <div class="input-description">
+                                Hide [CLS] and [SEP]
+                            </div>
+
+                            <label class="switch">
+                                <input type="checkbox" checked='checked'>
+                                <span class="short-slider round"></span>
+                            </label>
+                        </div>
+                        </div>
+
+                        <div class="head-control">
+                            <div id="selected-head-display">
+                                <div class="input-description">
+                                    Selected heads:
+                                </div>
+                                <div id="selected-heads"></div>
+                            </div>
+
+                            <div class="select-input" id="head-all-or-none">
+                                <button id="select-all-heads">Select all heads</button>
+                                <button id="select-no-heads">Unselect all heads</button>
+                            </div>
+
+                            <div id="usage-info">
+                                <p> You focus on one token by <b>click</b>.<br/>
+                                You can mask any token by <b>double click</b>.</p>
+                                <p>You can select and de-select a head by a <b>click</b> on the heatmap columns</p>
+
+                            </div>
+                        </div>
+
+                    </div>
+
+                    <div id=vis-break></div>
+
+                    <div class="text-center" id="atn-container">
+                        <svg id="left-att-heads"></svg>
+                        <div id="left-tokens"></div>
+                        <svg id="atn-display"></svg>
+                        <div id="right-tokens"></div>
+                        <svg id="right-att-heads"></svg>
+                    </div>
+
+                </div>
+
+                <!-- Part II of HTML -->
+                <hr />
+
+                <div id="corpus-selection-description">
+                    <header>
+                        Search <span class="inline-select" id="corpus-select">corpus</span>
+                    </header>
+                </div>
+
+                <div id="corpus-querying">
+                    <form>
+                        <button class="btn btn-primary" id="search-contexts" type="button">Search by Head</button>
+                        <button class="btn btn-primary" id="search-embeddings" type="button">Search by
+                            Embedding</button>
+                    </form>
+                </div>
+
+                <div id="histograms">
+                    <div id="matched-histogram">
+                        <svg class="histogram" id="matched-histogram-container"></svg>
+                        <div class="pos-selector">
+                            Matched Word Summary:
+                            <div id="matched-meta-select" class="btn-group btn-group-toggle" data-toggle="buttons">
+                                <label class="btn btn-secondary active" value="pos">
+                                    <input type="radio" name="options" id="option1" autocomplete="off" value="pos"> POS
+                                </label>
+                                <label class="btn btn-secondary" value="dep">
+                                    <input type="radio" name="options" id="option2" autocomplete="off"> DEP
+                                </label>
+                                <label class="btn btn-secondary" value="is_ent">
+                                    <input type="radio" name="options" id="option3" autocomplete="off"> ENT
+                                </label>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div id="max-att-histogram">
+                        <svg class="histogram" id="max-att-histogram-container"></svg>
+                        <div class="pos-selector">
+                            Max Attention Summary:
+
+                            <div id="max-att-meta-select" class="btn-group btn-group-toggle" data-toggle="buttons">
+                                <label class="btn btn-secondary active" value="pos">
+                                    <input type="radio" name="options" autocomplete="off" value="pos"> POS
+                                </label>
+                                <label class="btn btn-secondary" value="dep">
+                                    <input type="radio" name="options" autocomplete="off"> DEP
+                                </label>
+                                <label class="btn btn-secondary" value="is_ent">
+                                    <input type="radio" name="options" autocomplete="off"> ENT
+                                </label>
+                                <label class="btn btn-secondary" value="offset">
+                                    <input type="radio" name="options" autocomplete="off"> OFFSET
+                                </label>
+                            </div>
+                            <!-- <select name="position-meta-dropdown" id="position-meta-dropdown">
+                                <option value="offset">OFFSET</option>
+                            </select> -->
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+
+        <div class="vertical-separator"></div>
+
+
+        <div class="right-half">
+            <div id="corpus-vis">
+                <div id="corpus-control-buttons">
+                    <button class="btn btn-xs btn-secondary" id="minus-left" type="button">+</button>
+                    <button class="btn btn-xs btn-danger" id="kill-left" type="button">-</button>
+                    <span>&larr;||&rarr;</span>
+                    <button class="btn btn-xs btn-danger" id="kill-right" type="button">-</button>
+                    <button class="btn btn-xs btn-secondary" id="plus-right" type="button">+</button>
+                    <button class="btn btn-xs btn-info" id="mat-refresh" type="button">&#8635;</button>
+                </div>
+
+
+                <div class="vpartial-90 scrolling">
+                    <div class="whitespace"></div>
+                    <div id="main-corpus-vis">
+                        <div id="corpus-mat-container"></div>
+                        <div id="corpus-similar-sentences-div"></div>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+    </div>
+
+    <script src="vendor.js"></script>
+    <script src="main.js"></script>
+
+</body>
+
+</html>

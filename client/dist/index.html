@@ -1,0 +1,236 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <!-- Global site tag (gtag.js) - Google Analytics -->
+    <script async src="https://www.googletagmanager.com/gtag/js?id=UA-149275901-1"></script>
+    <script>
+        window.dataLayer = window.dataLayer || [];
+        function gtag() { dataLayer.push(arguments); }
+        gtag('js', new Date());
+
+        gtag('config', 'UA-149275901-2');
+    </script>
+    <meta charset="UTF-8">
+    <title>exBERT</title>
+    <!--<link rel="stylesheet" href="bootstrap.min.css">-->
+    <link href="https://maxcdn.bootstrapcdn.com/font-awesome/4.6.3/css/font-awesome.min.css" rel="stylesheet"
+        integrity="sha384-T8Gy5hrqNKT+hzMclPo118YTQO6cYprQmhrYwIiQ/3axmI1hQomh7Ud2hPOy8SP1" crossorigin="anonymous">
+    <link href="https://maxcdn.bootstrapcdn.com/bootswatch/3.3.6/cosmo/bootstrap.min.css" rel="stylesheet"
+        integrity="sha384-OiWEn8WwtH+084y4yW2YhhH6z/qTSecHZuk/eiWtnvLtU+Z8lpDsmhOKkex6YARr" crossorigin="anonymous">
+    <!--    <link rel="stylesheet" type="text/css" href="css/index.scss">-->
+    <link href="https://fonts.googleapis.com/css?family=IBM+Plex+Sans:300,400&display=swap" rel="stylesheet">
+
+
+    <link rel="shortcut icon" href="./img/exBERT_favicon.png" type="image/png">
+    <style>
+        body {
+            font-family: 'IBM Plex Sans', sans-serif;
+
+        }
+
+        h1,
+        h2,
+        h3 {
+            font-family: inherit;
+        }
+
+        h3 {
+            font-weight: normal;
+            color: white;
+        }
+
+        a {
+            color: black;
+        }
+
+        a:hover {
+            color: black;
+            font-weight: 500;
+        }
+    </style>
+    <meta name="title" content="exBERT" />
+    <meta name="description" content="A visual exploration of BERT's latent space" />
+    <link rel="image_src" href="http://lstm.seas.harvard.edu/small_teaser.png" />
+</head>
+
+<body>
+    <div class="container">
+        <div class="page-header">
+            <h1>
+                <img src="./img/exBERT.png" height="50" />
+                - A Visual Analysis of BERT
+            </h1>
+            <p class="lead">
+                <a target="_blank" href="">Benjamin Hoover</a>,
+                <a target="_blank" href="http://hendrik.strobelt.com">Hendrik Strobelt</a>,
+                <a target="_blank" href="http://scholar.harvard.edu/gehrmann/home">Sebastian Gehrmann</a>
+            </p>
+        </div>
+
+        <p>
+            Large language models can produce powerful contextual representations that lead to improvements across many
+            NLP tasks.
+            Since these models are typically guided by a sequence of learned self attention mechanisms and may comprise
+            undesired inductive biases, it is paramount to be able to explore what the attention has learned.
+            While static analyses of these models lead to targeted insights, interactive tools are more dynamic and can
+            help humans better gain an intuition for the model-internal reasoning process.
+        </p>
+
+        <p>
+            We present <b>exBERT</b> , an interactive tool named after the popular BERT language model, that provides
+            insights into the meaning of the contextual representations by matching a human-specified input to similar
+            contexts in a large annotated dataset.
+            By aggregating the annotations of the matching similar contexts, <b>exBERT</b> helps intuitively explain
+            what each attention-head has learned.
+        </p>
+
+        <p> Large language models can produce powerful contextual representations that lead to improvements across many
+            NLP tasks. Though these models can comprise undesired inductive biases, it is challenging to identify what
+            information they encode in their learned representations. </p>
+
+        <p> Since the model-internal reasoning process is often guided by a sequence of learned self-attention
+            mechanisms, it is paramount to be able to explore what the attention has learned. While static analyses for
+            this can lead to targeted insights, interactive tools can be more dynamic and help humans gain an intuition
+            for the model-internal reasoning process. We present exBERT, a tool that helps to gain insights into the
+            meaning of the contextual representations. exBERT matches a human-specified input to similar contexts in a
+            large annotated dataset. By aggregating these annotations across all similar contexts, exBERT can help to
+            explain what each attention-head has learned. </p>
+
+        <p> Thanks to
+            <a target="_blank" href="https://www.parc.com/about-parc/our-people/jesse-vig/">Jesse Vig</a>
+            for feedback. Please let us know what you think by commenting below! </p>
+
+        <div style="height: 20px"></div>
+
+
+        <div class="row">
+            <div class="col-md-4">
+                <div class="text-center" style="background-color: rgb(81,116,144);">
+                    <a href="exBERT.html">
+                        <h3><i class="fa fa-rocket" aria-hidden="true" style="font-size: 80%; "></i> Live Server </h3>
+                    </a>
+                </div>
+
+
+            </div>
+            <div class="col-md-4">
+                <div class="text-center" style="background-color: rgb(203,122,130);padding: inherit">
+                    <a href="https://github.com/bhoov/transformer-viz">
+                        <h3><i class="fa fa-github" aria-hidden="true" style="font-size: 80%;"></i> Source Code </h3>
+                    </a>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="text-center" style="background-color: rgb(152,152,152);padding: inherit">
+                    <a href="">
+                        <h3><i class="fa fa-book" aria-hidden="true" style="font-size: 80%;"></i> Pre-Publication </h3>
+                    </a>
+                </div>
+            </div>
+        </div>
+
+
+        <div class="row">
+            <div class="col-md-8 col-md-offset-2">
+                <div class='col-sm'>
+                    <img id='tool-screenshot' src="./img/exBERT_overview.png" alt="Tool screenshot" height="600px">
+                </div>
+            </div>
+        </div>
+
+        <hr>
+
+        <div class="row">
+            <div class="col-md-4">
+                <div class="text-center" style="background-color: rgb(81,116,144);">
+                    <a href="exBERT.html">
+                        <h3><i class="fa fa-rocket" aria-hidden="true" style="font-size: 80%; "></i> Live Server </h3>
+                    </a>
+                </div>
+
+
+            </div>
+            <div class="col-md-4">
+                <div class="text-center" style="background-color: rgb(203,122,130);padding: inherit">
+                    <a href="https://github.com/bhoov/transformer-viz">
+                        <h3><i class="fa fa-github" aria-hidden="true" style="font-size: 80%;"></i> Source Code </h3>
+                    </a>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="text-center" style="background-color: rgb(152,152,152);padding: inherit">
+                    <a href="">
+                        <h3><i class="fa fa-book" aria-hidden="true" style="font-size: 80%;"></i> Pre-Publication </h3>
+                    </a>
+                </div>
+            </div>
+        </div>
+
+
+        <div class="vspace-40"></div>
+
+        <div class="row">
+            <div class="col-12 text-center gray-1">
+                <p></p>
+                <p>We care about your privacy, but know that your activity on the site may be monitored. For more
+                    information, check out the links below.</p>
+            </div>
+        </div>
+
+        <div class="row">
+            <div class="col-lg-12 text-center gray-1">
+                <a target="_blank" href="http://www.ibm.com/legal/us/en/?lnk=flg-tous-usen" class="gray-1">Terms of
+                    Use</a> |
+                <a target="_blank" href="http://www.ibm.com/privacy/us/en/?lnk=flg-priv-usen" class="gray-1">Privacy</a>
+            </div>
+        </div>
+
+
+        <hr>
+
+        <div class="row justify-content-md-center">
+            <!-- <div class="col-xs-offset-2 col-lg-4 text-center" style="font-size: 16pt;"> -->
+            <div class="col-lg-6 text-center" style="font-size: 16pt;">
+                <span style="white-space: nowrap;"><b>IBM</b> Research, Cambridge </span><br>
+                <b>MIT-IBM</b> Watson <b>AI Lab</b>
+            </div>
+            <div class="col-xs-3 text-center">
+                <a target="_blank" href="http://nlp.seas.harvard.edu/"><img class="img-responsive"
+                        src="./img/harvardnlp_logo.png"></a>
+            </div>
+        </div>
+
+
+
+
+        <!-- DISQUS THREAD -->
+        <div id="disqus_thread"></div>
+        <script>
+
+            /**
+            *  RECOMMENDED CONFIGURATION VARIABLES: EDIT AND UNCOMMENT THE SECTION BELOW TO INSERT DYNAMIC VALUES FROM YOUR PLATFORM OR CMS.
+            *  LEARN WHY DEFINING THESE VARIABLES IS IMPORTANT: https://disqus.com/admin/universalcode/#configuration-variables*/
+            /*
+            var disqus_config = function () {
+            this.page.url = PAGE_URL;  // Replace PAGE_URL with your page's canonical URL variable
+            this.page.identifier = PAGE_IDENTIFIER; // Replace PAGE_IDENTIFIER with your page's unique identifier variable
+            };
+            */
+            (function () { // DON'T EDIT BELOW THIS LINE
+                var d = document, s = d.createElement('script');
+                s.src = 'https://exbert.disqus.com/embed.js';
+                s.setAttribute('data-timestamp', +new Date());
+                (d.head || d.body).appendChild(s);
+            })();
+        </script>
+        <noscript>Please enable JavaScript to view the <a href="https://disqus.com/?ref_noscript">comments powered by
+                Disqus.</a></noscript>
+
+    </div>
+
+
+    <!-- <script id="dsq-count-scr" src="//exbert.disqus.com/count.js" async></script> -->
+</body>
+
+</html>
