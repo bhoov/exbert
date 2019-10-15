@@ -4,6 +4,7 @@ from functools import partial
 from utils.gen_utils import map_nlist, vround
 
 def zip_len_check(*iters):
+    """Zip iterables with a check that they are all the same length"""
     if len(iters) < 2:
         raise ValueError(f"Expected at least 2 iterables to combine. Got {len(iters)} iterables")
     n = len(iters[0])
@@ -13,7 +14,12 @@ def zip_len_check(*iters):
             raise ValueError(f"Expected all iterations to have len {n} but found {n_}")
 
     return zip(*iters)
+
 class SearchResult:
+    """A wrapper around the HDF5 file storage information allowing easy access to information about each item.
+    
+    Includes method to send this information to the frontend
+    """
     def __init__(self, ds, index):
         """Represents returned from the refmap of the CorpusEmbedding class"""
         self.ds = ds
@@ -277,6 +283,12 @@ class AttentionSearchResult(SearchResult):
 
     
 class CorpusEmbeddings:
+    """A wrapper for both the token embeddings and the head context.
+    
+    This class allows access into an HDF5 file designed according to the data/processing module's contents as if it were
+    and in memory dictionary.
+    """
+
     def __init__(self, fname, name="WoZ embeddings"):
         """Open an hdf5 file of the format designed and provide easy access to its contents"""
                 
@@ -388,6 +400,10 @@ class CorpusEmbeddings:
         return self[training_idx][layer, token_num]
 
 class AttentionCorpusEmbeddings(CorpusEmbeddings):
+    """
+    An extension of the CorpusEmbeddings for the HDF5 file designed to also contain metadata for the attention to every other token
+    in an input sentence
+    """
 
     def _init_vector_map(self):
         refmap = {}

@@ -38,7 +38,6 @@ Temporary Items
 .vscode
 
 .ipynb_checkpoints
-# client/dist
 client/src/node_modules
 client/src/.cache-loader
 
@@ -49,9 +48,14 @@ client/src/.cache-loader
 
 # Datasets
 data/*/wizard-of-oz.txt
+wizard-of-oz.txt
 data/*/wikipedia*.csv.gz
+*_tst
 server/data/*.zip
 allResponses.json
+*.h5py
+*.pckl
+
 
 # Dev notebooks
 notebooks/*.ipynb

@@ -2,7 +2,8 @@ import numpy as np
 import torch
 import h5py
 import pickle
-import utils.path_fixes as pf
+import argparse
+from pathlib import Path
 from pytorch_pretrained_bert import BertTokenizer, BertModel
 
 from utils.token_processing import (
@@ -17,6 +18,16 @@ from utils.token_processing import (
 )
 
 bert_model = "bert-base-uncased"
+
+def parse_args():
+    parser = argparse.ArgumentParser()
+    parser.add_argument("-f", "--file", help="Path to .pckl file of unique sentences from a corpus.")
+    parser.add_argument("-o", "--outdir", help="Path of directory in which to store the analyzed sentences as a .hdf5")
+    parser.add_argument("--force", action="store_true", help="If given, overwrite existing hdf5 files.")
+    
+    args = parser.parse_args()
+    return args
+
 
 # Path -> [String]
 def read_pckl(path):
@@ -196,8 +207,29 @@ def sentences_to_hdf5(extractor, fname, sentences, print_every=50, groupname='em
         
     return f
 
+def main(infile, outdir, force):
+    sentences = read_pckl(infile)
+
+    outdir = Path(outdir)
+
+    embedding_dir = outdir / 'embeddings'
+    embedding_dir.mkdir(exist_ok=True)
+    embedding_outfile = "embeddings" + '.hdf5'
+    embedding_outpath = embedding_dir / embedding_outfile
+    print(f"Extracting embeddings into {embedding_outpath}")
+    embedding_extractor = EmbeddingExtractor.from_pretrained(bert_model)
+    sentences_to_hdf5(embedding_extractor, str(embedding_outpath), sentences, clear_file=force)
+
+    context_dir = outdir / 'headContext'
+    context_dir.mkdir(exist_ok=True)
+    context_outfile =  "contexts" + '.hdf5'
+    context_outpath = context_dir / context_outfile
+    print(f"Extracting head context into {context_outpath}")
+    context_extractor = HeadContextExtractor.from_pretrained(bert_model)
+    sentences_to_hdf5(context_extractor, str(context_outpath), sentences, clear_file=force)
+
+
 if __name__ == "__main__":
-    sentences = read_pckl(str(pf.WOZ_DIR / "woz-processed-sentences.pckl"))
-    outpath = pf.WOZ_DIR / 'woz_combined2.hdf5'
-    extractor = EmbeddingExtractor.from_pretrained(bert_model)
-    sentences_to_hdf5(extractor, str(outpath), sentences, clear_file=True)
+    args = parse_args()
+
+    main(args.file, args.outdir, args.force)
