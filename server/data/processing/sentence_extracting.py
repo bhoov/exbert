@@ -2,9 +2,18 @@ import spacy
 import regex as re
 from pathlib import Path
 import pickle
-import utils.path_fixes as pf
+import argparse
 
 nlp = spacy.load('en_core_web_sm')
+
+def parse_args():
+    parser = argparse.ArgumentParser()
+    parser.add_argument("-f", "--file", help="Path to .txt file to analyze and annotate")
+    parser.add_argument("-o", "--outdir", help="Path of directory in which to store the analyzed sentences as a .pckl")
+    
+    args = parser.parse_args()
+    return args
+
 
 # String -> String
 def replace_newlines(s):
@@ -71,9 +80,16 @@ def init_corpus(path):
 
 # Path -> Path -> _
 def save_init_corpus(in_path, out_path):
+    print("Extracting unique sentences...")
     unique_sents = init_corpus(in_path)
+    print("Saving to destination")
     save_to(out_path, unique_sents)
+    print("Done")
     
 if __name__ == "__main__":
-    init_corpus(pf.WOZ_PATH)
-    
+    args = parse_args()
+
+    outfname = Path(args.file).stem + '.pckl'
+    outfile = Path(args.outdir) / outfname
+
+    save_init_corpus(args.file, str(outfile))
