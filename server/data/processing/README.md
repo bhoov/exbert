@@ -26,8 +26,8 @@ To create your own dataset from scratch:
     - `headContext/` - A folder containing the `<FNAME>.hdf5` file and all the `<layer_**>.faiss` files needed to index into the head embeddings/context. NOTE: These files can be quite large
 
 ### Debugging: Running the individual scripts
-1. Run `python sentence_extracting.py -f <FNAME.txt> -o <OUTTDIR>`
-2. Run `python create_hdf5.py -f <FNAME.pckl> -o <OUTTDIR>`
-3. Run `python create_faiss.py -f <FNAME.hdf5> -o <OUTTDIR>`
+1. Run `python sentence_extracting.py -f <FNAME>.txt -o <OUTDIR>`
+2. Run `python create_hdf5.py -f <FNAME>.pckl -o <OUTDIR>`
+3. Run `python create_faiss.py -d <OUTDIR>`. This will assume the creation of the `embeddings` and `headContexts` folders inside of `<OUTDIR>`
 
-You will then need to link these corpora into your application. In the `main.py` file, change the `WozFaissWrapper.load_info()` method to point at the correct paths.
+You will then need to link these corpora into your application. In the `main.py` file, change the `FaissLoader.load_info()` method to point at the correct paths.

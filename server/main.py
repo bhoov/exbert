@@ -32,7 +32,7 @@ parser.add_argument("--port", default=5555, help="Port to run the app. ")
 
 # NOTE: Connexion runs all global code twice. We need to load the info on the second pass of the app instantiating, not the first. 'main' code statement.
 # This may not work in deploy
-class WozFaissWrapper:
+class FaissLoader:
     def __init__(self):
         self.embedding_faiss = None
         self.context_faiss = None
@@ -46,7 +46,7 @@ class WozFaissWrapper:
         self.embedding_corpus = AttentionCorpusEmbeddings(pf.WOZ_HDF5)
         self.context_corpus  = AttentionCorpusEmbeddings(pf.WOZ_CONTEXT_HDF5)
 
-woz = WozFaissWrapper()
+faiss_loader = FaissLoader()
 
 # Flask main routes
 @app.route('/')
@@ -188,9 +188,9 @@ def woz_nearest_embedding_search(**request):
     heads = list(map(int, list(set(request['heads']))))
     k = int(request['k'])
 
-    nearest_dists, nearest_idxs = woz.embedding_faiss.search(layer, q, k)
+    nearest_dists, nearest_idxs = faiss_loader.embedding_faiss.search(layer, q, k)
 
-    out = woz.embedding_corpus.find2d(nearest_idxs)[0]
+    out = faiss_loader.embedding_corpus.find2d(nearest_idxs)[0]
 
     return_obj = [o.to_json(layer, heads) for o in out]
     return return_obj
@@ -202,9 +202,9 @@ def woz_nearest_context_search(**request):
     heads = list(map(int, list(set(request['heads']))))
     k = int(request['k'])
 
-    nearest_dists, nearest_idxs = woz.context_faiss.search(layer, heads, q, k)
+    nearest_dists, nearest_idxs = faiss_loader.context_faiss.search(layer, heads, q, k)
 
-    out = woz.context_corpus.find2d(nearest_idxs)[0]
+    out = faiss_loader.context_corpus.find2d(nearest_idxs)[0]
 
     return_obj = [o.to_json(layer, heads) for o in out]
     return return_obj
@@ -214,7 +214,7 @@ app.add_api('swagger.yaml')
 # Setup code
 if __name__ != '__main__':
     print("SETTING UP")
-    woz.load_info()
+    faiss_loader.load_info()
     print("AFTER SETUP")
 
 # Then deploy app
