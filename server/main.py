@@ -30,8 +30,7 @@ parser = argparse.ArgumentParser(
 parser.add_argument("--debug", action='store_true', help=' Debug mode')
 parser.add_argument("--port", default=5555, help="Port to run the app. ")
 
-# NOTE: Connexion runs all global code twice. We need to load the info on the second pass of the app instantiating, not the first. 'main' code statement.
-# This may not work in deploy
+# NOTE: Connexion runs all global code twice. We need to load the info on the second pass of the app instantiating, not the first.
 class FaissLoader:
     def __init__(self):
         self.embedding_faiss = None

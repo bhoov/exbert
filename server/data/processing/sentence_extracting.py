@@ -85,11 +85,18 @@ def save_init_corpus(in_path, out_path):
     print("Saving to destination")
     save_to(out_path, unique_sents)
     print("Done")
-    
+    return out_path
+
+def main(infile, outdir):
+    outfname = Path(infile).stem + '.pckl'
+    outdir = Path(outdir)
+    outdir.mkdir(parents=True, exist_ok=True)
+    outfile = outdir / outfname
+    out_path = save_init_corpus(infile, str(outfile))
+
+    return out_path
+
 if __name__ == "__main__":
     args = parse_args()
 
-    outfname = Path(args.file).stem + '.pckl'
-    outfile = Path(args.outdir) / outfname
-
-    save_init_corpus(args.file, str(outfile))
+    main(args.file, args.outdir)

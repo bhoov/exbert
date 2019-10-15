@@ -104,11 +104,8 @@ class ContextIndexes(Indexes):
 
         return self[layer].search(new_query, k)
 
-if __name__ == "__main__":
-    # Creating the indices for both the context and embeddings
-    args = parse_args()
-
-    base = Path(args.directory)
+def main(basedir):
+    base = Path(basedir)
 
     # embeddings
     embedding_dir = base / 'embeddings'
@@ -140,3 +137,9 @@ if __name__ == "__main__":
     q = np.random.randn(1, 768).astype(np.float32)
     D, I = loaded_context_idxs.search(0, q, 5)
     print(context_ce.find2d(I))
+
+if __name__ == "__main__":
+    # Creating the indices for both the context and embeddings
+    args = parse_args()
+
+    main(args.directory)
