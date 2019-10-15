@@ -227,4 +227,4 @@ if __name__ == "__main__":
     context_outpath = context_dir / context_outfile
     print(f"Extracting head context into {context_outpath}")
     context_extractor = HeadContextExtractor.from_pretrained(bert_model)
-    sentences_to_hdf5(context_extractor, str(embedding_outpath), sentences, clear_file=args.force)
+    sentences_to_hdf5(context_extractor, str(context_outpath), sentences, clear_file=args.force)

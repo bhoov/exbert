@@ -18,7 +18,7 @@ import utils.path_fixes as pf
 import numpy as np
 
 from data.processing.create_faiss import Indexes, ContextIndexes
-from data.processing.woz_embeddings import CorpusEmbeddings, AttentionCorpusEmbeddings
+from data.processing.corpus_embeddings import CorpusEmbeddings, AttentionCorpusEmbeddings
 from copy import deepcopy
 
 app = connexion.FlaskApp(__name__, static_folder='client/dist', specification_dir='.')

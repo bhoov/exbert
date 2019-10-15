@@ -49,6 +49,7 @@ client/src/.cache-loader
 # Datasets
 data/*/wizard-of-oz.txt
 data/*/wikipedia*.csv.gz
+*_tst
 server/data/*.zip
 allResponses.json
 *.h5py
