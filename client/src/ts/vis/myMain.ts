@@ -264,12 +264,12 @@ export class MainGraphic {
 
         this.eventHandler.bind(CorpusMatManager.events.mouseOver, (e: { val: "pos" | "dep" | "is_ent", idx: number }) => {
             const selector = `.inspector-cell[index-offset='${e.idx}']`
-            const matchedCells: D3Sel = d3.selectAll(selector)
+            d3.selectAll(selector).classed("hovered-col", true)
         })
 
         this.eventHandler.bind(CorpusMatManager.events.mouseOut, (e: { idx: number }) => {
             const selector = `.inspector-cell[index-offset='${e.idx}']`
-            // d3.selectAll(selector).style('border-width', 0)
+            d3.selectAll(selector).classed("hovered-col", false)
         })
     }
 

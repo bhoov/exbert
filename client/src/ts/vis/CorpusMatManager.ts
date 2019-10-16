@@ -1,11 +1,11 @@
 import * as d3 from 'd3'
 import * as R from 'ramda'
 import * as tp from '../etc/types'
-import {D3Sel} from '../etc/Util'
-import {VComponent} from '../vis/VisComponent'
-import {SimpleEventHandler} from "../etc/SimpleEventHandler";
-import {SVG} from "../etc/SVGplus"
-import {spacyColors} from "../etc/SpacyInfo"
+import { D3Sel } from '../etc/Util'
+import { VComponent } from '../vis/VisComponent'
+import { SimpleEventHandler } from "../etc/SimpleEventHandler";
+import { SVG } from "../etc/SVGplus"
+import { spacyColors } from "../etc/SpacyInfo"
 import "../etc/xd3"
 
 // Need additoinal height information to render boxes
@@ -23,7 +23,7 @@ interface ColorMetaBaseData {
 
 type DisplayOptions = "pos" | "dep" | "ent"
 
-function managerData2MatData(dataIn:DataInterface, indexOffset=0, toPick=['pos']) {
+function managerData2MatData(dataIn: DataInterface, indexOffset = 0, toPick = ['pos']) {
 
     const outOfRangeObj: ColorMetaBaseData = {
         pos: null,
@@ -54,7 +54,11 @@ export class CorpusMatManager extends VComponent<DataInterface>{
     options = {
         cellWidth: 10,
         toPick: ['pos'],
-        idxs: [-1, 0, 1]
+        idxs: [-1, 0, 1],
+        divHover: {
+            width: 60,
+            height: 40 
+        }
     }
 
     static events = {
@@ -67,6 +71,7 @@ export class CorpusMatManager extends VComponent<DataInterface>{
     // The d3 components that are saved to make rendering faster
     corpusMats: D3Sel
     rowGroups: D3Sel
+    divHover: D3Sel
 
     _current = {}
     rowCssName = 'index-match-results'
@@ -77,8 +82,7 @@ export class CorpusMatManager extends VComponent<DataInterface>{
     static colorScale: tp.ColorMetaScale = spacyColors.colorScale;
 
     // Selections
-
-    constructor(d3parent:D3Sel, eventHandler?:SimpleEventHandler, options={}){
+    constructor(d3parent: D3Sel, eventHandler?: SimpleEventHandler, options = {}) {
         super(d3parent, eventHandler)
         this.idxs = [-1, 0, 1];
         this.superInitHTML(options)
@@ -95,11 +99,19 @@ export class CorpusMatManager extends VComponent<DataInterface>{
 
     // Use this to create static dom elements
     _init() {
+        const self = this;
         this.corpusMats = this.base.selectAll('.corpus-mat')
         this.rowGroups = this.corpusMats.selectAll(`.${this.rowCssName}`)
+        this.divHover = this.base.append('div')
+            .classed('mat-hover-display', true)
+            .classed('text-center', true)
+            .style('width', String(this.options.divHover.width) + 'px')
+            .style('height', String(this.options.divHover.height) + 'px')
+
+        this.divHover.append('p')
     }
 
-    pick(val:DisplayOptions) {
+    pick(val: DisplayOptions) {
         this.options.toPick = [val]
         this.redraw()
     }
@@ -112,7 +124,7 @@ export class CorpusMatManager extends VComponent<DataInterface>{
 
     addLeft() {
         const addedIdx = this.idxs[0] - 1;
-        const addDecrementedHead: (x:number[]) => number[] = x => R.insert(0, R.head(x) - 1)(x)
+        const addDecrementedHead: (x: number[]) => number[] = x => R.insert(0, R.head(x) - 1)(x)
         this.idxs = addDecrementedHead(this.idxs)
         this.addCorpusMat(addedIdx, "left")
     }
@@ -130,7 +142,7 @@ export class CorpusMatManager extends VComponent<DataInterface>{
      *
      * @param d Index to remove
      */
-    kill(d:number) {
+    kill(d: number) {
         if (d != 0) {
             if (d == Math.min(...this.idxs) || d == Math.max(...this.idxs)) {
                 this.idxs = R.without([d], this.idxs)
@@ -139,11 +151,11 @@ export class CorpusMatManager extends VComponent<DataInterface>{
         }
     }
 
-    _wrangle(data:DataInterface){
+    _wrangle(data: DataInterface) {
         return data
     }
 
-    data(val?:DataInterface) {
+    data(val?: DataInterface) {
         if (val == null) {
             return this._data;
         }
@@ -173,7 +185,7 @@ export class CorpusMatManager extends VComponent<DataInterface>{
      * @param idxOffset Distance of word from matched word in the sentence
      * @param toThe Indicates adding to the "left" or to the "right" of the index
      */
-    addCorpusMat(idxOffset:number, toThe:"right"|"left"="right") {
+    addCorpusMat(idxOffset: number, toThe: "right" | "left" = "right") {
         const self = this;
         const op = this.options;
         const boxWidth = op.cellWidth * op.toPick.length;
@@ -199,11 +211,11 @@ export class CorpusMatManager extends VComponent<DataInterface>{
                 width: boxWidth,
                 height: boxHeight,
             })
-            .on('mouseover', (d, i) => {
-                this.eventHandler.trigger(CorpusMatManager.events.mouseOver, {idx: d, val:this.options.toPick[0]})
+            .on('mouseover', function (d, i) {
+                self.eventHandler.trigger(CorpusMatManager.events.mouseOver, { idx: d, val: self.options.toPick[0] })
             })
             .on('mouseout', (d, i) => {
-                this.eventHandler.trigger(CorpusMatManager.events.mouseOut, {idx: d})
+                this.eventHandler.trigger(CorpusMatManager.events.mouseOut, { idx: d })
             })
 
         this.addRowGroup(corpusMat)
@@ -213,15 +225,15 @@ export class CorpusMatManager extends VComponent<DataInterface>{
      *
      * @param mat The base div on which to add matrices and rows
      */
-    addRowGroup(mat:D3Sel) {
+    addRowGroup(mat: D3Sel) {
         const self = this;
         const op = this.options;
 
         const heights = R.map(R.prop('height'), this._data)
 
-        const [heightSum, rawHeightList] = R.mapAccum((x, y) => [R.add(x, y), R.add(x,y)], 0, heights)
-        const fixList: (x:number[]) => number[] = R.compose(R.dropLast(1),
-        // @ts-ignore
+        const [heightSum, rawHeightList] = R.mapAccum((x, y) => [R.add(x, y), R.add(x, y)], 0, heights)
+        const fixList: (x: number[]) => number[] = R.compose(R.dropLast(1),
+            // @ts-ignore
             R.prepend(0)
         )
         const heightList = fixList(rawHeightList)
@@ -234,7 +246,7 @@ export class CorpusMatManager extends VComponent<DataInterface>{
             })
             .attr("height", d => d.height)
             .attr("transform", (d, i) => {
-                const out =  SVG.translate({
+                const out = SVG.translate({
                     x: 0,
                     y: heightList[i],
                 })
@@ -246,7 +258,7 @@ export class CorpusMatManager extends VComponent<DataInterface>{
         })
     }
 
-    addRect(g:D3Sel, xShift:number, prop:string) {
+    addRect(g: D3Sel, xShift: number, prop: string) {
         const self = this
         const op = this.options
 
@@ -258,19 +270,38 @@ export class CorpusMatManager extends VComponent<DataInterface>{
                     return SVG.translate({
                         x: xShift,
                         y: 1.5,
-                })},
+                    })
+                },
             })
             .style('fill', d => CorpusMatManager.colorScale[prop](d[prop]))
-            .append('title')
-            .text(d => {
-                return d[prop]
+
+        
+        const getBaseX = () => (<HTMLElement>self.base.node()).getBoundingClientRect().left
+        const getBaseY = () => (<HTMLElement>self.base.node()).getBoundingClientRect().top
+
+        g.on('mouseover', function () {
+                self.divHover.style('visibility', 'visible')
+            })
+            .on('mouseout', function () {
+                self.divHover.style('visibility', 'hidden')
+            })
+            .on('mousemove', function(d) {
+                const mouse = d3.mouse(self.base.node())
+                const divOffset = [3, 3]
+                const left = mouse[0] + getBaseX() - (op.divHover.width + divOffset[0])
+                const top = mouse[1] + getBaseY() - (op.divHover.height + divOffset[1])
+                self.divHover
+                    .style('left', String(left) + 'px')
+                    .style('top', String(top) + 'px')
+                    .selectAll('p')
+                    .text(d[prop])
             })
     }
 
     /**
      * @param data Data to display
      */
-    _render(data:DataInterface) {
+    _render(data: DataInterface) {
         this._updateData();
     }
 
