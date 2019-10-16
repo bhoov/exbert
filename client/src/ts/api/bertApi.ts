@@ -10,30 +10,44 @@ import { URLHandler } from '../etc/URLHandler';
 
 export const emptyTokenDisplay = new TokenDisplay()
 
-
-const urlFormat = (host, port) => {
-    // If location says `localhost` or diirectly a file, return correct server
-    if (host == "localhost" || host == "") return "http://localhost:5000/api";
-    const out = `http://${host}:${port}/api`
-    console.log(out)
-    return out;
-}
-
-const baseurl = URLHandler.basicURL()//urlFormat(window.location.hostname, 5000)
+const baseurl = URLHandler.basicURL()
 
 /**
- * Check if the route is present in the precompiled list of paths. Otherwise, return false
+ * A rewrite of `d3-fetch`'s `d3.json` callback. If an api call fails, make a backup call to specified url and payload, if specified.
+ * 
+ * @param response Object expected at time of callback
+ * @param backupUrl Backup url in the event of fail
+ * @param backupPayload Backup payload if making a post request
  */
-function checkDemoAPI(toSend) {
+function responseJson(response, backupUrl = null, backupPayload = null) {
+    if (!response.ok) {
+        if (backupUrl != null) {
+            console.log("STATIC FILE NOT FOUND");
+            return fetch(backupUrl, backupPayload).then(responseJson);
+        }
+        throw new Error(response.status + " " + response.statusText)
+    }
+    return response.json()
+}
+
+/**
+ * Check first if the information being sent exists in a static demo file. If it does, send that. Otherwise, make a normal call to the server.
+ * 
+ * @param toSend The packet of information to send to an API endpoint
+ * @param backupUrl Backup url in the event that the demo file is not found
+ * @param backupPayload Backup payload if demo file not found, for POST requests only
+ */
+function checkDemoAPI(toSend, backupUrl = null, backupPayload = null) {
     const hsh = hash.sha1(toSend);
     console.log("CHECKING DEMOAPI: " + hsh);
     if (DemoAPI.hasOwnProperty(hsh)) {
         // Relies on a symbolic link being present in the dist folder to the demo folder
         const path = './demo/' + DemoAPI[hsh]
-        console.log("SENDING STATIC: ", path);
-        return d3.json(path)
+        console.log("TRYING TO SENDING STATIC: ", path);
+        const follow = (response) => responseJson(response, backupUrl, backupPayload)
+        return fetch(path).then(follow)
     }
-    return false
+    return d3.json(backupUrl, backupPayload)
 }
 
 type SentenceInfo = {
@@ -46,11 +60,11 @@ export class BertAPI {
 
     constructor(private baseURL: string = null) {
         if (this.baseURL == null) {
-            this.baseURL = baseurl+'/api';
+            this.baseURL = baseurl + '/api';
         }
     }
 
-    getMetaAttentions(sentenceA: string, layer: number, sentenceB = "", hashObj:{}|null=null): Promise<tp.AttentionMetaResponse> {
+    getMetaAttentions(sentenceA: string, layer: number, sentenceB = "", hashObj: {} | null = null): Promise<tp.AttentionMetaResponse> {
         const toSend: SentenceInfo = {
             sentenceA: sentenceA,
             sentenceB: sentenceB,
@@ -68,10 +82,10 @@ export class BertAPI {
             })
         }
 
-        return checkDemoAPI(toSend) || d3.json(url)
+        return checkDemoAPI(toSend, url)
     }
 
-    updateMaskedMetaAttentions(a: TokenDisplay, layer: number, b: TokenDisplay = emptyTokenDisplay, hashObj:{}|null=null): Promise<tp.AttentionMetaMaskedResponse> {
+    updateMaskedMetaAttentions(a: TokenDisplay, layer: number, b: TokenDisplay = emptyTokenDisplay, hashObj: {} | null = null): Promise<tp.AttentionMetaMaskedResponse> {
 
         const toSend = {
             tokensA: R.map(R.prop('text'), a.tokenData),
@@ -96,7 +110,7 @@ export class BertAPI {
 
         console.log("--- POST " + url, payload);
 
-        return checkDemoAPI(toSend) || d3.json(url, payload)
+        return checkDemoAPI(toSend, url, payload)
     }
 
     /**
@@ -105,7 +119,7 @@ export class BertAPI {
      * @param layer In the l'th layer
      * @param k how many results to retrieve
      */
-    getNearestWozEmbeddings(embedding: number[], layer: number, heads: number[], k = 10, hashObj:{}|null=null): Promise<tp.FaissSearchResults[]> {
+    getNearestWozEmbeddings(embedding: number[], layer: number, heads: number[], k = 10, hashObj: {} | null = null): Promise<tp.FaissSearchResults[]> {
         const toSend = {
             embedding: embedding,
             layer: layer,
@@ -123,10 +137,10 @@ export class BertAPI {
             })
         }
 
-        return checkDemoAPI(toSend) || d3.json(url)
+        return checkDemoAPI(toSend, url)
     }
 
-    getNearestWozContexts(context: number[], layer: number, heads: number[], k = 10, hashObj:{}|null=null): Promise<tp.FaissSearchResults[]> {
+    getNearestWozContexts(context: number[], layer: number, heads: number[], k = 10, hashObj: {} | null = null): Promise<tp.FaissSearchResults[]> {
         const toSend = {
             context: context,
             layer: layer,
@@ -144,6 +158,6 @@ export class BertAPI {
             })
         }
 
-        return checkDemoAPI(toSend) || d3.json(url)
+        return checkDemoAPI(toSend, url)
     }
 };
