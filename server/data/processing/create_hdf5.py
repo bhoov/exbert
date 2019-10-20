@@ -196,12 +196,11 @@ def sentences_to_hdf5(extractor, fname, sentences, print_every=50, groupname='em
         ds.attrs['b_tokens'] = b_tokens
         ds.attrs['s_tokens'] = s_tokens
         ds.attrs['s_pos'] = s_pos
-        ds.attrs['s_dep'] = s_dep
-        ds.attrs['s_is_ent'] = s_is_ent
         ds.attrs['b_pos'] = b_pos
+        ds.attrs['s_dep'] = s_dep
         ds.attrs['b_dep'] = b_dep
         ds.attrs['b_is_ent'] = b_is_ent
-        ds.attrs['b_is_ent'] = b_is_ent
+        ds.attrs['s_is_ent'] = s_is_ent
         ds.attrs['sentence'] = s
         ds.attrs['attn_ref'] = supp_idx
         
