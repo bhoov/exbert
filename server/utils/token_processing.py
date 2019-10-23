@@ -67,7 +67,7 @@ class TokenAligner:
     def meta_to_hdf5(self, meta):
         out_dtype = np.dtype([
             ('token', h5py.special_dtype(vlen=str)),
-            ('POS', h5py.special_dtype(vlen=str)),
+            ('pos', h5py.special_dtype(vlen=str)),
             ('dep', h5py.special_dtype(vlen=str)),
             ('norm', h5py.special_dtype(vlen=str)),
             ('is_ent', np.bool_)
@@ -78,7 +78,6 @@ class TokenAligner:
     
     def meta_hdf5_to_obj(self, meta_hdf5):
         assert len(meta_hdf5) != 0
-        print(meta_hdf5)
         
         keys = meta_hdf5[0].dtype.names
         out = {k: [] for k in keys}
@@ -86,8 +85,6 @@ class TokenAligner:
         for m in meta_hdf5:
             for k in m.dtype.names:
                 out[k].append(m[k])
-
-        print(out)
         return out
         
     def to_spacy_hdf5(self, s):
@@ -123,7 +120,7 @@ class TokenAligner:
     
     def to_bpe_hdf5_by_col(self, s):
         h5_info = self.to_bpe_hdf5(s)
-        return self.meta_to_hdf5(h5_info)
+        return self.meta_hdf5_to_obj(h5_info)
         
 # [String] -> [String]
 def clean_tokens(toks):
@@ -165,3 +162,5 @@ def reshape(a):
     all_head_size = a.shape[-2] * a.shape[-1]
     new_shape = a.shape[:-2] + (all_head_size,)
     return a.reshape(new_shape)
+
+aligner = TokenAligner()

@@ -133,6 +133,7 @@ def main(basedir):
     save_indexes(context_indexes, context_dir)
 
     ## Test context search:
+    print("\n\nShowing a test result from a faiss search")
     loaded_context_idxs = Indexes(context_dir)
     q = np.random.randn(1, 768).astype(np.float32)
     D, I = loaded_context_idxs.search(0, q, 5)

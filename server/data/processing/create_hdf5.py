@@ -190,7 +190,7 @@ def sentences_to_hdf5(extractor, fname, sentences, print_every=50, groupname='em
         ds.attrs['s_tokens'] = spacy_info['token']
         ds.attrs['s_pos'] = spacy_info['pos']
         ds.attrs['s_dep'] = spacy_info['dep']
-        ds.attrs['s_is_ent'] = spacy_info['s_is_ent']
+        ds.attrs['s_is_ent'] = spacy_info['is_ent']
         
     return f
 
