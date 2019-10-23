@@ -1,136 +1,130 @@
+"""Defines the important metadata to extract for each token.
+
+If adding more metadata, modify the definitions in `to_spacy_meta` and `meta_to_hdf5`
+"""
 import h5py
 import numpy as np
 import spacy
 from pytorch_pretrained_bert import BertTokenizer
-from .gen_utils import BPE_SPECIAL_TOKS
+from .gen_utils import get_bpe, get_spacy
+from .f import flatten_, assoc
+bert_model = "bert-base-uncased"
 
-# To Config
-bert_model = 'bert-base-uncased'
 
-bpe = BertTokenizer.from_pretrained(bert_model)
-nlp = spacy.load('en_core_web_sm')
 
-def spacy_tokenize(s):
-    """Convert a single sentence to spacy tokens only"""
-    doc = nlp(s)
-    tokens = [t.text.lower() for t in doc]
-    return tokens
+class TokenAligner:
+    def __init__(self, bpe_pretrained_name_or_path="bert-base-uncased", spacy_name="en_core_web_sm"):
+        """Create a wrapper around a sentence such that the spacy and BPE tokens can be aligned"""
+        self.bpe = get_bpe(bpe_pretrained_name_or_path)
+        self.nlp = get_spacy(spacy_name)
 
-def get_spacy_metadata(s):
-    """Get all metadata out of sentence according to spacy.
-
-    output:
-    =======
-        - list(tuples) containing:
-            - POS : part of speech
-            - dep : dependency
-            - is_ent : Boolean indicating whether or not current token is an entity
-    """
-    doc = nlp(s)
-    ents = [e.text for e in doc.ents]
-    out = []
-
-    for t in doc:
-        if t.text in ents:
-            is_ent = True
-        else:
-            is_ent = False
-
-        out.append({"text": t.text,
-                    "pos": t.pos_,
-                    "dep": t.dep_,
-                    "is_ent": is_ent})
+    def fix_sentence(self, s):
+        return " ".join(self.to_spacy(s))
         
-    return out
-
-
-# Move back to hdf5 file. Make new function
-def get_spacy_hdf5_meta(s):
-    """Get all metadata out of sentence according to spacy to store in hdf5 file.
-
-    output:
-    =======
-        - list(tuples) containing:
-            - POS : part of speech
-            - dep : dependency
-            - is_ent : Boolean indicating whether or not current token is an entity
-    """
-    doc = nlp(s)
-    ents = [e.text for e in doc.ents]
-    out_dtype = np.dtype([
-        ('token', h5py.special_dtype(vlen=str)),
-        ('POS', h5py.special_dtype(vlen=str)),
-        ('dep', h5py.special_dtype(vlen=str)),
-        ('is_ent', np.bool_)
-    ])
-    out = []
-    for t in doc:
-        if t.text in ents:
-            is_ent = True
-        else:
-            is_ent = False
-        out.append((t.text, t.pos_, t.dep_, is_ent))
+    def to_spacy(self, s):
+        """Convert a sentence to spacy tokens. 
         
-    return np.array(out, dtype=out_dtype)
-
-def bpe_tokenize(s):
-    """Tokenize according to bert's tokenizer, BPE"""
-    tokens = bpe.tokenize(s)
-    return tokens
-
-def combine_tokens_meta(bpe_toks:list, spacy_toks:list, spacy_meta:list):
-    """Combine two lists of functions and transform metadata accordingly. Duplicate POS info
-    whenever tokenization doesn't align
-
-    If the bpe_toks contain [CLS] or [SEP], etc, fill in their values with None
+        Note that all contractions are removed in lieu of the word they shorten.
+        """
+        doc = self.nlp(s)
+        tokens = [t.norm_ for t in doc]
+        return tokens
     
-    Input:
-    ======
-        bpe_toks : Tokens of bpe tokenizer
-        spacy_toks : Tokens output by spacy tokenizer
-        spacy_meta : list for meta information desired to be transformed
+    def to_spacy_text(self, s):
+        """Convert a sentence into the raw tokens as spacy would.
         
-    NOTE: The tokenizations have some subtle differences in how they handle some punctuation
-        and contractions. Namely, "o'clock" cannot be handled and there is naive "Mr." and "Mrs."
-        handler
-    """
-    meta_list = []
+        No contraction expansion."""
+        doc = self.nlp(s)
+        tokens = [t.text for t in doc]
+        return tokens
+    
+    def to_bpe(self, s):
+        """Convert a sentence to bpe tokens"""
+        return self.bpe.tokenize(s)
+    
+    def to_spacy_meta(self, s):
+        """Convert a sentence to spacy tokens with important metadata"""  
+        doc = self.nlp(s)
+        ents = [e for e in doc.ents]
+        ent_ranges = [list(range(e.start, e.end)) for e in ents]
+        
+        def assign_ent(idx):
+            """Check if the word should be an entity or not"""
+            return any([idx in er for er in ent_ranges])
+        
+        out = []
 
-    null_filler = lambda txt: {"text": txt,
-                "pos": None,
-                "dep": None,
-                "is_ent": False}
+        for i, t in enumerate(doc):
+            is_ent = assign_ent(i)
+            out.append({"text": t.text,
+                        "pos": t.pos_,
+                        "dep": t.dep_,
+                        "norm": t.norm_,
+                        "is_ent": is_ent})
 
-    j = -1 # Must start at -1 because we increment j first thing in the for loop
-    prev_tok = ""
-    for bt in bpe_toks:
-        is_bpe_special = bt in BPE_SPECIAL_TOKS
-        is_partial = bt[:2] == "##"
-        follows_contraction = prev_tok == "'"
-        is_second_dash = (bt == "-") and (prev_tok == "-")
-        part_of_mr = (prev_tok.lower() in set(['mr', 'mrs'])) and (bt == '.')
-        if is_partial or follows_contraction or is_second_dash or part_of_mr:
-            pass
-        elif is_bpe_special:
-            meta_list.append(null_filler(bt))
-        else:
-            j += 1
-            
-        if not is_bpe_special:
-            try:
-                meta_list.append(spacy_meta[j])
-            except IndexError:
-                print(bpe_toks)
-                print(spacy_toks)
-                print(j)
-                
-                raise
-            
-        prev_tok = bt
+        return out
+    
+    def meta_to_hdf5(self, meta):
+        out_dtype = np.dtype([
+            ('token', h5py.special_dtype(vlen=str)),
+            ('POS', h5py.special_dtype(vlen=str)),
+            ('dep', h5py.special_dtype(vlen=str)),
+            ('norm', h5py.special_dtype(vlen=str)),
+            ('is_ent', np.bool_)
+        ])
+        
+        out = [(m['text'], m['pos'], m['dep'], m['norm'], m['is_ent']) for m in meta]
+        return np.array(out, dtype=out_dtype)
+    
+    def meta_hdf5_to_obj(self, meta_hdf5):
+        assert len(meta_hdf5) != 0
+        print(meta_hdf5)
+        
+        keys = meta_hdf5[0].dtype.names
+        out = {k: [] for k in keys}
+        
+        for m in meta_hdf5:
+            for k in m.dtype.names:
+                out[k].append(m[k])
 
-    return meta_list
+        print(out)
+        return out
+        
+    def to_spacy_hdf5(self, s):
+        """Get values for hdf5 store, each row being a tuple of the information desired"""
+        meta = self.to_spacy_meta(s)
+        return self.meta_to_hdf5(meta)
+    
+    def to_spacy_hdf5_by_col(self, s):
+        """Get values for hdf5 store, organized as a dictionary into the metadata"""
+        h5_info = self.to_spacy_hdf5(s)
+        return self.meta_hdf5_to_obj(h5_info)
+    
+    def bpe_from_meta_single(self, meta_token):
+        """Split a single spacy token with metadata into bpe tokens"""
+        
+        bpe_tokens = self.to_bpe(meta_token['norm'])
 
+        return [assoc("text", b, meta_token) for b in bpe_tokens]
 
+    def to_bpe_meta(self, s):
+        """Convert a sentence to bpe tokens with metadata
+        
+        Removes all known contractions from input sentence `s`
+        """
+        spacy_meta = self.to_spacy_meta(s)
+        out = flatten_([self.bpe_from_meta_single(sm) for sm in spacy_meta])
+        return out
+    
+    def to_bpe_hdf5(self, s):
+        """Format the metadata of a BPE tokenized setence into hdf5 format"""
+        meta = self.to_bpe_meta(s)
+        return self.meta_to_hdf5(meta)
+    
+    def to_bpe_hdf5_by_col(self, s):
+        h5_info = self.to_bpe_hdf5(s)
+        return self.meta_to_hdf5(h5_info)
+        
 # [String] -> [String]
 def clean_tokens(toks):
     return [t for t in toks if t not in set(['[CLS]', '[SEP]'])]

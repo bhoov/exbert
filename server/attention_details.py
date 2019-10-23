@@ -13,12 +13,7 @@ import numpy as np
 from typing import List
 from functools import partial
 
-from utils.token_processing import (
-    combine_tokens_meta, 
-    bpe_tokenize, 
-    get_spacy_metadata,
-    spacy_tokenize,
-)
+from utils.token_processing import aligner
 from copy import deepcopy
 from utils.gen_utils import BPE_SPECIAL_TOKS, zip_dicts, combine_pos_dicts, map_nlist
 
@@ -220,20 +215,17 @@ def get_token_info(sentence, bpe_tokens=None, include_spacy=False):
 
     # If None, do the tokenization as normal. Otherwise, pass in CLS and other information
     if bpe_tokens is None:
-        bpe_tokens = bpe_tokenize(sentence)
+        bpe_tokens = aligner.to_bpe(sentence)
 
-    spacy_meta = get_spacy_metadata(sentence)
+    spacy_meta = aligner.to_spacy_meta(sentence)
     spacy_tokens = [t['text'] for t in spacy_meta]
 
-    combined_tokens = combine_tokens_meta(bpe_tokens, spacy_tokens, spacy_meta)
+    bpe_meta = aligner.bpe_from_spacy_meta(spacy_meta)
 
-    bpe_pos_info = [c['pos'] for c in combined_tokens]
-    bpe_dep_info = [c['dep'] for c in combined_tokens]
-    bpe_ent_info = [c['is_ent'] for c in combined_tokens]
+    bpe_pos_info = [c['pos'] for c in bpe_meta]
+    bpe_dep_info = [c['dep'] for c in bpe_meta]
+    bpe_ent_info = [c['is_ent'] for c in bpe_meta]
 
-    spacy_pos_info = [s['pos'] for s in spacy_meta]
-    spacy_dep_info = [s['dep'] for s in spacy_meta]
-    spacy_ent_info = [s['is_ent'] for s in spacy_meta]
 
     out = {
         'bpe_tokens': bpe_tokens,
@@ -242,6 +234,10 @@ def get_token_info(sentence, bpe_tokens=None, include_spacy=False):
         'bpe_is_ent': bpe_ent_info,}
 
     if include_spacy:
+        spacy_pos_info = [s['pos'] for s in spacy_meta]
+        spacy_dep_info = [s['dep'] for s in spacy_meta]
+        spacy_ent_info = [s['is_ent'] for s in spacy_meta]
+
         out.update({
             'spacy_tokens': spacy_tokens,
             'spacy_pos': spacy_pos_info,

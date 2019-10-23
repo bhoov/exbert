@@ -38,6 +38,9 @@ def replace_multispace(s):
 def is_short_sentence(s, min_len=8):
     return len(s.split(' ')) < min_len
 
+def contains_char(char, s):
+    return char in s
+
 # ============================================================
 #                  Compilation functions   
 # ============================================================
@@ -46,8 +49,9 @@ def process_line(line):
     return s
 
 def filter_line(line):
-    does_pass = not is_short_sentence(line, MIN_LINE_LENGTH)
-    return does_pass
+    fails = is_short_sentence(line, MIN_LINE_LENGTH)
+
+    return not fails
 
 # ============================================================
 #                      Main Logic   

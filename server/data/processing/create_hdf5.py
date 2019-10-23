@@ -7,10 +7,7 @@ from pathlib import Path
 from pytorch_pretrained_bert import BertTokenizer, BertModel
 
 from utils.token_processing import (
-    spacy_tokenize,
-    get_spacy_hdf5_meta,
-    bpe_tokenize,
-    combine_tokens_meta,
+    aligner,
     process_tokens,
     process_hidden_tensors,
     normalize,
@@ -50,10 +47,11 @@ class ExtractorOutput(InfoContainer):
         self.tokens = tokens
 
 class Extractor:
-    def __init__(self, model, tokenizer):
+    def __init__(self, model, tokenizer, aligner=aligner):
         self.model = model
         self.tokenizer = tokenizer
         self.model.eval()
+        self.aligner = aligner
         
     @classmethod
     def from_pretrained(cls, model_type=bert_model):
@@ -61,6 +59,8 @@ class Extractor:
     
     # a -> b
     def __call__(self, s):
+        """Wrap `get` with a call to the token aligner to remove contractions"""
+        s = self.aligner.fix_sentence(s)
         return self.get(s)
     
     def get(self, sentence):
@@ -164,28 +164,14 @@ def sentences_to_hdf5(extractor, fname, sentences, print_every=50, groupname='em
         if ((i + 1) % print_every) == 0:
             print(i + 1, '/', N)
         
-        # b_tokens, embeds = extractor(s)
         ext_out = extractor(s)
         b_tokens, embeds, attn = ext_out.tokens, ext_out.zvec, ext_out.attention
 
-        s_tokens = spacy_tokenize(s)
-        s_meta = get_spacy_hdf5_meta(s)
-        
-        s_pos = [s[1] for s in s_meta]
-        s_dep = [s[2] for s in s_meta]
-        s_is_ent = [s[3] for s in s_meta]
-        
-        try:
-            b_pos = combine_tokens_meta(b_tokens, s_tokens, s_pos)
-        except IndexError:
-            print(i)
-            print(s)
-            raise
-            
-        b_dep = combine_tokens_meta(b_tokens, s_tokens, s_dep)
-        b_is_ent = combine_tokens_meta(b_tokens, s_tokens, s_is_ent)
-        
-        assert len(b_is_ent) == len(b_tokens)
+        s_tokens = aligner.to_spacy(s)
+
+        # BELOW IS WRONG. Not enough values to unpack
+        spacy_info = aligner.to_spacy_hdf5_by_col(s)
+        bpe_info = aligner.to_bpe_hdf5_by_col(s)
         
         idx = main_key.format(i)
         supp_idx = suppl_attn_key.format(i)
@@ -193,16 +179,18 @@ def sentences_to_hdf5(extractor, fname, sentences, print_every=50, groupname='em
         ds = grp.create_dataset(idx, data=embeds)
         ds_attn = grp.create_dataset(supp_idx, data=attn)
 
-        ds.attrs['b_tokens'] = b_tokens
-        ds.attrs['s_tokens'] = s_tokens
-        ds.attrs['s_pos'] = s_pos
-        ds.attrs['b_pos'] = b_pos
-        ds.attrs['s_dep'] = s_dep
-        ds.attrs['b_dep'] = b_dep
-        ds.attrs['b_is_ent'] = b_is_ent
-        ds.attrs['s_is_ent'] = s_is_ent
         ds.attrs['sentence'] = s
         ds.attrs['attn_ref'] = supp_idx
+
+        ds.attrs['b_tokens'] = bpe_info['token']
+        ds.attrs['b_pos'] = bpe_info['pos']
+        ds.attrs['b_dep'] = bpe_info['dep']
+        ds.attrs['b_is_ent'] = bpe_info['is_ent']
+
+        ds.attrs['s_tokens'] = spacy_info['token']
+        ds.attrs['s_pos'] = spacy_info['pos']
+        ds.attrs['s_dep'] = spacy_info['dep']
+        ds.attrs['s_is_ent'] = spacy_info['s_is_ent']
         
     return f
 
