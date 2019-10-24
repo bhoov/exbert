@@ -13,7 +13,7 @@ NHEADS = 12
 
 def parse_args():
     parser = argparse.ArgumentParser()
-    parser.add_argument("-d", "--directory", help="Path to the directory that contains the 'embeddings' and 'headContext' hdf5 files")
+    parser.add_argument("-d", "--directory", help="Path to the directory that contains the 'embeddings' and 'headContext' folders")
     
     args = parser.parse_args()
     return args
@@ -120,6 +120,8 @@ def main(basedir):
     loaded_embedding_idxs = Indexes(embedding_dir)
     q = np.random.randn(1, 768).astype(np.float32)
     D, I = loaded_embedding_idxs.search(0, q, 5)
+
+    print("\n\nShowing a test result from an embedding faiss search")
     print(embedding_ce.find2d(I))
 
     print("\n" + "=" * 50 + "\n")
@@ -133,10 +135,11 @@ def main(basedir):
     save_indexes(context_indexes, context_dir)
 
     ## Test context search:
-    print("\n\nShowing a test result from a faiss search")
     loaded_context_idxs = Indexes(context_dir)
     q = np.random.randn(1, 768).astype(np.float32)
     D, I = loaded_context_idxs.search(0, q, 5)
+
+    print("\n\nShowing a test result from a context faiss search")
     print(context_ce.find2d(I))
 
 if __name__ == "__main__":

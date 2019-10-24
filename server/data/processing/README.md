@@ -4,11 +4,11 @@ This module contains the code necessary for extracting and labeling a corpus wit
 ## Known limitations
 Please note the following:
 
-- These scripts unfortunately only works for simple input texts, as there are many cases in which BPE tokenization and spacy's built in tokenization do not align. To remedy this, contractions that would break the BPE tokenization (defined by Spacy's hard coded exceptions in `spacy.lang.en.TOKENIZER_EXCEPTIONS`) are instead decomposed into the full words the contractions represent.
-- Large corpus files require a LOT of hard drive space to store all the attentions and representations at every layer for every head. When tackling a corpus the size of the Wizard of Oz, make sure you have at least 12GB of free space.
+- There are many cases in which BPE tokenization and spacy's built in tokenization do not align. To remedy this, contractions that would break the BPE tokenization (defined by Spacy's hard coded exceptions in `spacy.lang.en.TOKENIZER_EXCEPTIONS` and `spacy.lang.tokenizer_exceptions.BASE_EXCEPTIONS`) are instead decomposed into the full words the contractions represent.
+- Large corpus files require a LOT of hard drive space to store all the attentions and representations at every layer for every head. When tackling a corpus the size of the Wizard of Oz, make sure you have at least 9GB of free space.
 
 ## Getting Started
-The raw Wizard of Oz text used to create the annotated corpus can be found [here](http://www.gutenberg.org/ebooks/55).
+The raw Wizard of Oz text used to create the annotated corpus can be found [here](http://www.gutenberg.org/ebooks/55). 
 
 ### Environment 
 Because this module depends on code written in other parts of this repo, we will need to make those files available to the PYTHONPATH. There are several ways to do this, but the easiest way is to do the following:

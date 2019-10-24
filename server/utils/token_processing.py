@@ -127,8 +127,6 @@ class TokenAligner:
         """
         bpe = self.to_bpe(s)
         spacy_meta = self.to_spacy_meta(s)
-        print("BPE: ", bpe)
-        print("SPACY META: ", spacy_meta)
         return self.bpe_from_spacy_meta(spacy_meta)
 
     def to_bpe_meta_from_tokens(self, sentence, bpe_tokens):

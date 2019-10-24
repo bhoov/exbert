@@ -2,6 +2,11 @@ import h5py
 import numpy as np
 from functools import partial
 from utils.gen_utils import map_nlist, vround
+import regex as re
+
+ZERO_BUFFER = 12 # Number of decimal places each index takes
+main_key = r"{:0" + str(ZERO_BUFFER) + r"}"
+suppl_attn_key = r"{:0" + str(ZERO_BUFFER) + r"}_attn"
 
 def zip_len_check(*iters):
     """Zip iterables with a check that they are all the same length"""
@@ -299,10 +304,12 @@ class CorpusEmbeddings:
         self.data = h5py.File(fname, 'r')
         self.embeddings = self.data['embeddings']
 
-        main_keys = list(filter(lambda x: len(x) <= 4, list(self.embeddings.keys())))
+        main_keys = list(filter(lambda x: x.isdigit(), list(self.embeddings.keys())))
         self.__len = len(main_keys)
-        self.embedding_dim = self.embeddings['0001'].shape[-1]
-        self.n_layers = self.embeddings['0001'].shape[0]
+        assert self.__len > 0, "Cannot process an empty file"
+
+        self.embedding_dim = self[0].shape[-1]
+        self.n_layers = self[0].shape[0]
         self.refmap, self.total_vectors = self._init_vector_map()
         
     def __del__(self):
@@ -346,7 +353,7 @@ class CorpusEmbeddings:
             return np.concatenate(out, axis=1)
         
         elif isinstance(idx, int):
-            key = str(idx).zfill(4)
+            key = main_key.format(idx)
             return self.embeddings[key]
         
         else:
