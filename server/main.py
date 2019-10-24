@@ -7,6 +7,7 @@ from copy import deepcopy
 
 from pytorch_pretrained_bert import BertModel, BertTokenizer
 
+import config
 from attention_details import (
     AttentionDetailsData,
     get_token_info,
@@ -37,10 +38,10 @@ class FaissLoader:
 
     def load_info(self):
         """Allow values to have default NONE, load all at once after first load of flask"""
-        self.embedding_faiss = Indexes(pf.WOZ_EMBEDDINGS)
-        self.context_faiss = ContextIndexes(pf.WOZ_CONTEXT)
-        self.embedding_corpus = AttentionCorpusEmbeddings(pf.WOZ_HDF5)
-        self.context_corpus  = AttentionCorpusEmbeddings(pf.WOZ_CONTEXT_HDF5)
+        self.embedding_faiss = Indexes(config.EMBEDDING_FAISS)
+        self.context_faiss = ContextIndexes(config.CONTEXT_FAISS)
+        self.embedding_corpus = AttentionCorpusEmbeddings(config.EMBEDDING_CORPUS)
+        self.context_corpus  = AttentionCorpusEmbeddings(config.CONTEXT_CORPUS)
 
 faiss_loader = FaissLoader()
 
