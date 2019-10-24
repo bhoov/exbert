@@ -13,7 +13,7 @@ import numpy as np
 from typing import List
 from functools import partial
 
-from utils.token_processing import aligner
+from utils.token_processing import aligner, null_filler
 from copy import deepcopy
 from utils.gen_utils import BPE_SPECIAL_TOKS, zip_dicts, combine_pos_dicts, map_nlist
 
@@ -212,20 +212,19 @@ def embeddings_to_dict(embeddings, slice_a, slice_b):
     return embeds_dict
 
 def get_token_info(sentence, bpe_tokens=None, include_spacy=False):
-
     # If None, do the tokenization as normal. Otherwise, pass in CLS and other information
-    if bpe_tokens is None:
-        bpe_tokens = aligner.to_bpe(sentence)
-
     spacy_meta = aligner.to_spacy_meta(sentence)
     spacy_tokens = [t['text'] for t in spacy_meta]
 
-    bpe_meta = aligner.bpe_from_spacy_meta(spacy_meta)
+    if bpe_tokens is None:
+        bpe_meta = aligner.to_bpe_meta(sentence)
+    else: 
+        bpe_meta = aligner.to_bpe_meta_from_tokens(sentence, bpe_tokens)
 
+    bpe_tokens = [c['text'] for c in bpe_meta]
     bpe_pos_info = [c['pos'] for c in bpe_meta]
     bpe_dep_info = [c['dep'] for c in bpe_meta]
     bpe_ent_info = [c['is_ent'] for c in bpe_meta]
-
 
     out = {
         'bpe_tokens': bpe_tokens,
@@ -263,13 +262,12 @@ def add_token_info(attention, sent_a, sent_b):
             include_spacy=False),
     }
 
+    # Get all tokens from the token_info
     all_tokens = {}
-
     for k in token_info['a'].keys():
         copied_token_a = deepcopy(token_info['a'][k])
         copied_token_a.extend(token_info['b'][k])
         all_tokens[k] = copied_token_a
-    
     token_info['all'] = all_tokens
 
     for k in attention.keys():
@@ -277,7 +275,7 @@ def add_token_info(attention, sent_a, sent_b):
         rtext = attention[k]['right']['text']
 
         if k == 'all':
-            new_left = combine_pos_dicts(attention[k]['left'], token_info[k])
+            new_left = combine_pos_dicts(attention[k]['left'], token_info[k]) # BREAKS
             new_right = combine_pos_dicts(attention[k]['right'], token_info[k])
         else:
             new_left = combine_pos_dicts(attention[k]['left'], token_info[k[0]])
@@ -294,9 +292,9 @@ def fix_dimensions(embedding_layers):
 class AttentionDetailsData:
     """Wraps model and tokenizer to format Represents data needed for attention details visualization"""
 
-    def __init__(self, model, tokenizer):
+    def __init__(self, model, aligner):
         self.model = model
-        self.tokenizer = tokenizer
+        self.aligner = aligner
         self.model.eval()
 
     @classmethod
@@ -318,15 +316,15 @@ class AttentionDetailsData:
         return self._tokens2atts(*out)
 
     def _get_inputs(self, sentence_a, sentence_b):
-        tokens_a = self.tokenizer.tokenize(sentence_a)
-        tokens_b = self.tokenizer.tokenize(sentence_b)
+        tokens_a = self.aligner.to_bpe(sentence_a)
+        tokens_b = self.aligner.to_bpe(sentence_b)
         tokens_a_delim = ['[CLS]'] + tokens_a + ['[SEP]']
         tokens_b_delim = tokens_b + ['[SEP]']
         return self._get_inputs_from_tokens(tokens_a_delim, tokens_b_delim)
 
     def _get_inputs_from_tokens(self, tokens_a, tokens_b):
         """ Assumes sentences are already tokenized and tagged with [CLS] and [SEP] """
-        token_ids = self.tokenizer.convert_tokens_to_ids(tokens_a + tokens_b)
+        token_ids = self.aligner.bpe.convert_tokens_to_ids(tokens_a + tokens_b)
         tokens_tensor = torch.tensor([token_ids])
         token_type_tensor = torch.LongTensor([[0] * len(tokens_a) + [1] * len(tokens_b)])
         return tokens_tensor, token_type_tensor, tokens_a, tokens_b

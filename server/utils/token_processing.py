@@ -6,11 +6,17 @@ import h5py
 import numpy as np
 import spacy
 from pytorch_pretrained_bert import BertTokenizer
-from .gen_utils import get_bpe, get_spacy
+from .gen_utils import get_bpe, get_spacy, BPE_SPECIAL_TOKS
 from .f import flatten_, assoc
 bert_model = "bert-base-uncased"
 
-
+null_filler = lambda text: {
+    "text": text,
+    "pos": None,
+    "dep": None,
+    "norm": None,
+    "is_ent": None
+}
 
 class TokenAligner:
     def __init__(self, bpe_pretrained_name_or_path="bert-base-uncased", spacy_name="en_core_web_sm"):
@@ -39,6 +45,12 @@ class TokenAligner:
         return tokens
     
     def to_bpe(self, s):
+        """Convert a sentence to bpe tokens"""
+        s = self.fix_sentence(s)
+        s = self.to_bpe_text(s)
+        return s
+
+    def to_bpe_text(self, s):
         """Convert a sentence to bpe tokens"""
         return self.bpe.tokenize(s)
     
@@ -104,14 +116,35 @@ class TokenAligner:
 
         return [assoc("text", b, meta_token) for b in bpe_tokens]
 
+    def bpe_from_spacy_meta(self, spacy_meta):
+        out = flatten_([self.bpe_from_meta_single(sm) for sm in spacy_meta]) 
+        return out
+
     def to_bpe_meta(self, s):
         """Convert a sentence to bpe tokens with metadata
         
         Removes all known contractions from input sentence `s`
         """
+        bpe = self.to_bpe(s)
         spacy_meta = self.to_spacy_meta(s)
-        out = flatten_([self.bpe_from_meta_single(sm) for sm in spacy_meta])
-        return out
+        print("BPE: ", bpe)
+        print("SPACY META: ", spacy_meta)
+        return self.bpe_from_spacy_meta(spacy_meta)
+
+    def to_bpe_meta_from_tokens(self, sentence, bpe_tokens):
+        """Get the normal BPE metadata, and add nulls wherever a BPE_SPECIAL_TOKEN appears"""
+        bpe_meta = self.to_bpe_meta(sentence)
+
+        new_bpe_meta = []
+        j = 0
+        for i, b in enumerate(bpe_tokens):
+            if b in BPE_SPECIAL_TOKS:
+                new_bpe_meta.append(null_filler(b))
+            else:
+                new_bpe_meta.append(bpe_meta[j])
+                j += 1
+
+        return new_bpe_meta
     
     def to_bpe_hdf5(self, s):
         """Format the metadata of a BPE tokenized setence into hdf5 format"""

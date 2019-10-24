@@ -1,25 +1,22 @@
 import argparse
+import numpy as np
+import connexion
+from flask_cors import CORS
+from flask import render_template, redirect, send_from_directory
+from copy import deepcopy
+
+from pytorch_pretrained_bert import BertModel, BertTokenizer
 
 from attention_details import (
     AttentionDetailsData,
     get_token_info,
     add_token_info,
 )
-
-from pytorch_pretrained_bert import BertModel, BertTokenizer
-
-from flask import render_template, redirect, send_from_directory
-from flask_cors import CORS
-from utils.mask_att import strip_attention
-import connexion
-import os
-import pickle
-import utils.path_fixes as pf
-import numpy as np
-
 from data.processing.create_faiss import Indexes, ContextIndexes
 from data.processing.corpus_embeddings import CorpusEmbeddings, AttentionCorpusEmbeddings
-from copy import deepcopy
+from utils.token_processing import aligner
+from utils.mask_att import strip_attention
+import utils.path_fixes as pf
 
 app = connexion.FlaskApp(__name__, static_folder='client/dist', specification_dir='.')
 flask_app = app.app
@@ -66,8 +63,7 @@ def send_static_client(path):
 #======================================================================
 bert_version = 'bert-base-uncased'
 model = BertModel.from_pretrained(bert_version)
-tokenizer = BertTokenizer.from_pretrained(bert_version)
-details_data = AttentionDetailsData(model, tokenizer)
+details_data = AttentionDetailsData(model, aligner)
 
 p_file = "_store/simple.pckl"
 
