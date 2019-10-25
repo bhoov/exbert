@@ -62,8 +62,7 @@ def send_static_client(path):
 #======================================================================
 ## INITIALIZATION OF MODEL ##
 #======================================================================
-bert_version = 'bert-base-uncased'
-model = BertModel.from_pretrained(bert_version)
+model = BertModel.from_pretrained(config.BERT_VERSION)
 details_data = AttentionDetailsData(model, aligner)
 
 p_file = "_store/simple.pckl"

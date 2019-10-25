@@ -6,9 +6,9 @@ import h5py
 import numpy as np
 import spacy
 from pytorch_pretrained_bert import BertTokenizer
+import config
 from .gen_utils import get_bpe, get_spacy, BPE_SPECIAL_TOKS
 from .f import flatten_, assoc
-bert_model = "bert-base-uncased"
 
 null_filler = lambda text: {
     "text": text,
@@ -194,4 +194,4 @@ def reshape(a):
     new_shape = a.shape[:-2] + (all_head_size,)
     return a.reshape(new_shape)
 
-aligner = TokenAligner()
+aligner = TokenAligner(bpe_pretrained_name_or_path=config.BERT_VERSION)
