@@ -66,6 +66,10 @@ export class CorpusMatManager extends VComponent<DataInterface>{
         mouseOut: "CorpusMatManager_MouseOut",
         click: "CorpusMatManager_Click",
         dblClick: "CorpusMatManager_DblClick",
+        rectMouseOver: "CorpusMatManager_RectMouseOver",
+        rectMouseOut: "CorpusMatManager_RectMouseOut",
+        rectClick: "CorpusMatManager_RectClick",
+        rectDblClick: "CorpusMatManager_RectDblClick",
     }
 
     // The d3 components that are saved to make rendering faster
@@ -206,16 +210,17 @@ export class CorpusMatManager extends VComponent<DataInterface>{
         corpusMat = corpusMat
             .data([idxOffset])
             .attr('class', `corpus-mat offset-${idxOffset}`)
+            .attr('offset', idxOffset)
             .append('svg')
             .attrs({
                 width: boxWidth,
                 height: boxHeight,
             })
             .on('mouseover', function (d, i) {
-                self.eventHandler.trigger(CorpusMatManager.events.mouseOver, { idx: d, val: self.options.toPick[0] })
+                self.eventHandler.trigger(CorpusMatManager.events.mouseOver, { idx: i, offset: d, val: self.options.toPick[0] })
             })
             .on('mouseout', (d, i) => {
-                this.eventHandler.trigger(CorpusMatManager.events.mouseOut, { idx: d })
+                this.eventHandler.trigger(CorpusMatManager.events.mouseOut, { idx: i, offset: d })
             })
 
         this.addRowGroup(corpusMat)
@@ -244,6 +249,7 @@ export class CorpusMatManager extends VComponent<DataInterface>{
             .attr("class", (d, i) => {
                 return `${self.rowCssName} ${self.rowCssName}-${i}`
             })
+            .attr("row-num", (d,i) => i)
             .attr("height", d => d.height)
             .attr("transform", (d, i) => {
                 const out = SVG.translate({
@@ -279,13 +285,20 @@ export class CorpusMatManager extends VComponent<DataInterface>{
         const getBaseX = () => (<HTMLElement>self.base.node()).getBoundingClientRect().left
         const getBaseY = () => (<HTMLElement>self.base.node()).getBoundingClientRect().top
 
-        g.on('mouseover', function () {
+        g.on('mouseover', function (d, i) {
                 self.divHover.style('visibility', 'visible')
+                // Get offset
+                const col = d3.select(this.parentNode.parentNode) // Column
+                const offset = +col.attr('offset')
+                self.eventHandler.trigger(CorpusMatManager.events.rectMouseOver, {idx: i, offset: offset})
             })
-            .on('mouseout', function () {
+            .on('mouseout', function (d, i) {
                 self.divHover.style('visibility', 'hidden')
+                const col = d3.select(this.parentNode.parentNode) // Column
+                const offset = +col.attr('offset')
+                self.eventHandler.trigger(CorpusMatManager.events.rectMouseOut, {idx: i, offset: offset})
             })
-            .on('mousemove', function(d) {
+            .on('mousemove', function(d, i) {
                 const mouse = d3.mouse(self.base.node())
                 const divOffset = [3, 3]
                 const left = mouse[0] + getBaseX() - (op.divHover.width + divOffset[0])

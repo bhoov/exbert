@@ -3,23 +3,23 @@ import * as _ from "lodash"
 import * as R from 'ramda'
 import * as tp from '../etc/types';
 import '../etc/xd3'
-import {BertAPI} from '../api/bertApi'
-import {UIConfig} from '../uiConfig'
-import {TextTokens, LeftTextToken, RightTextToken} from './TextToken'
-import {AttentionHeadBox, getAttentionInfo} from './AttentionHeadBox'
-import {AttentionGraph} from './AttentionConnector'
-import {CorpusInspector} from './CorpusInspector'
-import {TokenWrapper, sideToLetter} from '../data/TokenWrapper'
-import {AttentionWrapper, makeFromMetaResponse} from '../data/AttentionCapsule'
-import {SimpleEventHandler} from '../etc/SimpleEventHandler'
-import {CorpusMatManager} from '../vis/CorpusMatManager'
-import {CorpusHistogram} from '../vis/CorpusHistogram'
-import {FaissSearchResultWrapper} from '../data/FaissSearchWrapper'
-import {D3Sel, Sel} from '../etc/Util';
-import {from, fromEvent, interval} from 'rxjs'
-import {switchMap, map, tap} from 'rxjs/operators'
-import {BaseType} from "d3";
-import {SimpleMeta} from "../etc/types";
+import { BertAPI } from '../api/bertApi'
+import { UIConfig } from '../uiConfig'
+import { TextTokens, LeftTextToken, RightTextToken } from './TextToken'
+import { AttentionHeadBox, getAttentionInfo } from './AttentionHeadBox'
+import { AttentionGraph } from './AttentionConnector'
+import { CorpusInspector } from './CorpusInspector'
+import { TokenWrapper, sideToLetter } from '../data/TokenWrapper'
+import { AttentionWrapper, makeFromMetaResponse } from '../data/AttentionCapsule'
+import { SimpleEventHandler } from '../etc/SimpleEventHandler'
+import { CorpusMatManager } from '../vis/CorpusMatManager'
+import { CorpusHistogram } from '../vis/CorpusHistogram'
+import { FaissSearchResultWrapper } from '../data/FaissSearchWrapper'
+import { D3Sel, Sel } from '../etc/Util';
+import { from, fromEvent, interval } from 'rxjs'
+import { switchMap, map, tap } from 'rxjs/operators'
+import { BaseType } from "d3";
+import { SimpleMeta } from "../etc/types";
 import ChangeEvent = JQuery.ChangeEvent;
 
 
@@ -173,15 +173,15 @@ export class MainGraphic {
         this.eventHandler = new SimpleEventHandler(<Element>this.sels.body.node());
 
         this.vizs = {
-            leftHeads: new AttentionHeadBox(this.sels.atnHeads.left, this.eventHandler, {side: "left"}),
-            rightHeads: new AttentionHeadBox(this.sels.atnHeads.right, this.eventHandler, {side: "right"}),
+            leftHeads: new AttentionHeadBox(this.sels.atnHeads.left, this.eventHandler, { side: "left" }),
+            rightHeads: new AttentionHeadBox(this.sels.atnHeads.right, this.eventHandler, { side: "right" }),
             tokens: {
                 left: new LeftTextToken(this.sels.tokens.left, this.eventHandler),
                 right: new RightTextToken(this.sels.tokens.right, this.eventHandler),
             },
             attentionSvg: new AttentionGraph(this.sels.atnDisplay, this.eventHandler),
             corpusInspector: new CorpusInspector(this.sels.corpusInspector, this.eventHandler),
-            corpusMatManager: new CorpusMatManager(this.sels.corpusMatManager, this.eventHandler, {idxs: this.uiConf.offsetIdxs()}),
+            corpusMatManager: new CorpusMatManager(this.sels.corpusMatManager, this.eventHandler, { idxs: this.uiConf.offsetIdxs() }),
             histograms: {
                 matchedWord: new CorpusHistogram(this.sels.histograms.matchedWord, this.eventHandler),
                 maxAtt: new CorpusHistogram(this.sels.histograms.maxAtt, this.eventHandler),
@@ -262,15 +262,30 @@ export class MainGraphic {
             this.renderSvg();
         })
 
-        this.eventHandler.bind(CorpusMatManager.events.mouseOver, (e: { val: "pos" | "dep" | "is_ent", idx: number }) => {
-            const selector = `.inspector-cell[index-offset='${e.idx}']`
-            d3.selectAll(selector).classed("hovered-col", true)
+        this.eventHandler.bind(CorpusMatManager.events.mouseOver, (e: { val: "pos" | "dep" | "is_ent", offset: number }) => {
+            // Uncomment the below if you want to modify the whole column
+            // const selector = `.inspector-cell[index-offset='${e.offset}']`
+            // d3.selectAll(selector).classed("hovered-col", true)
         })
 
-        this.eventHandler.bind(CorpusMatManager.events.mouseOut, (e: { idx: number }) => {
-            const selector = `.inspector-cell[index-offset='${e.idx}']`
-            d3.selectAll(selector).classed("hovered-col", false)
+        this.eventHandler.bind(CorpusMatManager.events.mouseOut, (e: { offset: number, idx: number }) => {
+            // Uncomment the below if you want to modify the whole column
+            // const selector = `.inspector-cell[index-offset='${e.offset}']`
+            // d3.selectAll(selector).classed("hovered-col", false)
         })
+
+        this.eventHandler.bind(CorpusMatManager.events.rectMouseOver, (e: { offset: number, idx: number }) => {
+            const row = d3.select(`.inspector-row[rownum='${e.idx}']`)
+            const word = row.select(`.inspector-cell[index-offset='${e.offset}']`)
+            word.classed("hovered-col", true)
+        })
+
+        this.eventHandler.bind(CorpusMatManager.events.rectMouseOut, (e: { offset: number, idx: number }) => {
+            const row = d3.select(`.inspector-row[rownum='${e.idx}']`)
+            const word = row.select(`.inspector-cell[index-offset='${e.offset}']`)
+            word.classed("hovered-col", false)
+        })
+
     }
 
     private _toggleTokenSel() {
@@ -611,7 +626,7 @@ export class MainGraphic {
             .attr("name", "layerbox")
             // .attr("head", d => d)
             .attr("id", (d, i) => "layerCheckbox" + i)
-            // .text((d, i) => d + " ")
+        // .text((d, i) => d + " ")
 
         fromEvent(checkboxes.nodes(), 'change').pipe(
             /// TODO: CHECK !!!
