@@ -121,7 +121,7 @@ export class MainGraphic {
         });
     }
 
-    private _init(attention: tp.AttentionMetaResponse) {
+    private _init(attention: tp.AttentionResponse) {
         this.attCapsule = makeFromMetaResponse(attention, this.uiConf.hideClsSep())
         this.tokCapsule = new TokenWrapper(attention);
 
@@ -436,7 +436,7 @@ export class MainGraphic {
             if (sentence_a.length) {
                 this.sels.body.style("cursor", "progress")
                 this.api.getMetaAttentions(sentence_a, this.uiConf.layer())
-                    .then((r: tp.AttentionMetaResponse) => {
+                    .then((r: tp.AttentionResponse) => {
                         this.uiConf.sentence(sentence_a)
                         this.uiConf.rmToken();
                         this.attCapsule.updateFromNormal(r, this.uiConf.hideClsSep());
@@ -612,21 +612,6 @@ export class MainGraphic {
             // .attr("head", d => d)
             .attr("id", (d, i) => "layerCheckbox" + i)
             // .text((d, i) => d + " ")
-
-        // d3.selectAll('.x')
-        //     .on('click', function () {
-        //         const me = this;
-        //         d3.selectAll('.x').classed('selected',
-        //             function () {
-        //                 return this == me;
-        //             })
-        //     })
-        //     .on('click', d => {
-        //         const me = this;
-        //         d3.selectAll('.x').classed('selected',
-        //             dd => dd == d)
-        //     })
-
 
         fromEvent(checkboxes.nodes(), 'change').pipe(
             /// TODO: CHECK !!!

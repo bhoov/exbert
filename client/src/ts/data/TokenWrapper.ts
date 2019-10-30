@@ -5,7 +5,6 @@ import * as tp from '../etc/types'
 /**
  * The original tokens, and the indexes that need to be masked
  */
-
  const emptyFullResponse: tp.FullSingleTokenInfo[] = [{
      text: '[SEP]',
      embeddings: [],
@@ -79,11 +78,11 @@ export class TokenDisplay  {
 export class TokenWrapper {
     a: TokenDisplay
 
-    constructor(r:tp.AttentionMetaResponse){
+    constructor(r:tp.AttentionResponse){
         this.updateFromResponse(r);
     }
 
-    updateFromResponse(r:tp.AttentionMetaResponse) {
+    updateFromResponse(r:tp.AttentionResponse) {
         const tokensA = r.aa.left;
         this.updateFromComponents(tokensA, [])
     }

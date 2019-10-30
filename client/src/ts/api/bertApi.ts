@@ -64,7 +64,7 @@ export class BertAPI {
         }
     }
 
-    getMetaAttentions(sentenceA: string, layer: number, sentenceB = "", hashObj: {} | null = null): Promise<tp.AttentionMetaResponse> {
+    getMetaAttentions(sentenceA: string, layer: number, sentenceB = "", hashObj: {} | null = null): Promise<tp.AttentionResponse> {
         const toSend: SentenceInfo = {
             sentenceA: sentenceA,
             sentenceB: sentenceB,

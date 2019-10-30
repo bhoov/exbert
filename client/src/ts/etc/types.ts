@@ -12,19 +12,13 @@ type AbstractAttentionResponse<T> = {
 }
 
 export type AttentionMetaMaskedResponse = AbstractAttentionResponse<AttentionMetaMaskedResult>
-export type AttentionMetaResponse = AbstractAttentionResponse<AttentionMetaResult>
-export type AttentionResponse = AbstractAttentionResponse<AttentionResult>
+export type AttentionResponse = AbstractAttentionResponse<AttentionMetaResult>
 
 /**
  * ATTENTION RESULTS FROM BACKEND
  *
  * These are the results that are encased in the 'aa' and 'ab' keys returned
  */
-
-    // Helpers
-interface SideParams {
-    text: string[],
-}
 
 interface SimpleTokensInfo {
     text: string[],
@@ -49,7 +43,6 @@ type AbstractAttentionResult<T> = {
     right: T,
 }
 
-export type AttentionResult = AbstractAttentionResult<SideParams>
 export type AttentionMetaResult = AbstractAttentionResult<FullSingleTokenInfo[]>
 export type AttentionMetaMaskedResult = AbstractAttentionResult<SimpleTokensInfo>
 

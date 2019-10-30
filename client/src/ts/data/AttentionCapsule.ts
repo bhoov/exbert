@@ -12,7 +12,7 @@ import * as tf from '@tensorflow/tfjs'
 
 const bpeTokens = ["[CLS]", "[SEP]"]
 
-function wrapAttentionResponse(r:tp.AttentionMetaResponse, key:tp.SentenceOptions) {
+function wrapAttentionResponse(r:tp.AttentionResponse, key:tp.SentenceOptions) {
     const currPair = r[key]
     const left = <tp.FullSingleTokenInfo[]>currPair.left
     const right = <tp.FullSingleTokenInfo[]>currPair.right
@@ -28,7 +28,7 @@ function updateFromMask(r:tp.AttentionMetaMaskedResponse, key) {
     return new AttentionWrapper(r[key].att, [leftZero, rightZero]);
 }
 
-export function makeFromMetaResponse(r:tp.AttentionMetaResponse, isZeroed){
+export function makeFromMetaResponse(r:tp.AttentionResponse, isZeroed){
     const key = 'aa' // Change this if backend response changes to be simpler
     const currPair = r[key]
     const left = <tp.FullSingleTokenInfo[]>currPair.left
@@ -68,7 +68,7 @@ export class AttentionWrapper {
         this.init(currPair.att, [leftZero, rightZero], isZeroed)
     }
 
-    updateFromNormal(r:tp.AttentionMetaResponse, isZeroed){
+    updateFromNormal(r:tp.AttentionResponse, isZeroed){
         const key = 'aa' // Change this if backend response changes to be simpler
         const currPair = r[key]
         const left = <tp.FullSingleTokenInfo[]>currPair.left
