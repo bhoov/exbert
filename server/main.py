@@ -143,37 +143,32 @@ def get_attention_and_meta(**request):
 
     return minimize_aa(keep_aa(attentions_and_meta), layer, in_side_select_layer)
 
-def update_masked_meta_attention(**request):
+def update_masked_attention(**request):
     """
     Return attention information from tokens and mask indices.
 
     Object: {"a" : {"sentence":__, "mask_inds"}, "b" : {...}}
     """
     payload = request['payload']
-    a = payload['tokensA'] # NAME OF VARIABLE IS IMPORTANT. See below.
-    b = payload['tokensB'] # NAME OF VARIABLE IS IMPORTANT. See below.
+    a = payload['tokensA'] # NAME OF VARIABLE IS IMPORTANT. See eval statement below.
+    b = payload['tokensB'] # NAME OF VARIABLE IS IMPORTANT. See eval statement below.
+    sent_a = payload['sentenceA']
+    sent_b = payload['sentenceB']
     mask_a = payload['maskA']
     mask_b = payload['maskB']
     layer = int(payload['layer'])
 
     MASK = '[MASK]'
-    tokens_a = [t if i not in mask_a else MASK for (i, t) in enumerate(a)]
-    tokens_b = [t if i not in mask_b else MASK for (i, t) in enumerate(b)]
-    print("tokens_a: ", tokens_a)
-    print("tokens_b: ", tokens_b)
+    mask_tokens = lambda toks, maskinds: [t if i not in maskinds else MASK for (i, t) in enumerate(toks)]
+
+    tokens_a = mask_tokens(a, mask_a)
+    tokens_b = mask_tokens(b, mask_b)
 
     deets = details_data.get_data_from_tokens(tokens_a, tokens_b)
-    attentions = deets.to_json()
+    attentions_and_meta = add_token_info(deets.to_json(), sent_a, sent_b)
 
-    print(f"a: {a}")
-    print(f"b: {b}")
+    out = minimize_aa(keep_aa(attentions_and_meta), layer, in_side_select_layer)
 
-    for k in attentions:
-        if k != 'all':
-            attentions[k]['left']['text'] = eval(k[0]) # Calls the 'a' or 'b' from above
-            attentions[k]['right']['text'] = eval(k[1])
-
-    out = minimize_aa(keep_aa(attentions), layer, masking_reformat)
     return out
 
 def woz_nearest_embedding_search(**request):

@@ -101,7 +101,7 @@ export class CorpusMatManager extends VComponent<DataInterface>{
         this.options.idxs = val
     }
 
-    // Use this to create static dom elements
+    // Create static dom elements
     _init() {
         const self = this;
         this.corpusMats = this.base.selectAll('.corpus-mat')

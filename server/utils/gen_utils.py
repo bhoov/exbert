@@ -72,10 +72,8 @@ def combine_pos_dicts(attention_info, meta_info):
     """Zip the arrays associated with the keys in two dictionaries"""
     text = attention_info['text']
 
-    new_meta_info = meta_info
-
-    check_zippable(attention_info, new_meta_info)
-    new_dict = zip_dicts(new_meta_info, attention_info)
+    check_zippable(attention_info, meta_info)
+    new_dict = zip_dicts(meta_info, attention_info)
     return new_dict
 
 def vround(ndigits):

@@ -85,11 +85,23 @@ export class BertAPI {
         return checkDemoAPI(toSend, url)
     }
 
-    updateMaskedMetaAttentions(a: TokenDisplay, layer: number, b: TokenDisplay = emptyTokenDisplay, hashObj: {} | null = null): Promise<tp.AttentionMetaMaskedResponse> {
-
+    /**
+     * Update the display based on the information that was already parsed from the passed sentence.
+     * 
+     * @param a The displayed tokens in the columns 
+     * @param sentenceA The original sentence that led to the tokenized information in `a`
+     * @param layer Which layer to search at
+     * @param b Because exBERT only displays a single sentence of tokens, this defaults to an emptyTokenDisplay. DO NOT CHANGE
+     * @param sentenceB The original sentence that led to the tokenized information in `b`. Should remain an empty string.
+     * @param hashObj If not null, store the information of the responses into the passed object. Used for creating demos.
+     */
+    updateMaskedAttentions(a: TokenDisplay, sentenceA: string, layer: number, b: TokenDisplay = emptyTokenDisplay, sentenceB = "", hashObj: {} | null = null): Promise<tp.AttentionResponse> {
         const toSend = {
             tokensA: R.map(R.prop('text'), a.tokenData),
             tokensB: R.map(R.prop('text'), b.tokenData),
+
+            sentenceA: sentenceA,
+            sentenceB: sentenceB,
 
             // Empty masks need to be sent as a number, unfortunately. Choosing -1 for this
             maskA: a.maskInds.length ? a.maskInds : [-1],
@@ -97,11 +109,12 @@ export class BertAPI {
             layer: layer,
         }
 
-        const url = makeUrl(this.baseURL + '/update-meta-mask');
+        const url = makeUrl(this.baseURL + '/update-mask');
         const payload = toPayload(toSend)
 
-        // Add hash and value to hashObj
+        
         if (hashObj != null) {
+            // Add hash and value to hashObj for demo purposes
             const key = hash.sha1(toSend)
             d3.json(url, payload).then(r => {
                 hashObj[key] = r;

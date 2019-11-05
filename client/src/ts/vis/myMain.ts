@@ -108,9 +108,10 @@ export class MainGraphic {
 
             if (this.uiConf.maskInds().length > 0) {
                 this.tokCapsule.a.maskInds = this.uiConf.maskInds()
-                this.api.updateMaskedMetaAttentions(this.tokCapsule.a, this.uiConf.layer()).then(r => {
-                    this.attCapsule.updateFromMasking(r, this.uiConf.hideClsSep()); // Suspicious...
-                    this.tokCapsule.updateEmbeddingsFromMasking(r)
+
+                this.api.updateMaskedAttentions(this.tokCapsule.a, this.uiConf.sentence(), this.uiConf.layer()).then(r => {
+                    this.attCapsule.updateFromNormal(r, this.uiConf.hideClsSep());
+                    this.tokCapsule.updateEmbeddings(r)
                     this.update()
                     postInit()
                 })
@@ -198,10 +199,10 @@ export class MainGraphic {
             const letter = sideToLetter(e.side, this.uiConf.attType)
             this.tokCapsule[letter].toggle(e.ind)
             this.sels.body.style("cursor", "progress")
-            this.api.updateMaskedMetaAttentions(this.tokCapsule.a, this.uiConf.layer()).then(
-                (r: tp.AttentionMetaMaskedResponse) => {
-                    this.attCapsule.updateFromMasking(r, this.uiConf.hideClsSep());
-                    this.tokCapsule.updateEmbeddingsFromMasking(r)
+
+            this.api.updateMaskedAttentions(this.tokCapsule.a, this.uiConf.sentence(), this.uiConf.layer()).then( (r: tp.AttentionResponse) => {
+                    this.attCapsule.updateFromNormal(r, this.uiConf.hideClsSep());
+                    this.tokCapsule.updateEmbeddings(r);
 
                     this.uiConf.maskInds(this.tokCapsule.a.maskInds)
 
@@ -629,7 +630,6 @@ export class MainGraphic {
         // .text((d, i) => d + " ")
 
         fromEvent(checkboxes.nodes(), 'change').pipe(
-            /// TODO: CHECK !!!
             tap((e: Event) => {
                 const myData = d3.select(<BaseType>e.target).datum();
                 console.log(myData, "--- myData");
@@ -643,12 +643,11 @@ export class MainGraphic {
                 self.uiConf.layer(v);
                 self.sels.body.style("cursor", "progress");
             }),
-            switchMap((v) => from(self.api.updateMaskedMetaAttentions(self.tokCapsule.a, v)))
+            switchMap((v) => from(self.api.updateMaskedAttentions(self.tokCapsule.a, self.uiConf.sentence(), v))) // USE THIS
         ).subscribe({
-            next: (r: tp.AttentionMetaMaskedResponse) => {
-                self.attCapsule.updateFromMasking(r, self.uiConf.hideClsSep())
-                self.tokCapsule.updateEmbeddingsFromMasking(r)
-
+            next: (r: tp.AttentionResponse) => {
+                this.attCapsule.updateFromNormal(r, this.uiConf.hideClsSep());
+                self.tokCapsule.updateEmbeddings(r);
                 self.uiConf.maskInds(self.tokCapsule.a.maskInds)
                 self.update();
                 self.sels.body.style("cursor", "default")

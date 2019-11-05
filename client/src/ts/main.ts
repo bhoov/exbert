@@ -38,14 +38,14 @@ function createDemos(sentence, maskInd: number, outDictPath) {
             const tokCapsule = new TokenWrapper(r0);
 
             // Unmasked response:
-            api.updateMaskedMetaAttentions(tokCapsule.a, L, emptyTokenDisplay, contentHash).then(r1 => {
+            api.updateMaskedAttentions(tokCapsule.a, sentence, L, emptyTokenDisplay, "", contentHash).then(r1 => {
                 // Masked word and searching responses:
                 tokCapsule.a.mask(maskInd)
-                api.updateMaskedMetaAttentions(tokCapsule.a, L, emptyTokenDisplay, contentHash).then(r2 => {
+                api.updateMaskedAttentions(tokCapsule.a, sentence, L, emptyTokenDisplay, "", contentHash).then(r2 => {
                     // Get search results by embedding
                     const embedding = r2['aa']['left']['embeddings'][maskInd]
                     api.getNearestWozEmbeddings(embedding, L, _.range(12), 50, contentHash).then(x => {
-                })
+                    })
 
                     // Get search results by context
                     const context = r2['aa']['left']['contexts'][maskInd]
@@ -59,10 +59,20 @@ function createDemos(sentence, maskInd: number, outDictPath) {
     })
 }
 
+/**
+ * 
+ * Observe how the demo creation process works.
+ * 
+ * If desired to mask multiple words in the input for demo purposes, try looping over the mask inds and masking each one individually
+ * 
+ * @param sentence The demo sentence
+ * @param maskInd Desired index to mask (can currently only accept a single mask index)
+ * @param outDictPath 
+ */
 function inspectDemos(sentence, maskInd: number, outDictPath) {
     const api = new BertAPI()
 
-    const contentHash = {}          // Map hash -> contents
+    const contentHash = {}
 
     // Get the base return for all page initializations
     _.range(1).forEach(L => {
@@ -70,14 +80,14 @@ function inspectDemos(sentence, maskInd: number, outDictPath) {
             const tokCapsule = new TokenWrapper(r0);
 
             // Unmasked response:
-            api.updateMaskedMetaAttentions(tokCapsule.a, L, emptyTokenDisplay).then(r1 => {
+            api.updateMaskedAttentions(tokCapsule.a, sentence, L, emptyTokenDisplay, "").then(r1 => {
                 // Masked word and searching responses:
                 tokCapsule.a.mask(maskInd)
-                api.updateMaskedMetaAttentions(tokCapsule.a, L, emptyTokenDisplay).then(r2 => {
+                api.updateMaskedAttentions(tokCapsule.a, sentence, L, emptyTokenDisplay, "").then(r2 => {
                     // Get search results by embedding
                     const embedding = r2['aa']['left']['embeddings'][maskInd]
                     api.getNearestWozEmbeddings(embedding, L, _.range(12), 50, contentHash).then(x => {
-                })
+                    })
 
                     // Get search results by context
                     const context = r2['aa']['left']['contexts'][maskInd]

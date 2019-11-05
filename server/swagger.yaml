@@ -37,10 +37,10 @@ paths:
         200:
           description: Returns attentions, embeddings, and metadata
 
-  /update-meta-mask:
+  /update-mask:
     post:
       tags: [All]
-      operationId: main.update_masked_meta_attention
+      operationId: main.update_masked_attention
       summary: Get the masked attention information of tokens given indices to mask
       parameters:
         - name: payload

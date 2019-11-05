@@ -17,7 +17,7 @@ from utils.token_processing import aligner, null_filler
 from copy import deepcopy
 from utils.gen_utils import BPE_SPECIAL_TOKS, zip_dicts, combine_pos_dicts, map_nlist
 
-def roundReturnValue(attentions, ndigits=5):
+def round_return_value(attentions, ndigits=5):
     """Rounding must happen right before it's passed back to the frontend because there is a little numerical error that's introduced converting back to lists
     
     attentions: {
@@ -201,7 +201,7 @@ class FormattedAttention:
                     attentions[k]['left']['contexts'] = context_dict[k[0]][0]
                     attentions[k]['right']['contexts'] = context_dict[k[1]][0]
 
-        return roundReturnValue(attentions)
+        return round_return_value(attentions)
 
 def embeddings_to_dict(embeddings, slice_a, slice_b):
     embeds_dict = defaultdict(list)

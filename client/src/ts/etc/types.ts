@@ -1,6 +1,3 @@
-import * as tf from '@tensorflow/tfjs'
-import {AttentionWrapper} from '../data/AttentionCapsule'
-
 /**
  * ATTENTION RESPONSES FROM BACKEND
  *
@@ -11,7 +8,6 @@ type AbstractAttentionResponse<T> = {
     aa: T
 }
 
-export type AttentionMetaMaskedResponse = AbstractAttentionResponse<AttentionMetaMaskedResult>
 export type AttentionResponse = AbstractAttentionResponse<AttentionMetaResult>
 
 /**
@@ -19,12 +15,6 @@ export type AttentionResponse = AbstractAttentionResponse<AttentionMetaResult>
  *
  * These are the results that are encased in the 'aa' and 'ab' keys returned
  */
-
-interface SimpleTokensInfo {
-    text: string[],
-    embeddings: number[][],
-    contexts: number[][],
-}
 
 export type FullSingleTokenInfo = {
     text: string,
@@ -44,7 +34,6 @@ type AbstractAttentionResult<T> = {
 }
 
 export type AttentionMetaResult = AbstractAttentionResult<FullSingleTokenInfo[]>
-export type AttentionMetaMaskedResult = AbstractAttentionResult<SimpleTokensInfo>
 
 /**
  * SEARCH RESULT TYPES

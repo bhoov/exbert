@@ -11,22 +11,7 @@ import * as tf from '@tensorflow/tfjs'
  */
 
 const bpeTokens = ["[CLS]", "[SEP]"]
-
-function wrapAttentionResponse(r:tp.AttentionResponse, key:tp.SentenceOptions) {
-    const currPair = r[key]
-    const left = <tp.FullSingleTokenInfo[]>currPair.left
-    const right = <tp.FullSingleTokenInfo[]>currPair.right
-    const leftZero = x_.findAllIndexes(left.map(t => t.text), (a) => _.includes(bpeTokens, a))
-    const rightZero = x_.findAllIndexes(right.map(t => t.text), (a) => _.includes(bpeTokens, a))
-    return new AttentionWrapper(r[key].att, [leftZero, rightZero]);
-}
-
-function updateFromMask(r:tp.AttentionMetaMaskedResponse, key) {
-    const currPair = r[key]
-    const leftZero = x_.findAllIndexes(currPair.left.text, (a) => _.includes(bpeTokens, a))
-    const rightZero = x_.findAllIndexes(currPair.right.text, (a) => _.includes(bpeTokens, a))
-    return new AttentionWrapper(r[key].att, [leftZero, rightZero]);
-}
+const findBadIndexes = (x: tp.FullSingleTokenInfo[]) => x_.findAllIndexes(x.map(t => t.text), (a) => _.includes(bpeTokens, a))
 
 export function makeFromMetaResponse(r:tp.AttentionResponse, isZeroed){
     const key = 'aa' // Change this if backend response changes to be simpler
@@ -60,21 +45,14 @@ export class AttentionWrapper {
         this.badToks = badToks;
     }
 
-    updateFromMasking(r:tp.AttentionMetaMaskedResponse, isZeroed){
-        const key = 'aa' // Change this if backend response changes to be simpler
-        const currPair = r[key]
-        const leftZero = x_.findAllIndexes(currPair.left.text, (a) => _.includes(bpeTokens, a))
-        const rightZero = x_.findAllIndexes(currPair.right.text, (a) => _.includes(bpeTokens, a))
-        this.init(currPair.att, [leftZero, rightZero], isZeroed)
-    }
-
     updateFromNormal(r:tp.AttentionResponse, isZeroed){
         const key = 'aa' // Change this if backend response changes to be simpler
         const currPair = r[key]
         const left = <tp.FullSingleTokenInfo[]>currPair.left
         const right = <tp.FullSingleTokenInfo[]>currPair.right
-        const leftZero = x_.findAllIndexes(left.map(t => t.text), (a) => _.includes(bpeTokens, a))
-        const rightZero = x_.findAllIndexes(right.map(t => t.text), (a) => _.includes(bpeTokens, a))
+
+        const leftZero = findBadIndexes(left)
+        const rightZero = findBadIndexes(right)
         this.init(currPair.att, [leftZero, rightZero], isZeroed)
     }
 

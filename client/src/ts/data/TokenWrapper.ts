@@ -1,6 +1,7 @@
 import * as x_ from '../etc/_Tools'
 import * as _ from 'lodash'
 import * as tp from '../etc/types'
+import * as R from 'ramda'
 
 /**
  * The original tokens, and the indexes that need to be masked
@@ -91,13 +92,16 @@ export class TokenWrapper {
         this.a = new TokenDisplay(a, maskA)
     }
 
-    updateEmbeddingsFromMasking(r:tp.AttentionMetaMaskedResponse) {
-        const tokensA = r.aa.left
+    updateEmbeddings(r: tp.AttentionResponse) {
+        const newTokens = r.aa.left
 
-        this.a.tokenData.forEach((d, i) => {
-            d.embeddings = tokensA.embeddings[i]
-            d.contexts = tokensA.contexts[i]
-    })
+        const pairs = R.zip(this.a.tokenData, newTokens)
+
+        pairs.forEach((d, i) => {
+            d[0].embeddings = d[1].embeddings
+            d[0].contexts = d[1].contexts
+        })
+
     }
 
     /**
