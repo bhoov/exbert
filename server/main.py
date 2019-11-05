@@ -3,16 +3,15 @@ import numpy as np
 import connexion
 from flask_cors import CORS
 from flask import render_template, redirect, send_from_directory
-from copy import deepcopy
+
 
 from pytorch_pretrained_bert import BertModel, BertTokenizer
 
 import config
-from attention_details import (
-    AttentionDetailsData,
-    get_token_info,
-    add_token_info,
-)
+
+from attention_formatter import add_token_info
+
+from attention_details import AttentionDetailsData
 from data.processing.create_faiss import Indexes, ContextIndexes
 from data.processing.corpus_embeddings import CorpusEmbeddings, AttentionCorpusEmbeddings
 from utils.token_processing import aligner
@@ -73,20 +72,8 @@ def keep_aa(attentions):
     out = {'aa': aa}
     return out
 
-def masking_reformat(st, layer):
-    """
-    'st' = SimpleTokensInfo
-    """
-    format_matrix = lambda mat: np.array(mat)[:,layer,:].tolist()
-    out = {}
-    out['text'] = st['text']
-    out['embeddings'] = format_matrix(st['embeddings'])
-    out['contexts'] = format_matrix(st['contexts'])
-
-    return out
-
 def in_side_select_layer(fsti, layer):
-    """
+    """ Select only the layer of interest from the return object
 
     fst = "FullSingleTokenInfo[]"
     """

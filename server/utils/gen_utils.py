@@ -86,6 +86,7 @@ def roundTo(arr, ndigits):
     return f(arr)
     
 def map_nlist(f, nlist):
+    """Map a function across an arbitrarily nested list"""
     new_list=[]
     for i in range(len(nlist)):
         if isinstance(nlist[i],list):

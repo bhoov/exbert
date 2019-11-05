@@ -62,3 +62,6 @@ notebooks/*.ipynb
 
 # Demo
 client/src/demo
+
+# Mypy static checking
+.mypy_cache

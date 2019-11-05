@@ -112,8 +112,8 @@ function replTest() {
 }
 
 window.onload = () => {
-    // doMySvg();
+    doMySvg();
     // replTest();
-    createDemos("Chicken tastes absolutely delicious if you know what you're doing", 4, "")
+    // createDemos("Chicken tastes absolutely delicious if you know what you're doing", 4, "")
     console.log("Done loading window");
 }
