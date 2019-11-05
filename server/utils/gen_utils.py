@@ -68,14 +68,6 @@ def zip_dicts(dict_a, dict_b):
 
     return out
 
-def combine_pos_dicts(attention_info, meta_info):
-    """Zip the arrays associated with the keys in two dictionaries"""
-    text = attention_info['text']
-
-    check_zippable(attention_info, meta_info)
-    new_dict = zip_dicts(meta_info, attention_info)
-    return new_dict
-
 def vround(ndigits):
     """Vectorized version of "round" that can be used on numpy arrays. Returns a function that can be used to round digits in a response"""
     return np.vectorize(partial(round, ndigits=ndigits))
