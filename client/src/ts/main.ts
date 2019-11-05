@@ -43,12 +43,12 @@ function createDemos(sentence, maskInd: number, outDictPath) {
                 tokCapsule.a.mask(maskInd)
                 api.updateMaskedAttentions(tokCapsule.a, sentence, L, emptyTokenDisplay, "", contentHash).then(r2 => {
                     // Get search results by embedding
-                    const embedding = r2['aa']['left']['embeddings'][maskInd]
+                    const embedding = r2['aa']['left'][maskInd].embeddings
                     api.getNearestWozEmbeddings(embedding, L, _.range(12), 50, contentHash).then(x => {
                     })
 
                     // Get search results by context
-                    const context = r2['aa']['left']['contexts'][maskInd]
+                    const context = r2['aa']['left'][maskInd].contexts
                     api.getNearestWozContexts(context, L, _.range(12), 50, contentHash).then(x => {
                         console.log(Object.keys(contentHash).length);
                         console.log(contentHash);
@@ -84,16 +84,15 @@ function inspectDemos(sentence, maskInd: number, outDictPath) {
                 // Masked word and searching responses:
                 tokCapsule.a.mask(maskInd)
                 api.updateMaskedAttentions(tokCapsule.a, sentence, L, emptyTokenDisplay, "").then(r2 => {
+                    console.log(r2);
                     // Get search results by embedding
-                    const embedding = r2['aa']['left']['embeddings'][maskInd]
+                    const embedding = r2['aa']['left'][maskInd].embeddings
                     api.getNearestWozEmbeddings(embedding, L, _.range(12), 50, contentHash).then(x => {
                     })
 
                     // Get search results by context
-                    const context = r2['aa']['left']['contexts'][maskInd]
+                    const context = r2['aa']['left'][maskInd].contexts
                     api.getNearestWozContexts(context, L, _.range(12), 50).then(x => {
-                        console.log(Object.keys(contentHash).length);
-                        console.log(contentHash);
                     })
                 })
             })
@@ -113,8 +112,8 @@ function replTest() {
 }
 
 window.onload = () => {
-    doMySvg();
+    // doMySvg();
     // replTest();
-    // createDemos("The girl ran to a local pub to escape the din of her city.", 9, "")
+    createDemos("Chicken tastes absolutely delicious if you know what you're doing", 4, "")
     console.log("Done loading window");
 }
