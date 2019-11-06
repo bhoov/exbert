@@ -14,8 +14,8 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 #
-# Changes made by Jesse Vig on 2/23/19:
-# - Return attention weights
+# Changes made by Ben Hoover, 11/2018
+# - Return attention weights and context
 #
 
 """PyTorch BERT model."""
@@ -317,6 +317,8 @@ class BertSelfAttention(nn.Module):
         context_layer = context_layer.permute(0, 2, 1, 3).contiguous()
         new_context_layer_shape = context_layer.size()[:-2] + (self.all_head_size,)
         new_context_layer = context_layer.view(*new_context_layer_shape)
+        returned_context = new_context_layer.view((1, -1, self.num_attention_heads, self.attention_head_size))
+        print(f"Reshaped is equal to old: {torch.eq(returned_context, context_layer).all()}")
 
         attn_data = {
             'attn_probs': attention_probs,
@@ -324,6 +326,7 @@ class BertSelfAttention(nn.Module):
             'key_layer': key_layer,
             'context_layer': context_layer,
         }
+
         return new_context_layer, attn_data
 
 
@@ -512,10 +515,10 @@ class BertPreTrainedModel(nn.Module):
                     self.__class__.__name__, self.__class__.__name__
                 ))
         self.config = config
-
+ 
     def init_bert_weights(self, module):
         """ Initialize the weights.
-        """
+       """
         if isinstance(module, (nn.Linear, nn.Embedding)):
             # Slightly different from the TF version which uses truncated_normal for initialization
             # cf https://github.com/pytorch/pytorch/pull/5617
@@ -696,6 +699,8 @@ class BertModel(BertPreTrainedModel):
     """
     def __init__(self, config):
         super(BertModel, self).__init__(config)
+        print(self.config)
+        print(dir(self.config))
         self.embeddings = BertEmbeddings(config)
         self.encoder = BertEncoder(config)
         self.pooler = BertPooler(config)

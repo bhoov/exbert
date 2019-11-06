@@ -21,12 +21,6 @@ def parse_args():
     args = parser.parse_args()
     return args
 
-# Path -> [String]
-def read_pckl(path):
-    """Reads list of sentences from pickle object"""
-    with open(path, 'rb') as f:
-        return pickle.load(f)
-
 def sentence_to_hdf5(grp, extractor, sentence, i):
     s = sentence
     ext_out = extractor(s)

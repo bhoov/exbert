@@ -8,6 +8,7 @@ client_ref/
 _store/
 .cache/
 client_ref
+*.swp
 
 # Icon must end with two \r
 Icon

@@ -175,21 +175,16 @@ def process_hidden_tensors(t):
 
     # Convert to numpy
     return t.data.numpy()
-
-# Path -> [String]
-def read_pckl(path):
-    """Reads list of sentences from pickle object"""
-    with open(path, 'rb') as f:
-        return pickle.load(f)
     
 # np.Array -> np.Array
 def normalize(a):
-    """Divide each head by its """
+    """Divide each head by its norm"""
     norms = np.linalg.norm(a, axis=-1, keepdims=True)
     return a / norms
 
 # np.Array:<a,b,c,d> -> np.Array<a,b,c*d>
 def reshape(a):
+    """Combine the last two dimensions of a numpy array"""
     all_head_size = a.shape[-2] * a.shape[-1]
     new_shape = a.shape[:-2] + (all_head_size,)
     return a.reshape(new_shape)
