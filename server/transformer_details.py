@@ -6,6 +6,8 @@ import torch
 from attention_formatter import FormattedAttention
 from utils.token_processing import reshape
 
+from transformers import BertTokenizer, BertModel
+
 class AttentionDetailsData:
     """Wraps model and tokenizer to format Represents data needed for attention details visualization"""
 
@@ -35,8 +37,8 @@ class AttentionDetailsData:
     def _get_inputs(self, sentence_a, sentence_b):
         tokens_a = self.aligner.to_bpe(sentence_a)
         tokens_b = self.aligner.to_bpe(sentence_b)
-        tokens_a_delim = ['[CLS]'] + tokens_a + ['[SEP]']
-        tokens_b_delim = tokens_b + ['[SEP]']
+        tokens_a_delim = ['[CLS]'] + tokens_a + ['[SEP]'] # Change to be tokenizer BOS and EOS
+        tokens_b_delim = tokens_b + ['[SEP]'] # Change to be EOS
         return self._get_inputs_from_tokens(tokens_a_delim, tokens_b_delim)
 
     def _get_inputs_from_tokens(self, tokens_a, tokens_b):

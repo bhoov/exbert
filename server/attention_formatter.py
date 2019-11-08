@@ -6,7 +6,7 @@ from collections import defaultdict
 from copy import deepcopy
 
 from utils.token_processing import aligner, null_filler
-from utils.gen_utils import BPE_SPECIAL_TOKS, zip_dicts, map_nlist, check_zippable, zip_dicts
+from utils.gen_utils import zip_dicts, map_nlist, check_zippable, zip_dicts
 
 
 def combine_pos_dicts(attention_info, meta_info):

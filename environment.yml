@@ -19,3 +19,6 @@ dependencies:
   - pillow=5.4.1
   - pip=19.0.3=py36_0
   - pytorch=1.0.1
+  - sacremoses
+  - pip:
+    - sentencepiece

@@ -5,10 +5,9 @@ If adding more metadata, modify the definitions in `to_spacy_meta` and `meta_to_
 import h5py
 import numpy as np
 import spacy
-from pytorch_pretrained_bert import BertTokenizer
 import config
-from .gen_utils import get_bpe, get_spacy, BPE_SPECIAL_TOKS
-from .f import flatten_, assoc
+from transformers.tokenization_bert import BertTokenizer
+from .f import flatten_, assoc, memoize
 
 null_filler = lambda text: {
     "text": text,
@@ -17,6 +16,14 @@ null_filler = lambda text: {
     "norm": None,
     "is_ent": None
 }
+
+@memoize
+def get_bpe(bpe_pretrained_name_or_path):
+    return BertTokenizer.from_pretrained(bpe_pretrained_name_or_path)
+
+@memoize
+def get_spacy(spacy_name):
+    return spacy.load(spacy_name)
 
 class TokenAligner:
     def __init__(self, bpe_pretrained_name_or_path="bert-base-uncased", spacy_name="en_core_web_sm"):
@@ -130,13 +137,13 @@ class TokenAligner:
         return self.bpe_from_spacy_meta(spacy_meta)
 
     def to_bpe_meta_from_tokens(self, sentence, bpe_tokens):
-        """Get the normal BPE metadata, and add nulls wherever a BPE_SPECIAL_TOKEN appears"""
+        """Get the normal BPE metadata, and add nulls wherever a special_token appears"""
         bpe_meta = self.to_bpe_meta(sentence)
 
         new_bpe_meta = []
         j = 0
         for i, b in enumerate(bpe_tokens):
-            if b in BPE_SPECIAL_TOKS:
+            if b in self.bpe.all_special_tokens:
                 new_bpe_meta.append(null_filler(b))
             else:
                 new_bpe_meta.append(bpe_meta[j])
@@ -154,23 +161,21 @@ class TokenAligner:
         return self.meta_hdf5_to_obj(h5_info)
         
 # [String] -> [String]
-def clean_tokens(toks):
+def remove_CLS_SEP(toks):
     return [t for t in toks if t not in set(['[CLS]', '[SEP]'])]
-
-# String -> String -> (String, String)
-def process_tokens(ta, tb):
-    """Drop tokens from bpe that we don't care about"""
-    ta_out = clean_tokens(ta)
-    tb_out = clean_tokens(tb)
-    return ta_out, tb_out
 
 # torch.Tensor -> np.Array
 def process_hidden_tensors(t):
-    """Embeddings are returned from the BERT model in a non-ideal embedding. Drop the unnecessary information and just return what we need"""
+    """Embeddings are returned from the BERT model in a non-ideal embedding shape:
+        - unnecessary batch dimension
+        - Undesired second sentence "[SEP]".
+    
+    Drop the unnecessary information and just return what we need for the first sentence
+    """
     # Drop unnecessary batch dim and second sent
     t = t.squeeze(0)[:-1]
 
-    # Drop second sentence sep
+    # Drop second sentence sep ??
     t = t[1:-1]
 
     # Convert to numpy

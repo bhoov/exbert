@@ -4,7 +4,7 @@ from pytorch_pretrained_bert import BertTokenizer, BertModel
 
 from utils.token_processing import (
     aligner,
-    process_tokens,
+    remove_CLS_SEP,
     process_hidden_tensors,
     normalize,
     reshape
@@ -46,7 +46,8 @@ class Extractor:
         tokens_a, tokens_b, info = self._get_from_sentences(sentence, "")
         
         # List of length 12, containing tensors of size <1, len(ta) + len(tb), H>
-        tokens_a, tokens_b = process_tokens(tokens_a, tokens_b)
+        tokens_a = remove_CLS_SEP(tokens_a)
+        tokens_b = remove_CLS_SEP(tokens_b)
         info_out = map(process_hidden_tensors, info.zvec)
         proc_info_out = self._renorm(np.array(list(info_out)))
         proc_attention = np.stack([a.data.numpy() for a in info.attention]).squeeze(1)

@@ -30,7 +30,7 @@ import torch
 from torch import nn
 from torch.nn import CrossEntropyLoss, MSELoss
 
-from .modeling_utils import PreTrainedModel, prune_linear_layer
+from .modeling_utils import PreTrainedModel, prune_linear_layer, transpose_iterable
 from .configuration_bert import BertConfig
 from .file_utils import add_start_docstrings
 
@@ -195,6 +195,7 @@ class BertSelfAttention(nn.Module):
                 "The hidden size (%d) is not a multiple of the number of attention "
                 "heads (%d)" % (config.hidden_size, config.num_attention_heads))
         self.output_attentions = config.output_attentions
+        self.output_additional_info = config.output_additional_info
 
         self.num_attention_heads = config.num_attention_heads
         self.attention_head_size = int(config.hidden_size / config.num_attention_heads)
@@ -251,9 +252,16 @@ class BertSelfAttention(nn.Module):
 
         context_layer = context_layer.permute(0, 2, 1, 3).contiguous()
         new_context_layer_shape = context_layer.size()[:-2] + (self.all_head_size,)
-        context_layer = context_layer.view(*new_context_layer_shape)
+        new_context_layer = context_layer.view(*new_context_layer_shape)
 
-        outputs = (context_layer, attention_probs) if self.output_attentions else (context_layer,)
+        outputs = (new_context_layer,)
+        if self.output_attentions:
+            outputs += (attention_probs,)
+        if self.output_additional_info:
+            outputs += (context_layer,)
+
+        # outputs = (new_context_layer, attention_probs) if self.output_attentions else (new_context_layer,)
+        # outputs = (new_context_layer, attention_probs, context_layer) if self.output_attentions else (new_context_layer,)
         return outputs
 
 
@@ -368,6 +376,7 @@ class BertEncoder(nn.Module):
         super(BertEncoder, self).__init__()
         self.output_attentions = config.output_attentions
         self.output_hidden_states = config.output_hidden_states
+        self.output_additional_info = config.output_additional_info
         self.layer = nn.ModuleList([BertLayer(config) for _ in range(config.num_hidden_layers)])
 
     def forward(self, hidden_states, attention_mask=None, head_mask=None, encoder_hidden_states=None, encoder_attention_mask=None):
@@ -381,7 +390,9 @@ class BertEncoder(nn.Module):
             hidden_states = layer_outputs[0]
 
             if self.output_attentions:
-                all_attentions = all_attentions + (layer_outputs[1],)
+                print("Length of layer_outputs[1:]", len(layer_outputs[1:]))
+                all_attentions = all_attentions + (layer_outputs[1:],) # Expose original context layers as well
+                print("Attentions:", len(transpose_iterable(all_attentions)))
 
         # Add last layer
         if self.output_hidden_states:
@@ -391,8 +402,9 @@ class BertEncoder(nn.Module):
         if self.output_hidden_states:
             outputs = outputs + (all_hidden_states,)
         if self.output_attentions:
-            outputs = outputs + (all_attentions,)
-        return outputs  # last-layer hidden state, (all hidden states), (all attentions)
+            outputs = outputs + transpose_iterable(all_attentions) # all_attentions is now a tuple of the outputs
+
+        return outputs  # last-layer hidden state, (all hidden states), *(all additional metadata as tuples)
 
 
 class BertPooler(nn.Module):
@@ -725,6 +737,8 @@ class BertModel(BertPreTrainedModel):
         pooled_output = self.pooler(sequence_output)
 
         outputs = (sequence_output, pooled_output,) + encoder_outputs[1:]  # add hidden_states and attentions if they are here
+        print("Length of encoder output[1:]: ", len(encoder_outputs[1:]))
+        print("Length of outputs: ", len(outputs))
         return outputs  # sequence_output, pooled_output, (hidden_states), (attentions)
 
 

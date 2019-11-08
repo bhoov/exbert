@@ -30,7 +30,7 @@ import torch.nn as nn
 from torch.nn import CrossEntropyLoss
 from torch.nn.parameter import Parameter
 
-from .modeling_utils import PreTrainedModel, Conv1D, prune_conv1d_layer, SequenceSummary
+from .modeling_utils import PreTrainedModel, Conv1D, prune_conv1d_layer, SequenceSummary, transpose_iterable
 from .configuration_gpt2 import GPT2Config
 from .file_utils import add_start_docstrings
 
@@ -104,6 +104,7 @@ class Attention(nn.Module):
     def __init__(self, nx, n_ctx, config, scale=False):
         super(Attention, self).__init__()
         self.output_attentions = config.output_attentions
+        self.output_additional_info = config.output_additional_info
 
         n_state = nx  # in Attention: n_state=768 (nx=n_embd)
         # [switch nx => n_state from Block to Attention to keep identical to TF implem]
@@ -160,9 +161,14 @@ class Attention(nn.Module):
         if head_mask is not None:
             w = w * head_mask
 
-        outputs = [torch.matmul(w, v)]
+        contexts = torch.matmul(w, v)
+        outputs = [contexts]
         if self.output_attentions:
             outputs.append(w)
+
+        if self.output_additional_info:
+            outputs.append(contexts)
+
         return outputs
 
     def merge_heads(self, x):
@@ -230,7 +236,7 @@ class Block(nn.Module):
                                 layer_past=layer_past,
                                 attention_mask=attention_mask,
                                 head_mask=head_mask)
-        a = output_attn[0]  # output_attn: a, present, (attentions)
+        a = output_attn[0]  # output_attn: a, present, (attentions + ...)
 
         x = x + a
         m = self.mlp(self.ln_2(x))
@@ -352,6 +358,7 @@ class GPT2Model(GPT2PreTrainedModel):
         super(GPT2Model, self).__init__(config)
         self.output_hidden_states = config.output_hidden_states
         self.output_attentions = config.output_attentions
+        self.output_additional_info = config.output_additional_info
         self.output_past = config.output_past
 
         self.wte = nn.Embedding(config.vocab_size, config.n_embd)
@@ -446,7 +453,7 @@ class GPT2Model(GPT2PreTrainedModel):
         output_shape = input_shape + (hidden_states.size(-1),)
 
         presents = ()
-        all_attentions = []
+        all_attentions = [] 
         all_hidden_states = ()
         for i, (block, layer_past) in enumerate(zip(self.h, past)):
             if self.output_hidden_states:
@@ -462,7 +469,11 @@ class GPT2Model(GPT2PreTrainedModel):
                 presents = presents + (present,)
 
             if self.output_attentions:
-                all_attentions.append(outputs[2])
+                # all_attentions.append(outputs[2])
+                all_attentions.append(tuple(outputs[2:])) # List of 2-tuples
+                print("All att: ", len(all_attentions[0]))
+                # print("Model len(all_attentions): ", len(all_attentions))
+                # print("Model len(all_attentions[0]): ", len(all_attentions[0]))
 
         hidden_states = self.ln_f(hidden_states)
 
@@ -477,10 +488,18 @@ class GPT2Model(GPT2PreTrainedModel):
         if self.output_hidden_states:
             outputs = outputs + (all_hidden_states,)
         if self.output_attentions:
-            # let the number of heads free (-1) so we can extract attention even after head pruning
-            attention_output_shape = input_shape[:-1] + (-1,) + all_attentions[0].shape[-2:]
-            all_attentions = tuple(t.view(*attention_output_shape) for t in all_attentions)
-            outputs = outputs + (all_attentions,)
+            batch_size = input_shape[:-1]
+
+            # Fix all_attentions to be correctly shaped tuple
+            new_all_attentions = transpose_iterable(tuple(all_attentions))
+            # Reshape to free number of heads for all metadata
+            output_attentions = ()
+            for i, att_info in enumerate(new_all_attentions): # Attention, contexts
+                att_shape = att_info[0].shape[-2:]
+                out_shape = batch_size + (-1,) + att_info[0].shape[-2:]
+                output_attentions += (tuple(t.view(*out_shape) for t in att_info),)
+
+            outputs = outputs + output_attentions
         return outputs  # last hidden state, (presents), (all hidden_states), (attentions)
 
 

@@ -5,6 +5,7 @@ This file is adapted from Jesse Vig's tool at https://github.com/jessevig/bertvi
 import torch
 from attention_formatter import FormattedAttention
 from utils.token_processing import reshape
+from pytorch_pretrained_bert import BertTokenizer, BertModel
 
 class AttentionDetailsData:
     """Wraps model and tokenizer to format Represents data needed for attention details visualization"""
@@ -33,11 +34,18 @@ class AttentionDetailsData:
         return self._tokens2atts(*out)
 
     def _get_inputs(self, sentence_a, sentence_b):
+        # Tokenize sentences
         tokens_a = self.aligner.to_bpe(sentence_a)
         tokens_b = self.aligner.to_bpe(sentence_b)
+
+        # Process tokens by adding special tags
         tokens_a_delim = ['[CLS]'] + tokens_a + ['[SEP]']
         tokens_b_delim = tokens_b + ['[SEP]']
+
+        # Convert tokens to inputs needed for model
         return self._get_inputs_from_tokens(tokens_a_delim, tokens_b_delim)
+
+        # These outputs can be used to get the attentions and context details
 
     def _get_inputs_from_tokens(self, tokens_a, tokens_b):
         """ Assumes sentences are already tokenized and tagged with [CLS] and [SEP] """

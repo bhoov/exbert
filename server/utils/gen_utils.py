@@ -11,32 +11,6 @@ def add_base_exceptions(language_exceptions):
     merged.update(spacy.lang.tokenizer_exceptions.BASE_EXCEPTIONS)
     return merged
 
-@memoize
-def get_bpe(bpe_pretrained_name_or_path):
-    return BertTokenizer.from_pretrained(bpe_pretrained_name_or_path)
-
-@memoize
-def get_spacy(spacy_name):
-    return spacy.load(spacy_name)
-    
-NLP = get_spacy('en_core_web_sm')                                            # NOTE: This MUST precede any access to `spacy.lang.en`
-SPACY_EXCEPTIONS_EN = add_base_exceptions(spacy.lang.en.TOKENIZER_EXCEPTIONS)
-BPE_SPECIAL_TOKS = set(["[UNK]", "[SEP]", "[PAD]", "[CLS]", "[MASK]"])
-
-def pad_metadata(text, meta, bad_toks=BPE_SPECIAL_TOKS):
-    """Modify the pos list to add None where bad tokens exist"""
-    to_insert = []
-    for i, t in enumerate(text):
-        if t in bad_toks:
-            to_insert.append(i)
-            
-    out = deepcopy(meta)
-    
-    for idx in to_insert:
-        out.insert(idx, None)
-        
-    return out
-
 def check_key_len(d, length):
     for k, v in d.items():
         if len(v) != length:
