@@ -390,9 +390,7 @@ class BertEncoder(nn.Module):
             hidden_states = layer_outputs[0]
 
             if self.output_attentions:
-                print("Length of layer_outputs[1:]", len(layer_outputs[1:]))
                 all_attentions = all_attentions + (layer_outputs[1:],) # Expose original context layers as well
-                print("Attentions:", len(transpose_iterable(all_attentions)))
 
         # Add last layer
         if self.output_hidden_states:
@@ -737,9 +735,7 @@ class BertModel(BertPreTrainedModel):
         pooled_output = self.pooler(sequence_output)
 
         outputs = (sequence_output, pooled_output,) + encoder_outputs[1:]  # add hidden_states and attentions if they are here
-        print("Length of encoder output[1:]: ", len(encoder_outputs[1:]))
-        print("Length of outputs: ", len(outputs))
-        return outputs  # sequence_output, pooled_output, (hidden_states), (attentions)
+        return outputs  # sequence_output, pooled_output, (hidden_states), (attentions), (additional_info)
 
 
 @add_start_docstrings("""Bert Model with two heads on top as done during the pre-training:

@@ -471,9 +471,6 @@ class GPT2Model(GPT2PreTrainedModel):
             if self.output_attentions:
                 # all_attentions.append(outputs[2])
                 all_attentions.append(tuple(outputs[2:])) # List of 2-tuples
-                print("All att: ", len(all_attentions[0]))
-                # print("Model len(all_attentions): ", len(all_attentions))
-                # print("Model len(all_attentions[0]): ", len(all_attentions[0]))
 
         hidden_states = self.ln_f(hidden_states)
 

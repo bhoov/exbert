@@ -3,70 +3,164 @@ Utilities for interfacing with the attentions from the front end.
 This file is adapted from Jesse Vig's tool at https://github.com/jessevig/bertviz
 """
 import torch
-from attention_formatter import FormattedAttention
+from transformer_formatter import TransformerOutputFormatter
 from utils.token_processing import reshape
+from typing import List, Union
+from abc import ABC, abstractmethod
 
-from transformers import BertTokenizer, BertModel
+from transformers import (
+    BertModel,
+    BertTokenizer,
+    GPT2Tokenizer,
+    GPT2Model,
+    RobertaModel,
+    RobertaTokenizer,
+)
 
-class AttentionDetailsData:
-    """Wraps model and tokenizer to format Represents data needed for attention details visualization"""
+from utils.f import delegates
 
-    def __init__(self, model, aligner):
+# Parse input for model
+def parse_inputs(inputs, mask_attentions=False):
+    """Parse the output from `tokenizer.prepare_for_model` to the desired attention mask from special tokens
+    
+    Args:
+        - inputs: The output of `tokenizer.prepare_for_model`. 
+            A dict with keys: {'special_token_mask', 'token_type_ids', 'input_ids'}
+        - mask_attentions: Flag indicating whether to mask the attentions or not
+        
+    Returns:
+        Dict with keys: {'input_ids', 'token_type_ids', 'attention_mask'}
+        
+    Usage:
+        
+        s = "test sentence"
+        
+        # from raw sentence to tokens
+        tokens = tokenizer.tokenize(s)
+
+        # From tokens to ids
+        ids = tokenizer.convert_tokens_to_ids(tokens)
+
+        # From ids to input
+        inputs = tokenizer.prepare_for_model(ids, return_tensors='pt')
+
+        # Parse the input. Optionally mask the special tokens from the analysis. 
+        parsed_input = parse_inputs(inputs)
+
+        # Run the model
+        out = model(**parse_inputs(inputs))
+    """
+
+    out = inputs.copy()
+    out.pop("special_tokens_mask", None)
+
+    if mask_attentions:
+        out["attention_mask"] = torch.tensor(
+            [int(not i) for i in inputs["special_tokens_mask"]]
+        ).unsqueeze(0)
+    else:
+        out["attention_mask"] = torch.tensor(
+            [1 for i in inputs["special_tokens_mask"]]
+        ).unsqueeze(0)
+
+    return out
+
+
+class TransformerBaseDetails(ABC):
+    """ All API calls will interact with this class to get the hidden states and attentions for any input sentence."""
+
+    def __init__(self, model, tokenizer):
         self.model = model
-        self.aligner = aligner
+        self.tokenizer = tokenizer
         self.model.eval()
 
     @classmethod
-    def from_pretrained(cls, model_type='bert-base-uncased'):
-        return cls(BertModel.from_pretrained(model_type), BertTokenizer.from_pretrained(model_type))
+    def from_pretrained(cls, model_name: str):
+        raise NotImplementedError(
+            """Inherit from this class and specify the Model and Tokenizer to use"""
+        )
 
-    # a -> b
-    def __call__(self, s):
-        return self.get_data(s)
+    @delegates(parse_inputs)
+    def att_from_sentence(self, s: str, **kwargs) -> TransformerOutputFormatter:
+        """Get formatted attention from a single sentence input"""
+        tokens = self.tokenizer.tokenize(s)
+        return self.att_from_tokens(tokens, s)
 
-    # String -> String -> FormattedAttention
-    def get_data(self, sentence_a, sentence_b=""):
-        out = self._get_inputs(sentence_a, sentence_b)
-        return self._tokens2atts(*out)
+    @delegates(parse_inputs)
+    def att_from_tokens(
+        self, tokens: List[str], orig_sentence, **kwargs
+    ) -> TransformerOutputFormatter:
+        """Get formatted attention from a list of tokens, using the original sentence only for reference if we want to get Parts of Speech"""
+        ids = self.tokenizer.convert_tokens_to_ids(tokens)
+        inputs = self.tokenizer.prepare_for_model(ids, return_tensors="pt")
+        parsed_input = parse_inputs(inputs, **kwargs)
+        output = self.model(**parsed_input)
+        return self.format_model_output(inputs, orig_sentence, output)
 
-    # [String] -> [String] -> FormattedAttention
-    def get_data_from_tokens(self, tokens_a, tokens_b):
-        out = self._get_inputs_from_tokens(tokens_a, tokens_b)
-        return self._tokens2atts(*out)
+    def format_model_output(self, inputs, sentence:str, output):
+        """Convert model output to the desired format.
+        
+        Formatter additionally needs access to the tokens and the original sentence
+        """
+        _, _, hidden_state, attentions, contexts = output
 
-    def _get_inputs(self, sentence_a, sentence_b):
-        tokens_a = self.aligner.to_bpe(sentence_a)
-        tokens_b = self.aligner.to_bpe(sentence_b)
-        tokens_a_delim = ['[CLS]'] + tokens_a + ['[SEP]'] # Change to be tokenizer BOS and EOS
-        tokens_b_delim = tokens_b + ['[SEP]'] # Change to be EOS
-        return self._get_inputs_from_tokens(tokens_a_delim, tokens_b_delim)
+        print(inputs["input_ids"])
+        tokens = self.view_ids(inputs["input_ids"])
+        disp_tokens = self.display_tokens(tokens)
+        formatted_output = TransformerOutputFormatter(
+            sentence,
+            disp_tokens,
+            inputs["special_tokens_mask"],
+            attentions,
+            hidden_state,
+            contexts,
+        )
+        return formatted_output
 
-    def _get_inputs_from_tokens(self, tokens_a, tokens_b):
-        """ Assumes sentences are already tokenized and tagged with [CLS] and [SEP] """
-        token_ids = self.aligner.bpe.convert_tokens_to_ids(tokens_a + tokens_b)
-        tokens_tensor = torch.tensor([token_ids])
-        token_type_tensor = torch.LongTensor([[0] * len(tokens_a) + [1] * len(tokens_b)])
-        return tokens_tensor, token_type_tensor, tokens_a, tokens_b
-    
-    # (Tensor[], Tensor[], [String], [String]) -> FormattedAttention
-    def _tokens2atts(self, tokens_tensor, token_type_tensor, tokens_a, tokens_b):
-        # Encoded layers: (NumLayers, NumTokens, HiddenDim)
-        encoded_layers, _, attn_data_list = self.model(tokens_tensor, token_type_ids=token_type_tensor)
-        print(f"Shape of encoded_layers[0]: {len(encoded_layers[0])}")
-        query_tensor = torch.stack([attn_data['query_layer'] for attn_data in attn_data_list])
-        key_tensor = torch.stack([attn_data['key_layer'] for attn_data in attn_data_list])
-        attn_tensor = torch.stack([attn_data['attn_probs'] for attn_data in attn_data_list])
-        context_tensor = torch.stack([attn_data['context_layer'] for attn_data in attn_data_list])
+    def display_tokens(self, toks: List[str]) -> List[str]:
+        """Convert the tokens to the strings we want to display to the user.
+        
+        Models like GPT-2 and Roberta want to override this method to handle the unicode that replaces spaces
+        """
+        return toks
 
-        query = query_tensor.data.numpy()
-        key = key_tensor.data.numpy()
-        att = attn_tensor.data.numpy()
-        context = context_tensor.data.numpy()
+    def view_ids(self, ids: Union[List[int], torch.Tensor]) -> List[str]:
+        """View what the tokenizer thinks certain ids are"""
+        if type(ids) == torch.Tensor:
+            # Remove batch dimension
+            ids = ids.squeeze(0).tolist() 
+
+        out = self.tokenizer.convert_ids_to_tokens(ids)
+        return out
 
 
-        encoded_tensor = torch.stack([layer for layer in encoded_layers]).squeeze(1).transpose(0, 1)
-        embeddings = encoded_tensor.data.numpy()
-        contexts = reshape(context_tensor.squeeze(1)).transpose(0, 1).data.numpy()
+class BertDetails(TransformerBaseDetails):
+    @classmethod
+    def from_pretrained(cls, model_name: str):
+        return cls(
+            BertModel.from_pretrained(
+                model_name,
+                output_attentions=True,
+                output_hidden_states=True,
+                output_additional_info=True,
+            ),
+            BertTokenizer.from_pretrained(model_name),
+        )
 
-        output = FormattedAttention(tokens_a, tokens_b, query, key, att, embeddings, contexts)
-        return output
+
+class GPT2Details(TransformerBaseDetails):
+    @classmethod
+    def from_pretrained(cls, model_name: str):
+        return cls(
+            GPT2Model.from_pretrained(
+                model_name,
+                output_attentions=True,
+                output_hidden_states=True,
+                output_additional_info=True,
+            ),
+            GPT2Tokenizer.from_pretrained(model_name),
+        )
+
+    def display_tokens(self, toks: List[str]) -> List[str]:
+        """Remove weird space unicode characters"""
+        return [t.replace("\u0120", " ") for t in toks]
