@@ -15,6 +15,8 @@ from transformers import (
     GPT2Model,
     RobertaModel,
     RobertaTokenizer,
+    DistilBertModel,
+    DistilBertTokenizer
 )
 
 from utils.f import delegates
@@ -104,7 +106,6 @@ class TransformerBaseDetails(ABC):
         """
         _, _, hidden_state, attentions, contexts = output
 
-        print(inputs["input_ids"])
         tokens = self.view_ids(inputs["input_ids"])
         disp_tokens = self.display_tokens(tokens)
         formatted_output = TransformerOutputFormatter(
@@ -163,4 +164,37 @@ class GPT2Details(TransformerBaseDetails):
 
     def display_tokens(self, toks: List[str]) -> List[str]:
         """Remove weird space unicode characters"""
+        return fix_byte_spaces(toks)
+
+class RobertaDetails(TransformerBaseDetails):
+    @classmethod
+    def from_pretrained(cls, model_name: str):
+        return cls(
+            RobertaModel.from_pretrained(
+                model_name,
+                output_attentions=True,
+                output_hidden_states=True,
+                output_additional_info=True,
+            ),
+            RobertaTokenizer.from_pretrained(model_name),
+        )
+
+    def display_tokens(self, toks: List[str]) -> List[str]:
+        return fix_byte_spaces(toks)
+
+class DistilBertDetails(TransformerBaseDetails):
+    @classmethod
+    def from_pretrained(cls, model_name: str):
+        return cls(
+            DistilBertModel.from_pretrained(
+                model_name,
+                output_attentions=True,
+                output_hidden_states=True,
+                output_additional_info=True,
+            ),
+            DistilBertTokenizer.from_pretrained(model_name),
+        )
+
+
+def fix_byte_spaces(toks: List[str]) -> List[str]:
         return [t.replace("\u0120", " ") for t in toks]
