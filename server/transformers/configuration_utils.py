@@ -167,6 +167,9 @@ class PretrainedConfig(object):
         for key in to_remove:
             kwargs.pop(key, None)
 
+        if config.output_additional_info and not config.output_attentions:
+            raise RuntimeError('Design has not been tested for when additional info is desired without attentions')
+
         logger.info("Model config %s", str(config))
         if return_unused_kwargs:
             return config, kwargs

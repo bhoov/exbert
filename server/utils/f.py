@@ -5,8 +5,9 @@ If ever a function changes its input in place, it is denoted by a trailing `_`
 
 import inspect
 from itertools import zip_longest
+from typing import List, Set, Union, Dict
 
-# Can i delegate many?
+# Can i delegate many different functions?
 def delegates(to=None, keep=False):
     """ Decorator: replace `**kwargs` in signature with params from `to`.
     
@@ -26,6 +27,10 @@ def delegates(to=None, keep=False):
         from_f.__signature__ = sig.replace(parameters=sigd.values())
         return f
     return _f
+
+def pick(keys:Union[List, Set], obj:Dict) -> Dict:
+    """ Return a NEW object containing `keys` from the original `obj` """
+    return {k: obj[k] for k in keys}
 
 def memoize(f):
     """Memoize a function.

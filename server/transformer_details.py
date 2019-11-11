@@ -19,7 +19,7 @@ from transformers import (
     DistilBertTokenizer
 )
 
-from utils.f import delegates
+from utils.f import delegates, pick
 
 # Parse input for model
 def parse_inputs(inputs, mask_attentions=False):
@@ -31,7 +31,7 @@ def parse_inputs(inputs, mask_attentions=False):
         - mask_attentions: Flag indicating whether to mask the attentions or not
         
     Returns:
-        Dict with keys: {'input_ids', 'token_type_ids', 'attention_mask'}
+        Dict with keys: {'input_ids', 'token_type_ids', 'attention_mask', 'special_tokens_mask'}
         
     Usage:
         
@@ -75,6 +75,7 @@ class TransformerBaseDetails(ABC):
         self.model = model
         self.tokenizer = tokenizer
         self.model.eval()
+        self.forward_inputs = ['input_ids', 'token_type_ids', 'attention_mask']
 
     @classmethod
     def from_pretrained(cls, model_name: str):
@@ -95,7 +96,7 @@ class TransformerBaseDetails(ABC):
         """Get formatted attention from a list of tokens, using the original sentence only for reference if we want to get Parts of Speech"""
         ids = self.tokenizer.convert_tokens_to_ids(tokens)
         inputs = self.tokenizer.prepare_for_model(ids, return_tensors="pt")
-        parsed_input = parse_inputs(inputs, **kwargs)
+        parsed_input = self.format_model_input(inputs, **kwargs)
         output = self.model(**parsed_input)
         return self.format_model_output(inputs, orig_sentence, output)
 
@@ -104,7 +105,7 @@ class TransformerBaseDetails(ABC):
         
         Formatter additionally needs access to the tokens and the original sentence
         """
-        _, _, hidden_state, attentions, contexts = output
+        hidden_state, attentions, contexts = self.get_state_att_contexts(output)
 
         tokens = self.view_ids(inputs["input_ids"])
         disp_tokens = self.display_tokens(tokens)
@@ -118,12 +119,34 @@ class TransformerBaseDetails(ABC):
         )
         return formatted_output
 
+    def get_state_att_contexts(self, output):
+        """Extract the desired hidden states as passed by a particular model through the output
+        
+        In all cases, we care for:
+            - hidden state embeddings (tuple of n_layers + 1)
+            - attentions (tuple of n_layers)
+            - contexts (tuple of n_layers)
+        """
+        _, _, hidden_state, attentions, contexts = output
+
+        return hidden_state, attentions, contexts
+
     def display_tokens(self, toks: List[str]) -> List[str]:
         """Convert the tokens to the strings we want to display to the user.
         
         Models like GPT-2 and Roberta want to override this method to handle the unicode that replaces spaces
         """
         return toks
+
+    @delegates(parse_inputs)
+    def format_model_input(self, inputs, **kwargs):
+        """Parse the input for the model according to what is expected in the forward pass. 
+        
+        If not otherwise defined, outputs a dict containing the keys:
+        
+        {'input_ids', 'token_type_ids', 'attention_mask'}
+        """
+        return pick(self.forward_inputs, parse_inputs(inputs))
 
     def view_ids(self, ids: Union[List[int], torch.Tensor]) -> List[str]:
         """View what the tokenizer thinks certain ids are"""
@@ -167,6 +190,7 @@ class GPT2Details(TransformerBaseDetails):
         return fix_byte_spaces(toks)
 
 class RobertaDetails(TransformerBaseDetails):
+
     @classmethod
     def from_pretrained(cls, model_name: str):
         return cls(
@@ -183,6 +207,10 @@ class RobertaDetails(TransformerBaseDetails):
         return fix_byte_spaces(toks)
 
 class DistilBertDetails(TransformerBaseDetails):
+    def __init__(self, model, tokenizer):
+        super().__init__(model, tokenizer)
+        self.forward_inputs = ['input_ids', 'attention_mask']
+
     @classmethod
     def from_pretrained(cls, model_name: str):
         return cls(
@@ -194,6 +222,18 @@ class DistilBertDetails(TransformerBaseDetails):
             ),
             DistilBertTokenizer.from_pretrained(model_name),
         )
+
+    def get_state_att_contexts(self, output):
+        """Extract the desired hidden states as passed by a particular model through the output
+        
+        In all cases, we care for:
+            - hidden state embeddings (tuple of n_layers + 1)
+            - attentions (tuple of n_layers)
+            - contexts (tuple of n_layers)
+        """
+        _, hidden_states, attentions, contexts = output
+
+        return hidden_states, attentions, contexts
 
 
 def fix_byte_spaces(toks: List[str]) -> List[str]:
