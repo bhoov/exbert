@@ -1,5 +1,3 @@
-import h5py
-import numpy as np
 import spacy
 from spacy.tokens.token import Token as SpacyToken
 from spacy.tokens.doc import Doc as SpacyDoc
@@ -7,14 +5,10 @@ from typing import List, Iterable, Union
 import regex as re
 
 from transformers import (
-    BertModel,
     BertTokenizer,
     GPT2Tokenizer,
-    GPT2Model,
-    RobertaModel,
     RobertaTokenizer,
     DistilBertTokenizer,
-    DistilBertModel,
 )
 from utils.simple_spacy_token import SimpleSpacyToken
 from utils.f import flatten_, assoc, memoize, GetAttr, delegates, pick
@@ -28,17 +22,17 @@ def fix_token(tok: SpacyToken, idx:int=-1) -> str:
     out = tok.text if tok.text.lower() == tok.norm_ else tok.norm_
     return out
 
-def MakeAligner(pretrained_tokenizer):
+def MakeAligner(pretrained_tokenizer, spacy_language_model):
     """Create an aligner from the pretrained tokenizers. Some caveats to note:
     
     Usage:
-        BrandNewAligner = MakeAligner(BrandNewTokenizer)
+        BrandNewHuggingfaceAligner = MakeAligner(BrandNewHuggingfaceTokenizer)
     """
     class Aligner(pretrained_tokenizer):
         @delegates(pretrained_tokenizer.__init__)
-        def __init__(self, spacy_name="en_core_web_sm", **kwargs):
+        def __init__(self, **kwargs):
             super().__init__(**kwargs)
-            self.nlp = spacy.load(spacy_name)
+            self.nlp = spacy.load(spacy_language_model)
 
         def prep_sentence(self, s: str) -> str:
             """Remove contractions and multiple spaces from input sentence"""
@@ -60,13 +54,45 @@ def MakeAligner(pretrained_tokenizer):
             meta_info = self._to_spacy_meta(s)
             return self._tokenize_from_spacy_meta(meta_info)
 
+        def meta_from_tokens(self, sentence: str, tokens: List[str], perform_check=True) -> List[SimpleSpacyToken]:
+            """Convert existing tokens into their metadata, ignoring effects of special tokens from the tokenizer
+            
+            NOTE that the sentence MUST be the same sentence that produced the tokens, otherwise,
+            an unpredictable error may occur. Or worse, it will act like it works.
+
+            Parameters:
+                - sentence: Sentence the tokens came from
+                - tokens: Tokenized version of the sentence. Can be post encoding or pre-encoding
+                    (where special tokens are added)
+                - perform_check: If True, check that the tokens come from the sentence. This slows down processing 
+                    and should be False if speed is more important than accuracy
+            """
+            orig_meta = self.meta_tokenize(sentence)
+
+            new_meta = []
+            j = 0
+
+            # Unfortunately, this can really slow down predictions. 
+            is_encoded = self.encode(sentence) == self.convert_tokens_to_ids(tokens)
+            is_tokenized = self.tokenize(sentence) == tokens
+            assert is_encoded or is_tokenized, "Can only take tokens that come from the original sentence!"
+
+            for i, b in enumerate(tokens):
+                if b in self.all_special_tokens:
+                    new_meta.append(SimpleSpacyToken(b))
+                else:
+                    new_meta.append(orig_meta[j])
+                    j += 1
+
+            return new_meta
+
         def _to_normed_spacy(self, s: str) -> List[str]:
             """Return the normalized tokens (i.e., language exceptions replaced by a lowercased version)"""
             doc = self.nlp(s)
             tokens = self._doc_to_fixed_tokens(doc)
             return tokens
 
-        def _to_spacy_meta(self, s: str) -> List: # list of simple spacy tokens...
+        def _to_spacy_meta(self, s: str) -> List[SimpleSpacyToken]: # list of simple spacy tokens...
             """Convert a string into a list of records containing simplified spacy information"""
             doc = self.nlp(s)
             out = [SimpleSpacyToken(t) for t in doc]
@@ -82,17 +108,21 @@ def MakeAligner(pretrained_tokenizer):
             tokens = [t.text for t in doc]
             return tokens
 
-        def _tokenize_from_spacy_meta(self, spacy_meta): # Change this for GPT2
+        def _tokenize_from_spacy_meta(self, spacy_meta: List[SimpleSpacyToken]) -> List[SimpleSpacyToken]:
+            """Convert spacy-tokenized SimpleSpacyTokens into the appropriate tokenizer's tokens"""
             out = [self._tokenize_from_meta_single(sm, i) for i, sm in enumerate(spacy_meta)]
             return flatten_(out)
 
-        def _tokenize_from_meta_single(self, meta_token, idx): # Change this for GPT2
-            """Split a single spacy token with metadata into tokenizer tokens
+        def _tokenize_from_meta_single(self, meta_token: SimpleSpacyToken, idx:int) -> List[SimpleSpacyToken]:
+            """Split a single spacy token with metadata into tokenizer tokens. 
+
+            Because the transformer's tokenizer may split each Spacy-tokenized word into multiple subwords, 
+            output a list
 
             For GPT2 tokenization, there is a different behavior for the tokenization of a word if it 
             starts the sentence vs if it occurs later in the sentence. 
             """
-            BUFFER = "X "
+            BUFFER = "X " # GPT tokenization fusses if it thinks the token is the beginning of the sentence
 
             if idx != 0: 
                 s = BUFFER + meta_token["token"] # Add a buffer with guaranteed tokenization of length 1 to input
@@ -102,16 +132,20 @@ def MakeAligner(pretrained_tokenizer):
                 offset = 0
 
             bpe_tokens = self.tokenize(s)
-            return [assoc("token", b, meta_token) for b in bpe_tokens[offset:]]
 
-        def _doc_to_fixed_tokens(self, doc):
+            # Functional version that works with dictionaries
+            return [meta_token.assoc("token", b) for b in bpe_tokens[offset:]]
+
+        def _doc_to_fixed_tokens(self, doc: SpacyDoc) -> List[str]:
             """Extract tokens from a document, accounting for exceptions only if needed"""
             tokens = doc_to_fixed_tokens(doc)
             return tokens
         
     return Aligner
         
-BertAligner = MakeAligner(BertTokenizer)
-GPT2Aligner = MakeAligner(GPT2Tokenizer)
-RobertaAligner = MakeAligner(RobertaTokenizer)
-DistilBertAligner = MakeAligner(DistilBertTokenizer)
+english = "en_core_web_sm"
+
+BertAligner = MakeAligner(BertTokenizer, english)
+GPT2Aligner = MakeAligner(GPT2Tokenizer, english)
+RobertaAligner = MakeAligner(RobertaTokenizer, english)
+DistilBertAligner = MakeAligner(DistilBertTokenizer, english)
