@@ -72,7 +72,7 @@ def get_bpe_token_meta(sentence, bpe_tokens=None):
     else:
         bpe_meta = aligner.to_bpe_meta_from_tokens(sentence, bpe_tokens)
 
-    bpe_tokens = [c["text"] for c in bpe_meta]
+    bpe_tokens = [c["token"] for c in bpe_meta]
     bpe_pos_info = [c["pos"] for c in bpe_meta]
     bpe_dep_info = [c["dep"] for c in bpe_meta]
     bpe_ent_info = [c["is_ent"] for c in bpe_meta]

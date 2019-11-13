@@ -1,6 +1,5 @@
 """
 Utilities for interfacing with the attentions from the front end.
-This file is adapted from Jesse Vig's tool at https://github.com/jessevig/bertviz
 """
 import torch
 from transformer_formatter import TransformerOutputFormatter
@@ -35,6 +34,7 @@ def parse_inputs(inputs, mask_attentions=False):
         
     Usage:
         
+        ```
         s = "test sentence"
         
         # from raw sentence to tokens
@@ -49,12 +49,13 @@ def parse_inputs(inputs, mask_attentions=False):
         # Parse the input. Optionally mask the special tokens from the analysis. 
         parsed_input = parse_inputs(inputs)
 
-        # Run the model
-        out = model(**parse_inputs(inputs))
+        # Run the model, pick from this output whatever inputs you want
+        from utils.f import pick
+        out = model(**pick(['input_ids'], parse_inputs(inputs)))
+        ```
     """
 
     out = inputs.copy()
-    out.pop("special_tokens_mask", None)
 
     if mask_attentions:
         out["attention_mask"] = torch.tensor(

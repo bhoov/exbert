@@ -7,7 +7,31 @@ import inspect
 from itertools import zip_longest
 from typing import List, Set, Union, Dict
 
+def custom_dir(c, add): return dir(type(c)) + list(c.__dict__.keys()) + add
+
+class GetAttr:
+    """Base class for attr accesses in `self._xtra` passed down to `self.default`
+    
+    Taken from article by Jeremy Howard: https://www.fast.ai/2019/08/06/delegation/
+
+    Usage:
+
+        ```
+        class ProductPage(GetAttr):
+            def __init__(self, page, price, cost):
+                self.page,self.price,self.cost = page,price,cost
+                self.default = page
+        ```
+    """
+    @property
+    def _xtra(self): return [o for o in dir(self.default) if not o.startswith('_')]
+    def __getattr__(self,k):
+        if k in self._xtra: return getattr(self.default, k)
+        raise AttributeError(k)
+    def __dir__(self): return custom_dir(self, self._xtra)
+
 # Can i delegate many different functions?
+# Can i add a new docstring to the existing docstring of the delgated function? Or at least point to the function delegated?
 def delegates(to=None, keep=False):
     """ Decorator: replace `**kwargs` in signature with params from `to`.
     
