@@ -59,3 +59,10 @@ class TransformerOutputFormatter:
     def to_json(self):
         print("Jsoning")
         pass
+
+    def __repr__(self):
+        lim = 40
+        if len(self.sentence) > lim: s = self.sentence[:lim - 3] + "..."
+        else: s = self.sentence[:lim]
+
+        return f"TransformerOutput({s})"

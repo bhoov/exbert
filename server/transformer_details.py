@@ -7,15 +7,18 @@ from utils.token_processing import reshape
 from typing import List, Union
 from abc import ABC, abstractmethod
 
+from aligner import (
+    BertAligner,
+    GPT2Aligner,
+    RobertaAligner,
+    DistilBertAligner
+)
+
 from transformers import (
     BertModel,
-    BertTokenizer,
-    GPT2Tokenizer,
     GPT2Model,
     RobertaModel,
-    RobertaTokenizer,
     DistilBertModel,
-    DistilBertTokenizer
 )
 
 from utils.f import delegates, pick
@@ -72,22 +75,22 @@ def parse_inputs(inputs, mask_attentions=False):
 class TransformerBaseDetails(ABC):
     """ All API calls will interact with this class to get the hidden states and attentions for any input sentence."""
 
-    def __init__(self, model, tokenizer):
+    def __init__(self, model, aligner):
         self.model = model
-        self.tokenizer = tokenizer
+        self.aligner = aligner
         self.model.eval()
         self.forward_inputs = ['input_ids', 'token_type_ids', 'attention_mask']
 
     @classmethod
     def from_pretrained(cls, model_name: str):
         raise NotImplementedError(
-            """Inherit from this class and specify the Model and Tokenizer to use"""
+            """Inherit from this class and specify the Model and Aligner to use"""
         )
 
     @delegates(parse_inputs)
     def att_from_sentence(self, s: str, **kwargs) -> TransformerOutputFormatter:
         """Get formatted attention from a single sentence input"""
-        tokens = self.tokenizer.tokenize(s)
+        tokens = self.aligner.tokenize(s)
         return self.att_from_tokens(tokens, s)
 
     @delegates(parse_inputs)
@@ -95,8 +98,8 @@ class TransformerBaseDetails(ABC):
         self, tokens: List[str], orig_sentence, **kwargs
     ) -> TransformerOutputFormatter:
         """Get formatted attention from a list of tokens, using the original sentence only for reference if we want to get Parts of Speech"""
-        ids = self.tokenizer.convert_tokens_to_ids(tokens)
-        inputs = self.tokenizer.prepare_for_model(ids, return_tensors="pt")
+        ids = self.aligner.convert_tokens_to_ids(tokens)
+        inputs = self.aligner.prepare_for_model(ids, return_tensors="pt")
         parsed_input = self.format_model_input(inputs, **kwargs)
         output = self.model(**parsed_input)
         return self.format_model_output(inputs, orig_sentence, output)
@@ -155,7 +158,7 @@ class TransformerBaseDetails(ABC):
             # Remove batch dimension
             ids = ids.squeeze(0).tolist() 
 
-        out = self.tokenizer.convert_ids_to_tokens(ids)
+        out = self.aligner.convert_ids_to_tokens(ids)
         return out
 
 
@@ -169,7 +172,7 @@ class BertDetails(TransformerBaseDetails):
                 output_hidden_states=True,
                 output_additional_info=True,
             ),
-            BertTokenizer.from_pretrained(model_name),
+            BertAligner.from_pretrained(model_name),
         )
 
 
@@ -183,7 +186,7 @@ class GPT2Details(TransformerBaseDetails):
                 output_hidden_states=True,
                 output_additional_info=True,
             ),
-            GPT2Tokenizer.from_pretrained(model_name),
+            GPT2Aligner.from_pretrained(model_name),
         )
 
     def display_tokens(self, toks: List[str]) -> List[str]:
@@ -201,15 +204,15 @@ class RobertaDetails(TransformerBaseDetails):
                 output_hidden_states=True,
                 output_additional_info=True,
             ),
-            RobertaTokenizer.from_pretrained(model_name),
+            RobertaAligner.from_pretrained(model_name),
         )
 
     def display_tokens(self, toks: List[str]) -> List[str]:
         return fix_byte_spaces(toks)
 
 class DistilBertDetails(TransformerBaseDetails):
-    def __init__(self, model, tokenizer):
-        super().__init__(model, tokenizer)
+    def __init__(self, model, aligner):
+        super().__init__(model, aligner)
         self.forward_inputs = ['input_ids', 'attention_mask']
 
     @classmethod
@@ -221,7 +224,7 @@ class DistilBertDetails(TransformerBaseDetails):
                 output_hidden_states=True,
                 output_additional_info=True,
             ),
-            DistilBertTokenizer.from_pretrained(model_name),
+            DistilBertAligner.from_pretrained(model_name),
         )
 
     def get_state_att_contexts(self, output):
