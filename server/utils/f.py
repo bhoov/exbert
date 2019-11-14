@@ -7,6 +7,12 @@ import inspect
 from itertools import zip_longest
 from typing import List, Set, Union, Dict
 
+
+def ifnone(x, default):
+    """If `x` is None, return default. Otherwise, return `x`"""
+    if x is None: return default
+    return x
+
 def custom_dir(c, add): return dir(type(c)) + list(c.__dict__.keys()) + add
 
 class GetAttr:

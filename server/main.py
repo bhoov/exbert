@@ -23,6 +23,7 @@ from data.processing.corpus_embeddings import (
 )
 from utils.token_processing import aligner
 from utils.mask_att import strip_attention
+from utils.f import ifnone
 import utils.path_fixes as pf
 
 app = connexion.FlaskApp(__name__, static_folder="client/dist", specification_dir=".")
@@ -93,17 +94,17 @@ def update_masked_attention(**request):
     Object: {"a" : {"sentence":__, "mask_inds"}, "b" : {...}}
     """
     payload = request["payload"]
-    a = payload["tokensA"]  # NAME OF VARIABLE IS IMPORTANT. See eval statement below.
-    b = payload["tokensB"]  # NAME OF VARIABLE IS IMPORTANT. See eval statement below.
+    a = payload["tokensA"]
+    b = payload["tokensB"]
     sent_a = payload["sentenceA"]
     sent_b = payload["sentenceB"]
     mask_a = payload["maskA"]
     mask_b = payload["maskB"]
     layer = int(payload["layer"])
 
-    MASK = "[MASK]"
+    MASK = details_data.aligner.mask_token
     mask_tokens = lambda toks, maskinds: [
-        t if i not in maskinds else MASK for (i, t) in enumerate(toks)
+        t if i not in maskinds else ifnone(MASK, t) for (i, t) in enumerate(toks)
     ]
 
     tokens_a = mask_tokens(a, mask_a)
