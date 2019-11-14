@@ -23,55 +23,6 @@ from transformers import (
 
 from utils.f import delegates, pick
 
-# Parse input for model
-def parse_inputs(inputs, mask_attentions=False):
-    """Parse the output from `tokenizer.prepare_for_model` to the desired attention mask from special tokens
-    
-    Args:
-        - inputs: The output of `tokenizer.prepare_for_model`. 
-            A dict with keys: {'special_token_mask', 'token_type_ids', 'input_ids'}
-        - mask_attentions: Flag indicating whether to mask the attentions or not
-        
-    Returns:
-        Dict with keys: {'input_ids', 'token_type_ids', 'attention_mask', 'special_tokens_mask'}
-        
-    Usage:
-        
-        ```
-        s = "test sentence"
-        
-        # from raw sentence to tokens
-        tokens = tokenizer.tokenize(s)
-
-        # From tokens to ids
-        ids = tokenizer.convert_tokens_to_ids(tokens)
-
-        # From ids to input
-        inputs = tokenizer.prepare_for_model(ids, return_tensors='pt')
-
-        # Parse the input. Optionally mask the special tokens from the analysis. 
-        parsed_input = parse_inputs(inputs)
-
-        # Run the model, pick from this output whatever inputs you want
-        from utils.f import pick
-        out = model(**pick(['input_ids'], parse_inputs(inputs)))
-        ```
-    """
-
-    out = inputs.copy()
-
-    if mask_attentions:
-        out["attention_mask"] = torch.tensor(
-            [int(not i) for i in inputs["special_tokens_mask"]]
-        ).unsqueeze(0)
-    else:
-        out["attention_mask"] = torch.tensor(
-            [1 for i in inputs["special_tokens_mask"]]
-        ).unsqueeze(0)
-
-    return out
-
-
 class TransformerBaseDetails(ABC):
     """ All API calls will interact with this class to get the hidden states and attentions for any input sentence."""
 
@@ -87,20 +38,18 @@ class TransformerBaseDetails(ABC):
             """Inherit from this class and specify the Model and Aligner to use"""
         )
 
-    @delegates(parse_inputs)
-    def att_from_sentence(self, s: str, **kwargs) -> TransformerOutputFormatter:
+    def att_from_sentence(self, s: str, mask_attentions=False) -> TransformerOutputFormatter:
         """Get formatted attention from a single sentence input"""
         tokens = self.aligner.tokenize(s)
-        return self.att_from_tokens(tokens, s)
+        return self.att_from_tokens(tokens, s, add_special_tokens=True, mask_attentions=mask_attentions)
 
-    @delegates(parse_inputs)
     def att_from_tokens(
-        self, tokens: List[str], orig_sentence, **kwargs
+        self, tokens: List[str], orig_sentence, add_special_tokens=False, mask_attentions=False
     ) -> TransformerOutputFormatter:
-        """Get formatted attention from a list of tokens, using the original sentence only for reference if we want to get Parts of Speech"""
+        """Get formatted attention from a list of tokens, using the original sentence for getting Spacy Metadata"""
         ids = self.aligner.convert_tokens_to_ids(tokens)
-        inputs = self.aligner.prepare_for_model(ids, return_tensors="pt")
-        parsed_input = self.format_model_input(inputs, **kwargs)
+        inputs = self.aligner.prepare_for_model(ids, add_special_tokens=add_special_tokens, return_tensors="pt")
+        parsed_input = self.format_model_input(inputs, mask_attentions=mask_attentions)
         output = self.model(**parsed_input)
         return self.format_model_output(inputs, orig_sentence, output)
 
@@ -112,10 +61,11 @@ class TransformerBaseDetails(ABC):
         hidden_state, attentions, contexts = self.get_state_att_contexts(output)
 
         tokens = self.view_ids(inputs["input_ids"])
-        disp_tokens = self.display_tokens(tokens)
+        toks = self.aligner.meta_from_tokens(sentence, tokens, perform_check=False)
+
         formatted_output = TransformerOutputFormatter(
             sentence,
-            disp_tokens,
+            toks,
             inputs["special_tokens_mask"],
             attentions,
             hidden_state,
@@ -135,22 +85,14 @@ class TransformerBaseDetails(ABC):
 
         return hidden_state, attentions, contexts
 
-    def display_tokens(self, toks: List[str]) -> List[str]:
-        """Convert the tokens to the strings we want to display to the user.
-        
-        Models like GPT-2 and Roberta want to override this method to handle the unicode that replaces spaces
-        """
-        return toks
-
-    @delegates(parse_inputs)
-    def format_model_input(self, inputs, **kwargs):
+    def format_model_input(self, inputs, mask_attentions=False):
         """Parse the input for the model according to what is expected in the forward pass. 
         
         If not otherwise defined, outputs a dict containing the keys:
         
         {'input_ids', 'token_type_ids', 'attention_mask'}
         """
-        return pick(self.forward_inputs, parse_inputs(inputs))
+        return pick(self.forward_inputs, self.parse_inputs(inputs, mask_attentions=mask_attentions))
 
     def view_ids(self, ids: Union[List[int], torch.Tensor]) -> List[str]:
         """View what the tokenizer thinks certain ids are"""
@@ -159,6 +101,58 @@ class TransformerBaseDetails(ABC):
             ids = ids.squeeze(0).tolist() 
 
         out = self.aligner.convert_ids_to_tokens(ids)
+        return out
+
+    def parse_inputs(self, inputs, mask_attentions=False):
+        """Parse the output from `tokenizer.prepare_for_model` to the desired attention mask from special tokens
+        
+        Args:
+            - inputs: The output of `tokenizer.prepare_for_model`. 
+                A dict with keys: {'special_token_mask', 'token_type_ids', 'input_ids'}
+            - mask_attentions: Flag indicating whether to mask the attentions or not
+            
+        Returns:
+            Dict with keys: {'input_ids', 'token_type_ids', 'attention_mask', 'special_tokens_mask'}
+            
+        Usage:
+            
+            ```
+            s = "test sentence"
+            
+            # from raw sentence to tokens
+            tokens = tokenizer.tokenize(s)
+
+            # From tokens to ids
+            ids = tokenizer.convert_tokens_to_ids(tokens)
+
+            # From ids to input
+            inputs = tokenizer.prepare_for_model(ids, return_tensors='pt')
+
+            # Parse the input. Optionally mask the special tokens from the analysis. 
+            parsed_input = parse_inputs(inputs)
+
+            # Run the model, pick from this output whatever inputs you want
+            from utils.f import pick
+            out = model(**pick(['input_ids'], parse_inputs(inputs)))
+            ```
+        """
+
+        out = inputs.copy()
+
+        # DEFINE SPECIAL TOKENS MASK
+        if "special_tokens_mask" not in inputs.keys():
+            special_tok_mask =  self.aligner.get_special_tokens_mask(inputs['input_ids'][0], already_has_special_tokens=True)
+            inputs['special_tokens_mask'] = special_tok_mask
+
+        if mask_attentions:
+            out["attention_mask"] = torch.tensor(
+                [int(not i) for i in inputs.get("special_tokens_mask")]
+            ).unsqueeze(0)
+        else:
+            out["attention_mask"] = torch.tensor(
+                [1 for i in inputs.get("special_tokens_mask")]
+            ).unsqueeze(0)
+
         return out
 
 
@@ -189,10 +183,6 @@ class GPT2Details(TransformerBaseDetails):
             GPT2Aligner.from_pretrained(model_name),
         )
 
-    def display_tokens(self, toks: List[str]) -> List[str]:
-        """Remove weird space unicode characters"""
-        return fix_byte_spaces(toks)
-
 class RobertaDetails(TransformerBaseDetails):
 
     @classmethod
@@ -206,9 +196,6 @@ class RobertaDetails(TransformerBaseDetails):
             ),
             RobertaAligner.from_pretrained(model_name),
         )
-
-    def display_tokens(self, toks: List[str]) -> List[str]:
-        return fix_byte_spaces(toks)
 
 class DistilBertDetails(TransformerBaseDetails):
     def __init__(self, model, aligner):
@@ -238,7 +225,3 @@ class DistilBertDetails(TransformerBaseDetails):
         _, hidden_states, attentions, contexts = output
 
         return hidden_states, attentions, contexts
-
-
-def fix_byte_spaces(toks: List[str]) -> List[str]:
-        return [t.replace("\u0120", " ") for t in toks]

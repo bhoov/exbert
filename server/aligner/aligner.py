@@ -73,9 +73,10 @@ def MakeAligner(pretrained_tokenizer, spacy_language_model):
             j = 0
 
             # Unfortunately, this can really slow down predictions. 
-            is_encoded = self.encode(sentence) == self.convert_tokens_to_ids(tokens)
-            is_tokenized = self.tokenize(sentence) == tokens
-            assert is_encoded or is_tokenized, "Can only take tokens that come from the original sentence!"
+            if perform_check:
+                is_encoded = self.encode(sentence) == self.convert_tokens_to_ids(tokens)
+                is_tokenized = self.tokenize(sentence) == tokens
+                assert is_encoded or is_tokenized, "Can only take tokens that come from the original sentence!"
 
             for i, b in enumerate(tokens):
                 if b in self.all_special_tokens:

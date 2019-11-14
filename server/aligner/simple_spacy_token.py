@@ -1,7 +1,7 @@
 import h5py
 import numpy as np
 from spacy.tokens.token import Token as SpacyToken
-from typing import Union
+from typing import Union, List
 
 class SimpleSpacyToken():
 
@@ -47,6 +47,10 @@ class SimpleSpacyToken():
         OUT_OF_ENT = 2
         NO_ENT_DEFINED = 0
         return tok.ent_iob != OUT_OF_ENT and tok.ent_iob != NO_ENT_DEFINED
+
+    def pick(self, keys:List[str]):
+        """Choose to return only the keys in `keys` to store as a simple dictionary"""
+        return {k: self[k] for k in fields}
 
     def assoc(self, key, value):
         """Set the key to the value, returning a new instance of SimpleSpacyTokens"""

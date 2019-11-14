@@ -9,6 +9,10 @@ import config
 from transformers.tokenization_bert import BertTokenizer
 from .f import flatten_, assoc, memoize, GetAttr
 
+from typing import List
+
+def fix_byte_spaces(toks: List[str]) -> List[str]:
+        return [t.replace("\u0120", " ") for t in toks]
 
 # NOTE: If you want to change anything that is extracted from the SPACY token, change the functions below.
 # ====================================================================================================
@@ -54,16 +58,13 @@ token_dtype = [
     ]
 # ====================================================================================================
 
-
 @memoize
 def get_bpe(bpe_pretrained_name_or_path):
     return BertTokenizer.from_pretrained(bpe_pretrained_name_or_path)
 
-
 @memoize
 def get_spacy(spacy_name):
     return spacy.load(spacy_name)
-
 
 class TokenAligner:
     def __init__(
@@ -186,11 +187,9 @@ class TokenAligner:
     def meta_tokenize(self, s):
         return self.to_bpe_meta(s)
 
-
 # [String] -> [String]
 def remove_CLS_SEP(toks):
     return [t for t in toks if t not in set(["[CLS]", "[SEP]"])]
-
 
 # torch.Tensor -> np.Array
 def process_hidden_tensors(t):

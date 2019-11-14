@@ -4,8 +4,7 @@ import connexion
 from flask_cors import CORS
 from flask import render_template, redirect, send_from_directory
 
-
-from pytorch_pretrained_bert import BertModel, BertTokenizer
+from transformer_details import BertDetails
 
 import config
 
@@ -71,8 +70,7 @@ def send_static_client(path):
 # ======================================================================
 ## INITIALIZATION OF MODEL ##
 # ======================================================================
-model = BertModel.from_pretrained(config.BERT_VERSION)
-details_data = AttentionDetailsData(model, aligner)
+details_data = BertDetails.from_pretrained(config.BERT_VERSION)
 
 p_file = "_store/simple.pckl"
 
@@ -83,10 +81,9 @@ def get_attention_and_meta(**request):
     sent_a = request["sentenceA"]
     sent_b = request["sentenceB"]
     layer = int(request["layer"])
-    deets = details_data.get_data(sent_a, sent_b)
-    attentions_and_meta = deets.to_json(sent_a, sent_b)
+    deets = details_data.att_from_sentence(sent_a)
 
-    return minimize_aa(keep_aa(attentions_and_meta), layer, in_side_select_layer)
+    return deets.to_old_json(layer + 1) # CHANGE +1 WHEN FRONTEND FIXED
 
 
 def update_masked_attention(**request):
@@ -112,11 +109,8 @@ def update_masked_attention(**request):
     tokens_a = mask_tokens(a, mask_a)
     tokens_b = mask_tokens(b, mask_b)
 
-    deets = details_data.get_data_from_tokens(tokens_a, tokens_b)
-    attentions_and_meta = deets.to_json(sent_a, sent_b)
-
-    out = minimize_aa(keep_aa(attentions_and_meta), layer, in_side_select_layer)
-
+    deets = details_data.att_from_tokens(tokens_a, sent_a)
+    out = deets.to_old_json(layer + 1) # CHANGE THIS
     return out
 
 
