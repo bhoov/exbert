@@ -167,7 +167,7 @@ class TokenAligner:
         j = 0
         for i, b in enumerate(bpe_tokens):
             if b in self.bpe.all_special_tokens:
-                new_bpe_meta.append(null_filler(b))
+                new_bpe_meta.append(null_token_filler(b))
             else:
                 new_bpe_meta.append(bpe_meta[j])
                 j += 1

@@ -10,7 +10,7 @@ from transformers import (
     RobertaTokenizer,
     DistilBertTokenizer,
 )
-from utils.simple_spacy_token import SimpleSpacyToken
+from aligner.simple_spacy_token import SimpleSpacyToken
 from utils.f import flatten_, assoc, memoize, GetAttr, delegates, pick
 
 def doc_to_fixed_tokens(doc: SpacyDoc) -> List[str]:
@@ -45,7 +45,7 @@ def MakeAligner(pretrained_tokenizer, spacy_language_model):
             s = self.prep_sentence(s)
             return super().tokenize(s, **kwargs)
 
-        def meta_tokenize(self, s: str) -> List:
+        def meta_tokenize(self, s: str) -> List[SimpleSpacyToken]:
             """Tokenize the sentence and return the metadata for it according to Spacy
             
             Due to implementation differences, does not provide the exact same API as the 
@@ -124,14 +124,19 @@ def MakeAligner(pretrained_tokenizer, spacy_language_model):
             """
             BUFFER = "X " # GPT tokenization fusses if it thinks the token is the beginning of the sentence
 
+            def choose_norm(t):
+                return t['token'] if t['token'].lower() == t['norm'] else t['norm']
+
+            tok = choose_norm(meta_token)
+
             if idx != 0: 
-                s = BUFFER + meta_token["token"] # Add a buffer with guaranteed tokenization of length 1 to input
+                s = BUFFER + tok # Add a buffer with guaranteed tokenization of length 1 to input
                 offset = 1
             else: 
-                s = meta_token["token"]
+                s = tok
                 offset = 0
 
-            bpe_tokens = self.tokenize(s)
+            bpe_tokens = super().tokenize(s) # Can't do `self.tokenize` because it will normalize again
 
             # Functional version that works with dictionaries
             return [meta_token.assoc("token", b) for b in bpe_tokens[offset:]]

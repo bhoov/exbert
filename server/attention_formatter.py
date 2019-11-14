@@ -5,7 +5,9 @@ import json
 from collections import defaultdict
 from copy import deepcopy
 
-from utils.token_processing import aligner, null_filler
+# from utils.token_processing import aligner, null_filler
+# from utils.aligner import BertAligner
+from utils.token_processing import aligner
 from utils.gen_utils import zip_dicts, map_nlist, check_zippable, zip_dicts
 
 
