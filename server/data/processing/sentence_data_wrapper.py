@@ -24,10 +24,13 @@ def zip_len_check(*iters):
 class TokenH5Data:
     """A wrapper around the HDF5 file storage information allowing easy access to information about each 
     processed sentence.
+
+    Sometimes, and index of -1 is used to represent the entire object in memory
     """
     def __init__(self, grp, index):
         """Represents returned from the refmap of the CorpusEmbedding class"""
         self.grp = grp
+
         self.index = index
 
     @property

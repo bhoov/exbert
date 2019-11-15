@@ -11,6 +11,9 @@ from data.processing.extractor import EmbeddingExtractor, HeadContextExtractor
 from data.processing.sentence_extracting import extract_chars, extract_lines
 from data.processing.corpus_embeddings import main_key, suppl_attn_key
 
+from transformer_details import BertDetails
+from data.processing.corpus_data_wrapper import CorpusDataWrapper
+
 def parse_args():
     parser = argparse.ArgumentParser()
     parser.add_argument("-f", "--file", help="Path to .pckl file of unique sentences from a corpus.")
@@ -60,6 +63,55 @@ def make_f(outpath, group_name, force):
 
 def main(infile, outdir, force, bert_model):
     outdir = Path(outdir)
+
+    embedding_extractor = EmbeddingExtractor.from_pretrained(bert_model)
+    embedding_dir = outdir / 'embeddings'
+    embedding_dir.mkdir(parents=True, exist_ok=True)
+    embedding_outfile = "embeddings" + '.hdf5'
+    embedding_outpath = embedding_dir / embedding_outfile
+    embed_f, embed_grp = make_f(embedding_outpath, "embeddings", force) # must be called "embeddings" for wrapper to work
+
+    context_extractor = HeadContextExtractor.from_pretrained(bert_model)
+    context_dir = outdir / 'headContext'
+    context_dir.mkdir(parents=True, exist_ok=True)
+    context_outfile =  "contexts" + '.hdf5'
+    context_outpath = context_dir / context_outfile
+    context_f, context_grp = make_f(context_outpath, "embeddings", force)
+    
+    print_every = 50
+    long_strings = extract_chars(infile, 10000)
+    cutoff_sent = ""
+    i = 0
+    for strip in long_strings:
+        sentences = [sent.text for sent in aligner.nlp(strip).sents]
+        fixed_sentences = [cutoff_sent + sentences[0]] + sentences[1:-1] 
+
+        # This leads to the possibility that there will be an input that is two sentences long. This is ok.
+        cutoff_sent = sentences[-1]
+        for s in fixed_sentences:
+            if ((i + 1) % print_every) == 0:
+                print(f"Starting sentence {i+1}: ")
+                print(s)
+
+            try:
+                sentence_to_hdf5(embed_grp, embedding_extractor, s, i)
+            except:
+                print(f"Broken in Embeddings at {i}: {s}")
+                raise
+
+            try:
+                sentence_to_hdf5(context_grp, context_extractor, s, i)
+            except:
+                print(f"Broken in Contexts at {i}: {s}")
+                raise
+
+            i += 1 # Increment to mark the next sentence
+    
+    print("FINISHED SUCCESSFULLY")
+
+def new_main(infile, oudir, force, model):
+    outdir = Path(outdir)
+    deets = BertDetails.from_pretrained(model)
 
     embedding_extractor = EmbeddingExtractor.from_pretrained(bert_model)
     embedding_dir = outdir / 'embeddings'

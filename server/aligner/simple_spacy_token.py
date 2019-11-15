@@ -8,7 +8,7 @@ class SimpleSpacyToken():
     # Indicate how the info should be stored as hdf5 metadata.
     # Names on left MUST match properties of this class
     hdf5_token_dtype = [
-        ("token", h5py.special_dtype(vlen=str))
+        ("token", h5py.special_dtype(vlen=str)),
         ("pos", h5py.special_dtype(vlen=str)),
         ("dep", h5py.special_dtype(vlen=str)),
         ("norm", h5py.special_dtype(vlen=str)),
