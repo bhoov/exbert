@@ -5,8 +5,10 @@ from typing import Union, List
 
 class SimpleSpacyToken():
 
+    # Indicate how the info should be stored as hdf5 metadata.
+    # Names on left MUST match properties of this class
     hdf5_token_dtype = [
-        ("token", h5py.special_dtype(vlen=str)),
+        ("token", h5py.special_dtype(vlen=str))
         ("pos", h5py.special_dtype(vlen=str)),
         ("dep", h5py.special_dtype(vlen=str)),
         ("norm", h5py.special_dtype(vlen=str)),
@@ -50,7 +52,7 @@ class SimpleSpacyToken():
 
     def pick(self, keys:List[str]):
         """Choose to return only the keys in `keys` to store as a simple dictionary"""
-        return {k: self[k] for k in fields}
+        return {k: self[k] for k in keys}
 
     def assoc(self, key, value):
         """Set the key to the value, returning a new instance of SimpleSpacyTokens"""

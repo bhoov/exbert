@@ -66,6 +66,7 @@ class TransformerOutputFormatter:
         embeddings: Tuple[torch.Tensor],
         contexts: Tuple[torch.Tensor],
     ):
+        assert len(tokens) > 0, "Cannot have an empty token output!"
 
         modified_att = add_blank(flatten_batch(att))
         modified_contexts = add_blank(squeeze_contexts(flatten_batch(contexts)))
@@ -77,14 +78,6 @@ class TransformerOutputFormatter:
         self.embeddings = modified_embeddings
         self.attentions = modified_att
         self.contexts = modified_contexts
-
-        # print("Att length: ", len(self.attentions))
-        # print("HS length: ", len(self.embeddings))
-        # print("Context length: ", len(self.contexts))
-
-        # print("Att shape: ", self.attentions[3].shape)
-        # print("HS shape: ", self.embeddings[3].shape)
-        # print("Context shape: ", self.contexts[3].shape)
     
     def to_json(self):
         print("Jsoning")
@@ -144,9 +137,32 @@ class TransformerOutputFormatter:
     def display_tokens(self, tokens):
         return fix_byte_spaces(tokens)
 
+    def to_hdf5_meta(self):
+        """Output metadata information to store as hdf5 metadata for a group"""
+        token_dtype = self.tokens[0].hdf5_token_dtype
+        out = {k: np.array([t[k] for t in self.tokens], dtype=np.dtype(dtype)) for k, dtype in token_dtype}
+        return out
+
+    def to_hdf5_content(self):
+        """Return dictionary of {attentions, embeddings, contexts} formatted as array for hdf5 file"""
+        embeddings = to_numpy(self.embeddings)
+        contexts = to_numpy(self.contexts)
+        atts = to_numpy(self.attentions)
+
+        return {
+            "embeddings": embeddings,
+            "contexts": contexts,
+            "attentions": atts
+        }
+
     def __repr__(self):
         lim = 40
         if len(self.sentence) > lim: s = self.sentence[:lim - 3] + "..."
         else: s = self.sentence[:lim]
 
         return f"TransformerOutput({s})"
+        
+def to_numpy(x): 
+    """Embeddings, contexts, and attentions are stored as torch.Tensors in a tuple. Convert this to a numpy array
+    for storage in hdf5"""
+    return np.array([x_.detach().numpy() for x_ in x])
