@@ -141,6 +141,7 @@ class TransformerOutputFormatter:
         """Output metadata information to store as hdf5 metadata for a group"""
         token_dtype = self.tokens[0].hdf5_token_dtype
         out = {k: np.array([t[k] for t in self.tokens], dtype=np.dtype(dtype)) for k, dtype in token_dtype}
+        out['sentence'] = self.sentence
         return out
 
     def to_hdf5_content(self):

@@ -357,7 +357,7 @@ class CorpusEmbeddings:
             return self.embeddings[key]
         
         else:
-            raise NotImplementedError
+            raise NotImplementedError(f"Value of type {type(idx)} is not supported for indexing")
     
     def __repr__(self):
         return f"{self.__name}: containing {self.__len} items"
