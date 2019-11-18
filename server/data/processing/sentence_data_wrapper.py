@@ -21,17 +21,9 @@ def zip_len_check(*iters):
 
     return zip(*iters)
 
-class TokenH5Data:
-    """A wrapper around the HDF5 file storage information allowing easy access to information about each 
-    processed sentence.
-
-    Sometimes, and index of -1 is used to represent the entire object in memory
-    """
-    def __init__(self, grp, index):
-        """Represents returned from the refmap of the CorpusEmbedding class"""
+class SentenceH5Data:
+    def __init__(self, grp):
         self.grp = grp
-
-        self.index = index
 
     @property
     def n_layers(self):
@@ -40,7 +32,7 @@ class TokenH5Data:
     @property
     def sentence(self):
         return self.grp.attrs['sentence']
-        
+
     @property
     def embeddings(self):
         return self.grp['embeddings'][:]
@@ -50,19 +42,73 @@ class TokenH5Data:
         return self.grp['contexts'][:]
 
     @property
+    def attentions(self):
+        """Return all attentions, including [CLS] and [SEP]
+        
+        Note that if the hdf5 is created with CLS and SEP attentions, it will have CLS and SEP attentions"""
+        return self.grp['attentions'][:] # Converts to numpy array
+
+    @property
+    def tokens(self):
+        return self.grp.attrs['token']
+
+    @property
+    def poss(self):
+        return self.grp.attrs['pos']
+
+    @property
+    def deps(self):
+        return self.grp.attrs['dep']
+
+    @property
+    def is_ents(self):
+        return self.grp.attrs['is_ent']
+    
+    @property
+    def heads(self):
+        """Not the attention heads, but rather the head word of the orig sentence"""
+        return self.grp.attrs['head']
+    
+    @property
+    def norms(self):
+        return self.grp.attrs['norm']
+    
+    @property
+    def tags(self):
+        return self.grp.attrs['tag']
+    
+    @property
+    def lemmas(self):
+        return self.grp.attrs['lemma']
+
+    def __len__(self):
+        return len(self.tokens)
+
+    def __repr__(self):
+        sent_len = 40
+        if len(self.sentence) > sent_len: s = self.sentence[:(sent_len - 3)] + '...'
+        else: s = self.sentence
+        return f"SentenceH5Data({s})"
+
+class TokenH5Data(SentenceH5Data):
+    """A wrapper around the HDF5 file storage information allowing easy access to information about each 
+    processed sentence.
+
+    Sometimes, and index of -1 is used to represent the entire object in memory
+    """
+    def __init__(self, grp, index):
+        """Represents returned from the refmap of the CorpusEmbedding class"""
+        if type(grp) == SentenceH5Data: super().__init__(grp.grp)
+        elif type(grp) == h5py._hl.group.Group: super().__init__(grp)
+        self.index = index
+
+    @property
     def embedding(self):
         return self.embeddings[:, self.index, :]
     
     @property
     def context(self):
         return self.contexts[:, self.index, :]
-    
-    @property
-    def attentions(self):
-        """Return all attentions, including [CLS] and [SEP]
-        
-        Note that if the hdf5 is created with CLS and SEP attentions, it will have CLS and SEP attentions"""
-        return self.grp['attentions'][:] # Converts to numpy array
 
     @property
     def attentions_out(self):
@@ -97,39 +143,6 @@ class TokenH5Data:
     # Right now, needs manual curation of fields from SimpleSpacyToken. Ideally, this is automated
     
     @property
-    def tokens(self):
-        return self.grp.attrs['token']
-
-    @property
-    def poss(self):
-        return self.grp.attrs['pos']
-
-    @property
-    def deps(self):
-        return self.grp.attrs['dep']
-
-    @property
-    def is_ents(self):
-        return self.grp.attrs['is_ent']
-    
-    @property
-    def heads(self):
-        """Not the attention heads, but rather the head word of the orig sentence"""
-        return self.grp.attrs['head']
-    
-    @property
-    def norms(self):
-        return self.grp.attrs['norm']
-    
-    @property
-    def tags(self):
-        return self.grp.attrs['tag']
-    
-    @property
-    def lemmas(self):
-        return self.grp.attrs['lemma']
-    
-    @property
     def token(self):
         return self.tokens[self.index]
 
@@ -160,9 +173,6 @@ class TokenH5Data:
     @property
     def tag(self):
         return self.tags[self.index]
-
-    def __len__(self):
-        return len(self.tokens)
 
     def to_json(self, layer, heads, top_k=5, ndigits=4):
         """

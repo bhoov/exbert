@@ -23,6 +23,32 @@ from transformers import (
 
 from utils.f import delegates, pick
 
+def from_pretrained(model_name):
+    """Convert model name into appropriate transformer details"""
+    cls_type = {
+        'bert-base-uncased': BertDetails,
+        'bert-base-cased': BertDetails,
+        'bert-large-uncased': BertDetails,
+        'bert-large-cased': BertDetails,
+        'gpt2': GPT2Details,
+        'gpt2-medium': GPT2Details,
+        'gpt2-large': GPT2Details,
+        'roberta-base': RobertaDetails,
+        'roberta-large': RobertaDetails,
+        'roberta-large-mnli': RobertaDetails,
+        'roberta-base-openai-detector': RobertaDetails,
+        'roberta-large-openai-detector': RobertaDetails,
+        'distilbert-base-uncased': DistilBertDetails,
+        'distilbert-base-uncased-distilled-squad': DistilBertDetails,
+        'distilgpt2': DistilBertDetails,
+        'distilroberta-base': DistilBertDetails,
+    }
+
+    try: out = cls_type[model_name].from_pretrained(model_name)
+    except KeyError: raise KeyError(f"The model name of '{model_name}' either does not exist or is currently not supported")
+
+    return out
+
 class TransformerBaseDetails(ABC):
     """ All API calls will interact with this class to get the hidden states and attentions for any input sentence."""
 

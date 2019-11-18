@@ -4,11 +4,11 @@ from functools import partial
 from utils.gen_utils import map_nlist, vround
 import regex as re
 from aligner.simple_spacy_token import SimpleSpacyToken
-from data.processing.sentence_data_wrapper import TokenH5Data
+from data.processing.sentence_data_wrapper import SentenceH5Data, TokenH5Data
+from utils.f import ifnone
     
 ZERO_BUFFER = 12 # Number of decimal places each index takes
 main_key = r"{:0" + str(ZERO_BUFFER) + r"}"
-suppl_attn_key = r"{:0" + str(ZERO_BUFFER) + r"}_attn"
 
 def to_idx(idx:int):
     return main_key.format(idx)
@@ -32,13 +32,13 @@ class CorpusDataWrapper:
     and in memory dictionary.
     """
 
-    def __init__(self, fname, name="WoZ embeddings"):
+    def __init__(self, fname, name=None):
         """Open an hdf5 file of the format designed and provide easy access to its contents"""
                 
         # For iterating through the dataset
         self.__curr = 0
         
-        self.__name = name
+        self.__name = ifnone(name, "CorpusData")
         self.data = h5py.File(fname, 'r')
 
         main_keys = self.data.keys()
@@ -46,7 +46,7 @@ class CorpusDataWrapper:
 
         assert self.__len > 0, "Cannot process an empty file"
 
-        embeds = self[0]['embeddings']
+        embeds = self[0].embeddings
         self.embedding_dim = embeds.shape[-1]
         self.n_layers = embeds.shape[0] - 1  # 1 was added for the input layer
         self.refmap, self.total_vectors = self._init_vector_map()
@@ -87,15 +87,18 @@ class CorpusDataWrapper:
                 out.append(self[i])
                 i += step
             
-            return np.concatenate(out, axis=1)
+            return out
         
         elif isinstance(idx, int):
-            key = to_idx(idx)
-            return self.data[key]
+            if idx < 0: i = self.__len + idx
+            else: i = idx
+
+            key = to_idx(i)
+            return SentenceH5Data(self.data[key])
         
         else:
             raise NotImplementedError
-    
+
     def __repr__(self):
         return f"{self.__name}: containing {self.__len} items"
     
@@ -110,11 +113,9 @@ class CorpusDataWrapper:
         refmap = {}
         print("Initializing reference map for embedding vector...")
         n_vec = 0
-        for z, grp in enumerate(self):
-            # iterate through each layer ??
-            sentence = TokenH5Data(grp, 0) # Get info about current sentence
+        for z, sentence in enumerate(self):
             for i in range(len(sentence)):
-                refs = TokenH5Data(grp, i)
+                refs = TokenH5Data(sentence, i)
                 refmap[n_vec] = refs
                 n_vec += 1
         
@@ -139,8 +140,4 @@ class CorpusDataWrapper:
     def find2d(self, idxs):
         """Find a vector's metadata in the hdf5 file. Needed to find sentence info and other attr"""
         out = [[self.refmap[i] for i in idx] for idx in idxs]
-        return np.array(out)
-    
-    def grab(self, training_idx, layer, token_num):
-        """Find a vector in the hdf5 file by indexing with the above parameters"""
-        return self[training_idx][layer, token_num]
+        return out
