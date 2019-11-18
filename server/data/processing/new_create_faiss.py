@@ -33,6 +33,7 @@ def train_indexes(ce:CorpusDataWrapper, stepsize=100):
 
     for ix in range(0, len(ce), stepsize):
         cdata = ce[ix:ix+stepsize]
+
         embeddings = np.concatenate([c.embeddings for c in cdata], axis=1)
         contexts = np.concatenate([c.contexts for c in cdata], axis=1)
 
@@ -115,25 +116,14 @@ class ContextIndexes(Indexes):
 
         return self[layer].search(new_query, k)
 
-def search_tst(embedding_indir, corpus):
-    idxs = Indexes(str(embedding_indir))
-    SEARCH_LAYER = 12
-    WORD_IDX = 6 
-    seed = corpus[20]
-    q = seed.embeddings[SEARCH_LAYER, WORD_IDX].astype(np.float32)[None] # unsqueeze
-
-    D, I = idxs.search(SEARCH_LAYER, q, 10)
-    print("Original: ", seed.tokens[WORD_IDX])
-    print(corpus.find2d(I))
-
 def main(basedir):
     base = Path(basedir)
     h5_fname = base / 'data.hdf5'
     corpus = CorpusDataWrapper(h5_fname, "woz_tst")
-    context_faiss_dir = base / "context_faiss"
-    embedding_faiss_dir = base / "embedding_faiss"
     embedding_faiss, context_faiss = train_indexes(corpus)
 
+    context_faiss_dir = base / "context_faiss"
+    embedding_faiss_dir = base / "embedding_faiss"
     save_indexes(embedding_faiss, embedding_faiss_dir)
     save_indexes(context_faiss, context_faiss_dir)
 

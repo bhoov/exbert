@@ -69,7 +69,6 @@ class TransformerOutputFormatter:
         assert len(tokens) > 0, "Cannot have an empty token output!"
 
         modified_att = add_blank(flatten_batch(att))
-        modified_contexts = add_blank(squeeze_contexts(flatten_batch(contexts)))
         modified_embeddings = flatten_batch(embeddings)
 
         self.sentence = sentence
@@ -77,7 +76,30 @@ class TransformerOutputFormatter:
         self.special_tokens_mask = special_tokens_mask
         self.embeddings = modified_embeddings
         self.attentions = modified_att
-        self.contexts = modified_contexts
+        self.raw_contexts = contexts
+
+        self.n_layers = len(contexts) # Add +1 for buffer layer at the beginning
+        _, self.__len, self.n_heads, self.hidden_dim = contexts[0].shape
+
+    @property
+    def contexts(self):
+        """Combine the head and the context dimension as it is passed forward in the model"""
+        return squeeze_contexts(self.raw_contexts)
+
+    @property
+    def normed_embeddings(self):
+        ens = tuple([torch.norm(e, dim=-1) for e in self.embeddings])
+        normed_es = tuple([e / en.unsqueeze(-1) for e, en in zip(self.embeddings, ens)])
+        return normed_es
+
+    @property
+    def normed_contexts(self):
+        """Normalize each by head"""
+        cs = self.raw_contexts
+        cns = tuple([torch.norm(c, dim=-1) for c in cs])
+        normed_cs = tuple([c / cn.unsqueeze(-1) for c, cn in zip(cs, cns)])
+        squeezed_normed_cs = squeeze_contexts(normed_cs)
+        return squeezed_normed_cs
     
     def to_json(self):
         print("Jsoning")
@@ -144,10 +166,19 @@ class TransformerOutputFormatter:
         out['sentence'] = self.sentence
         return out
 
-    def to_hdf5_content(self):
+    def to_hdf5_content(self, do_norm=True):
         """Return dictionary of {attentions, embeddings, contexts} formatted as array for hdf5 file"""
-        embeddings = to_numpy(self.embeddings)
-        contexts = to_numpy(self.contexts)
+
+        def get_embeds(c): 
+            if do_norm: return c.normed_embeddings
+            return c.embeddings
+
+        def get_contexts(c):
+            if do_norm: return c.normed_contexts
+            return c.contexts
+
+        embeddings = to_numpy(get_embeds(self))
+        contexts = to_numpy(get_contexts(self))
         atts = to_numpy(self.attentions)
 
         return {
@@ -162,6 +193,9 @@ class TransformerOutputFormatter:
         else: s = self.sentence[:lim]
 
         return f"TransformerOutput({s})"
+
+    def __len__(self):
+        return self.__len
         
 def to_numpy(x): 
     """Embeddings, contexts, and attentions are stored as torch.Tensors in a tuple. Convert this to a numpy array
