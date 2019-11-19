@@ -88,7 +88,7 @@ export class CorpusInspector extends VComponent<tp.FaissSearchResults[]>{
                 dep: d => d.dep.toLowerCase(), 
                 is_ent: d => d.is_ent
             })
-            .text(d => d.token)
+            .text(d => d.token.replace("\u0120", " "))
             .classed('matched-cell', d => d.is_match)
 
         // Highlight the cells appropriately

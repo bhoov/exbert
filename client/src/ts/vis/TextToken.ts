@@ -67,7 +67,9 @@ export abstract class TextTokens extends VComponent<tp.FullSingleTokenInfo[]>{
             .attr("class", (d, i) => `token ${this.css_name} token-${i}`)
             .attr("id", (d, i) => `${this.css_name}-${i}`)
             .style('height', op.boxheight + 'px')
-            .text((d) => {return d.text})
+            .text((d) => {
+                return d.text.replace("\u0120", " ")
+            })
             .on('mouseover', function(d, i) {
                 const sel = d3.select(this);
                 sel.style('background', 'lightblue');

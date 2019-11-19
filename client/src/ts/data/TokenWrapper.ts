@@ -17,12 +17,6 @@ import * as R from 'ramda'
  }]
 
 export class TokenDisplay  {
-
-    readonly sideMap = {
-        left: "a",
-        right: "b"
-    }
-
     tokenData:tp.FullSingleTokenInfo[]
     maskInds:number[]
 
