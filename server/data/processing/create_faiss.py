@@ -2,7 +2,7 @@ import faiss
 import numpy as np
 import utils.path_fixes as pf
 from pathlib import Path
-from data.processing.corpus_embeddings import CorpusEmbeddings
+from data.processing.corpus_data_wrapper import CorpusDataWrapper
 from functools import partial
 import argparse
 
@@ -17,7 +17,7 @@ def parse_args():
     args = parser.parse_args()
     return args
 
-def train_indexes(ce:CorpusEmbeddings, stepsize=100):
+def train_indexes(ce:CorpusDataWrapper, stepsize=100):
     """
     
     Parameters:
@@ -25,22 +25,34 @@ def train_indexes(ce:CorpusEmbeddings, stepsize=100):
     - corpus_embedding: Wrapper around HDF5 file for easy access to data
     - stepsize: How many sentences to train with at once
     """
+    NUM_LAYERS = ce.n_layers + 1 # want to account for the input layer, which for attentions + contexts is all value 0
     
-    indexes = [faiss.IndexFlatIP(ce.embedding_dim) for i in range(ce.n_layers)]
+    embedding_indexes = [faiss.IndexFlatIP(ce.embedding_dim) for i in range(NUM_LAYERS)]
+    context_indexes = [faiss.IndexFlatIP(ce.embedding_dim) for i in range(NUM_LAYERS)]
 
     for ix in range(0, len(ce), stepsize):
         cdata = ce[ix:ix+stepsize]
-        for i in range(ce.n_layers):
-            indexes[i].add(cdata[i])
+
+        embeddings = np.concatenate([c.embeddings for c in cdata], axis=1)
+        contexts = np.concatenate([c.contexts for c in cdata], axis=1)
+
+        for i in range(NUM_LAYERS):
+            embedding_indexes[i].add(embeddings[i])
+            context_indexes[i].add(contexts[i])
             
-    return indexes
+    return embedding_indexes, context_indexes
 
 def save_indexes(idxs, outdir, base_name=LAYER_TEMPLATE):
     """Save the faiss index into a file for each index in idxs"""
 
-    out_name = str(Path(outdir) / base_name)
+    base_dir = Path(outdir)
+    if not base_dir.exists(): base_dir.mkdir(exist_ok=True, parents=True)
+
+    out_name = str(base_dir / base_name)
     for i, idx in enumerate(idxs):
-        faiss.write_index(idx, out_name.format(i))
+        name = out_name.format(i)
+        print(f"Saving to {name}")
+        faiss.write_index(idx, name)
 
 class Indexes:
     """Wrapper around the faiss indices to make searching for a vector simpler and faster.
@@ -49,9 +61,8 @@ class Indexes:
     """
     def __init__(self, folder, pattern=FAISS_LAYER_PATTERN):
         self.base_dir = Path(folder)
-        num_layers = len(list(self.base_dir.glob(pattern)))
-        print(num_layers)
-        self.indexes = [None] * num_layers # Initialize empty list
+        self.n_layers = len(list(self.base_dir.glob(pattern))) - 1 # Subtract input dimension
+        self.indexes = [None] * (self.n_layers + 1) # Initialize empty list, adding 1 for input
         self.pattern = pattern
         self.__init_indexes()
         
@@ -101,47 +112,19 @@ class ContextIndexes(Indexes):
         mask_vector = mask_vector.reshape(query.shape)
 
         new_query = (query * mask_vector).astype(np.float32)
-        # print(new_query.dtype)
 
         return self[layer].search(new_query, k)
 
 def main(basedir):
     base = Path(basedir)
+    h5_fname = base / 'data.hdf5'
+    corpus = CorpusDataWrapper(h5_fname, "woz_tst")
+    embedding_faiss, context_faiss = train_indexes(corpus)
 
-    # embeddings
-    embedding_dir = base / 'embeddings'
-    embedding_hdf5 = embedding_dir / 'embeddings.hdf5'
-    print(f"Creating Embedding faiss files in {embedding_dir} from {embedding_hdf5}")
-    embedding_ce = CorpusEmbeddings(str(embedding_hdf5))
-    embedding_idxs = train_indexes(embedding_ce)
-    save_indexes(embedding_idxs, embedding_dir)
-
-    ## Test embedding search:
-    print("Testing embedding idxs:")
-    loaded_embedding_idxs = Indexes(embedding_dir)
-    q = np.random.randn(1, 768).astype(np.float32)
-    D, I = loaded_embedding_idxs.search(0, q, 5)
-
-    print("\n\nShowing a test result from an embedding faiss search")
-    print(embedding_ce.find2d(I))
-
-    print("\n" + "=" * 50 + "\n")
-
-    # headContext
-    context_dir = base / 'headContext'
-    context_hdf5 = context_dir / 'contexts.hdf5'
-    print(f"Creating head context faiss files in {context_dir} from {context_hdf5}")
-    context_ce = CorpusEmbeddings(str(context_hdf5))
-    context_indexes = train_indexes(context_ce)
-    save_indexes(context_indexes, context_dir)
-
-    ## Test context search:
-    loaded_context_idxs = Indexes(context_dir)
-    q = np.random.randn(1, 768).astype(np.float32)
-    D, I = loaded_context_idxs.search(0, q, 5)
-
-    print("\n\nShowing a test result from a context faiss search")
-    print(context_ce.find2d(I))
+    context_faiss_dir = base / "context_faiss"
+    embedding_faiss_dir = base / "embedding_faiss"
+    save_indexes(embedding_faiss, embedding_faiss_dir)
+    save_indexes(context_faiss, context_faiss_dir)
 
 if __name__ == "__main__":
     # Creating the indices for both the context and embeddings
