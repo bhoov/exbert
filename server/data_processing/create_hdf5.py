@@ -5,8 +5,8 @@ import pickle
 import argparse
 from pathlib import Path
 
-from data.processing.sentence_extracting import extract_chars, extract_lines
-from data.processing.corpus_data_wrapper import CorpusDataWrapper, to_idx
+from data_processing.sentence_extracting import extract_chars, extract_lines
+from data_processing.corpus_data_wrapper import CorpusDataWrapper, to_idx
 from transformer_details import from_pretrained
 
 MIN_SENTENCE_CHARLEN = 24

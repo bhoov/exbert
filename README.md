@@ -129,7 +129,7 @@ Note: This code has possible OS dependencies as it was developed exclusively on 
 
 ### Generating Example Data
 
-please see the [instructions here](https://github.com/bhoov/exbert/tree/master/server/data/processing)
+please see the [instructions here](https://github.com/bhoov/exbert/tree/master/server/data_processing)
 
 
 ### Running Locally

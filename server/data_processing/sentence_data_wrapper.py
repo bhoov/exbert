@@ -128,7 +128,6 @@ class TokenH5Data(SentenceH5Data):
 
         # Select layer and heads
         modified_attentions = self.attentions[layer, heads].mean(0)
-        print("Modified attention shape: ", modified_attentions.shape)
         attentions_out = modified_attentions
         attentions_in = modified_attentions.transpose()
         return attentions_out, attentions_in

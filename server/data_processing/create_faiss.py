@@ -2,7 +2,7 @@ import faiss
 import numpy as np
 import utils.path_fixes as pf
 from pathlib import Path
-from data.processing.corpus_data_wrapper import CorpusDataWrapper
+from data_processing.corpus_data_wrapper import CorpusDataWrapper
 from functools import partial
 import argparse
 

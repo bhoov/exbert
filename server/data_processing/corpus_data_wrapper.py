@@ -4,7 +4,7 @@ from functools import partial
 from utils.gen_utils import map_nlist, vround
 import regex as re
 from aligner.simple_spacy_token import SimpleSpacyToken
-from data.processing.sentence_data_wrapper import SentenceH5Data, TokenH5Data
+from data_processing.sentence_data_wrapper import SentenceH5Data, TokenH5Data
 from utils.f import ifnone
     
 ZERO_BUFFER = 12 # Number of decimal places each index takes

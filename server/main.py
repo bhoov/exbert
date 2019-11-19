@@ -8,8 +8,8 @@ import utils.path_fixes as pf
 import config
 from utils.f import ifnone
 
-from data.processing.create_faiss import Indexes, ContextIndexes
-from data.processing.corpus_data_wrapper import CorpusDataWrapper
+from data_processing.create_faiss import Indexes, ContextIndexes
+from data_processing.corpus_data_wrapper import CorpusDataWrapper
 from transformer_details import from_pretrained
 
 

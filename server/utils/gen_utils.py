@@ -1,5 +1,4 @@
 import spacy
-from pytorch_pretrained_bert import BertTokenizer
 from copy import deepcopy
 import numpy as np
 from functools import partial
