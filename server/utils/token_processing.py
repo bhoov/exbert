@@ -222,6 +222,3 @@ def reshape(a):
     all_head_size = a.shape[-2] * a.shape[-1]
     new_shape = a.shape[:-2] + (all_head_size,)
     return a.reshape(new_shape)
-
-
-aligner = TokenAligner(bpe_pretrained_name_or_path=config.BERT_VERSION)

@@ -5,8 +5,6 @@ import pickle
 import argparse
 from pathlib import Path
 
-from utils.token_processing import aligner
-
 from data.processing.sentence_extracting import extract_chars, extract_lines
 from data.processing.corpus_embeddings import main_key, suppl_attn_key
 
@@ -40,7 +38,7 @@ def main(infile, outdir, force, model_name, mask_attentions):
     cutoff_sent = ""
     i = 0
     for strip in long_strings:
-        sentences = [sent.text for sent in aligner.nlp(strip).sents]
+        sentences = [sent.text for sent in extractor.aligner.nlp(strip).sents]
         fixed_sentences = [cutoff_sent + sentences[0]] + sentences[1:-1] 
 
         # This leads to the possibility that there will be an input that is two sentences long. This is ok.

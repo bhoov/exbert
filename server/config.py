@@ -9,12 +9,10 @@ ROOT = Path(os.path.abspath(__file__)).parent
 DATA = ROOT / "data"
 
 # Change this to indicate what data is loaded for searching
-RESOURCE_DIR = DATA / "woz" 
+RESOURCE_DIR = DATA / "woz_gpt2_tst" 
 
 # Below are DEFAULTS. Change only if you changed the way embeddings and contexts are stored and created
-EMBEDDING_CORPUS = RESOURCE_DIR / "embeddings" / "embeddings.hdf5"
-CONTEXT_CORPUS = RESOURCE_DIR / "headContext" / "contexts.hdf5"
-EMBEDDING_FAISS = RESOURCE_DIR / "embeddings"
-CONTEXT_FAISS = RESOURCE_DIR / "headContext"
-
-BERT_VERSION = "bert-base-uncased" # Currently only supports "bert-base-uncased"
+CORPUS = RESOURCE_DIR / "data.hdf5"
+EMBEDDING_FAISS = RESOURCE_DIR / "embedding_faiss"
+CONTEXT_FAISS = RESOURCE_DIR / "context_faiss"
+MODEL_VERSION = "gpt2"

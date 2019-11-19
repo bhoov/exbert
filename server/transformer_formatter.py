@@ -4,8 +4,8 @@ import numpy as np
 import torch
 import json
 
-from utils.token_processing import aligner, fix_byte_spaces
 from aligner.simple_spacy_token import SimpleSpacyToken
+from utils.token_processing import fix_byte_spaces
 from utils.gen_utils import map_nlist
 
 
@@ -68,17 +68,19 @@ class TransformerOutputFormatter:
     ):
         assert len(tokens) > 0, "Cannot have an empty token output!"
 
-        modified_att = add_blank(flatten_batch(att))
         modified_embeddings = flatten_batch(embeddings)
+        modified_att = add_blank(flatten_batch(att))
+        modified_contexts = add_blank(flatten_batch(contexts))
+
 
         self.sentence = sentence
         self.tokens = tokens
         self.special_tokens_mask = special_tokens_mask
         self.embeddings = modified_embeddings
         self.attentions = modified_att
-        self.raw_contexts = contexts
+        self.raw_contexts = modified_contexts
 
-        self.n_layers = len(contexts) # Add +1 for buffer layer at the beginning
+        self.n_layers = len(contexts) # With +1 for buffer layer at the beginning
         _, self.__len, self.n_heads, self.hidden_dim = contexts[0].shape
 
     @property
@@ -101,10 +103,6 @@ class TransformerOutputFormatter:
         squeezed_normed_cs = squeeze_contexts(normed_cs)
         return squeezed_normed_cs
     
-    def to_json(self):
-        print("Jsoning")
-        pass
-
     def to_old_json(self, layer:int, ndigits=5):
         """The original API expects the following response:
 
@@ -144,6 +142,9 @@ class TransformerOutputFormatter:
             }
 
         # Drop the first value in embeddings
+        print(layer)
+        print("EMBEDDING SHAPE: ", self.embeddings[layer].shape)
+        print("CONTEXT SHAPE: ", self.contexts[layer].shape)
         side_info = [to_resp(t, e, c) for t,e,c in zip(self.tokens, tolist(self.embeddings[layer]), tolist(self.contexts[layer]))]
 
         out = {"aa": {

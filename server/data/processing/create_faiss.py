@@ -8,7 +8,6 @@ import argparse
 
 FAISS_LAYER_PATTERN = 'layer_*.faiss'
 LAYER_TEMPLATE = 'layer_{:02d}.faiss' 
-NLAYERS = 12
 NHEADS = 12
 
 def parse_args():
@@ -50,7 +49,9 @@ class Indexes:
     """
     def __init__(self, folder, pattern=FAISS_LAYER_PATTERN):
         self.base_dir = Path(folder)
-        self.indexes = [None] * NLAYERS # Initialize empty list
+        num_layers = len(list(self.base_dir.glob(pattern)))
+        print(num_layers)
+        self.indexes = [None] * num_layers # Initialize empty list
         self.pattern = pattern
         self.__init_indexes()
         

@@ -4,27 +4,14 @@ import connexion
 from flask_cors import CORS
 from flask import render_template, redirect, send_from_directory
 
-from transformer_details import BertDetails
-
-import config
-
-from attention_formatter import (
-    add_token_info,
-    minimize_aa,
-    keep_aa,
-    in_side_select_layer,
-)
-
-from attention_details import AttentionDetailsData
-from data.processing.create_faiss import Indexes, ContextIndexes
-from data.processing.corpus_embeddings import (
-    CorpusEmbeddings,
-    AttentionCorpusEmbeddings,
-)
-from utils.token_processing import aligner
-from utils.mask_att import strip_attention
-from utils.f import ifnone
 import utils.path_fixes as pf
+import config
+from utils.f import ifnone
+
+from data.processing.create_faiss import Indexes, ContextIndexes
+from data.processing.corpus_data_wrapper import CorpusDataWrapper
+from transformer_details import from_pretrained
+
 
 app = connexion.FlaskApp(__name__, static_folder="client/dist", specification_dir=".")
 flask_app = app.app
@@ -39,16 +26,13 @@ class FaissLoader:
     def __init__(self):
         self.embedding_faiss = None
         self.context_faiss = None
-        self.embedding_corpus = None
-        self.context_corpus = None
+        self.corpus = None
 
     def load_info(self):
         """Allow values to have default NONE, load all at once after first load of flask"""
         self.embedding_faiss = Indexes(config.EMBEDDING_FAISS)
         self.context_faiss = ContextIndexes(config.CONTEXT_FAISS)
-        self.embedding_corpus = AttentionCorpusEmbeddings(config.EMBEDDING_CORPUS)
-        self.context_corpus = AttentionCorpusEmbeddings(config.CONTEXT_CORPUS)
-
+        self.corpus = CorpusDataWrapper(config.CORPUS)
 
 faiss_loader = FaissLoader()
 
@@ -56,7 +40,6 @@ faiss_loader = FaissLoader()
 @app.route("/")
 def hello_world():
     return redirect("client/exBERT.html")
-
 
 # send everything from client as static content
 @app.route("/client/<path:path>")
@@ -71,9 +54,7 @@ def send_static_client(path):
 # ======================================================================
 ## INITIALIZATION OF MODEL ##
 # ======================================================================
-details_data = BertDetails.from_pretrained(config.BERT_VERSION)
-
-p_file = "_store/simple.pckl"
+details_data = from_pretrained(config.MODEL_VERSION)
 
 # ======================================================================
 ## CONNEXION API ##
@@ -122,9 +103,11 @@ def woz_nearest_embedding_search(**request):
     heads = list(map(int, list(set(request["heads"]))))
     k = int(request["k"])
 
+    layer = layer + 1 # CHANGE THIS
+
     nearest_dists, nearest_idxs = faiss_loader.embedding_faiss.search(layer, q, k)
 
-    out = faiss_loader.embedding_corpus.find2d(nearest_idxs)[0]
+    out = faiss_loader.corpus.find2d(nearest_idxs)[0]
 
     return_obj = [o.to_json(layer, heads) for o in out]
     return return_obj
@@ -137,11 +120,13 @@ def woz_nearest_context_search(**request):
     heads = list(map(int, list(set(request["heads"]))))
     k = int(request["k"])
 
+    layer = layer + 1 # CHANGE THIS
+
     nearest_dists, nearest_idxs = faiss_loader.context_faiss.search(layer, heads, q, k)
 
-    out = faiss_loader.context_corpus.find2d(nearest_idxs)[0]
-
+    out = faiss_loader.corpus.find2d(nearest_idxs)[0]
     return_obj = [o.to_json(layer, heads) for o in out]
+
     return return_obj
 
 
