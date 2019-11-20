@@ -2,11 +2,11 @@
 Utilities for interfacing with the attentions from the front end.
 """
 import torch
-from transformer_formatter import TransformerOutputFormatter
-from utils.token_processing import reshape
 from typing import List, Union
 from abc import ABC, abstractmethod
 
+from transformer_formatter import TransformerOutputFormatter
+from utils.token_processing import reshape
 from aligner import (
     BertAligner,
     GPT2Aligner,
@@ -21,8 +21,9 @@ from transformers import (
     DistilBertModel,
 )
 
-from utils.f import delegates, pick
+from utils.f import delegates, pick, memoize
 
+@memoize
 def from_pretrained(model_name):
     """Convert model name into appropriate transformer details"""
     cls_type = {
@@ -167,7 +168,9 @@ class TransformerBaseDetails(ABC):
 
         # DEFINE SPECIAL TOKENS MASK
         if "special_tokens_mask" not in inputs.keys():
-            special_tok_mask =  self.aligner.get_special_tokens_mask(inputs['input_ids'][0], already_has_special_tokens=True)
+            special_tokens = set([self.aligner.unk_token_id, self.aligner.cls_token_id, self.aligner.sep_token_id, self.aligner.bos_token_id, self.aligner.eos_token_id, self.aligner.pad_token_id])
+            in_ids = inputs['input_ids'][0]
+            special_tok_mask = [1 if int(i) in special_tokens else 0 for i in in_ids]
             inputs['special_tokens_mask'] = special_tok_mask
 
         if mask_attentions:

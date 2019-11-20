@@ -8,10 +8,11 @@ from itertools import zip_longest
 from typing import List, Set, Union, Dict
 
 
-def ifnone(x, default):
-    """If `x` is None, return default. Otherwise, return `x`"""
-    if x is None: return default
-    return x
+def ifnone(*xs):
+    """Return the first item in 'x' that is not None"""
+    for x in xs: 
+        if x is not None: return x
+    return None
 
 def custom_dir(c, add): return dir(type(c)) + list(c.__dict__.keys()) + add
 
