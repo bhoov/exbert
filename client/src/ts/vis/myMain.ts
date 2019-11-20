@@ -88,7 +88,7 @@ export class MainGraphic {
      */
     private _mainInit() {
 
-        this.api.getMetaAttentions(this.uiConf.sentence(), this.uiConf.layer()).then(attention => {
+        this.api.getMetaAttentions(this.uiConf.model(), this.uiConf.sentence(), this.uiConf.layer()).then(attention => {
             this.uiConf.nHeads = attention[this.uiConf.attType].att.length // To verify that the default 12 is correct
             this._init(attention)
 
@@ -109,7 +109,7 @@ export class MainGraphic {
             if (this.uiConf.maskInds().length > 0) {
                 this.tokCapsule.a.maskInds = this.uiConf.maskInds()
 
-                this.api.updateMaskedAttentions(this.tokCapsule.a, this.uiConf.sentence(), this.uiConf.layer()).then(r => {
+                this.api.updateMaskedAttentions(this.uiConf.model(), this.tokCapsule.a, this.uiConf.sentence(), this.uiConf.layer()).then(r => {
                     this.attCapsule.updateFromNormal(r, this.uiConf.hideClsSep());
                     this.tokCapsule.updateEmbeddings(r)
                     this.update()
@@ -202,7 +202,7 @@ export class MainGraphic {
             this.tokCapsule[letter].toggle(e.ind)
             this.sels.body.style("cursor", "progress")
 
-            this.api.updateMaskedAttentions(this.tokCapsule.a, this.uiConf.sentence(), this.uiConf.layer()).then( (r: tp.AttentionResponse) => {
+            this.api.updateMaskedAttentions(this.uiConf.model(), this.tokCapsule.a, this.uiConf.sentence(), this.uiConf.layer()).then( (r: tp.AttentionResponse) => {
                     this.attCapsule.updateFromNormal(r, this.uiConf.hideClsSep());
                     this.tokCapsule.updateEmbeddings(r);
 
@@ -497,7 +497,7 @@ export class MainGraphic {
             // Only update if the form is filled correctly
             if (sentence_a.length) {
                 this.sels.body.style("cursor", "progress")
-                this.api.getMetaAttentions(sentence_a, this.uiConf.layer())
+                this.api.getMetaAttentions(this.uiConf.model(), sentence_a, this.uiConf.layer())
                     .then((r: tp.AttentionResponse) => {
                         this.uiConf.sentence(sentence_a)
                         this.uiConf.rmToken();
@@ -548,7 +548,7 @@ export class MainGraphic {
         const k = 50
 
         this.sels.body.style("cursor", "progress")
-        self.api.getNearestWozEmbeddings(embed, layer, heads, k)
+        self.api.getNearestEmbeddings(self.uiConf.model(), self.uiConf.corpus(), embed, layer, heads, k)
             .then((val: tp.FaissSearchResults[]) => {
                 // Get heights of corpus inspector rows.
                 self.vizs.corpusInspector.update(val)
@@ -576,7 +576,7 @@ export class MainGraphic {
 
         this.sels.body.style("cursor", "progress")
 
-        self.api.getNearestWozContexts(context, layer, heads, k)
+        self.api.getNearestContexts(self.uiConf.model(), self.uiConf.corpus(), context, layer, heads, k)
             .then((val: tp.FaissSearchResults[]) => {
                 // Get heights of corpus inspector rows.
                 self.vizs.corpusInspector.update(val)
@@ -689,7 +689,7 @@ export class MainGraphic {
                 self.uiConf.layer(v);
                 self.sels.body.style("cursor", "progress");
             }),
-            switchMap((v) => from(self.api.updateMaskedAttentions(self.tokCapsule.a, self.uiConf.sentence(), v))) // USE THIS
+            switchMap((v) => from(self.api.updateMaskedAttentions(self.uiConf.model(), self.tokCapsule.a, self.uiConf.sentence(), v))) // USE THIS
         ).subscribe({
             next: (r: tp.AttentionResponse) => {
                 this.attCapsule.updateFromNormal(r, this.uiConf.hideClsSep());

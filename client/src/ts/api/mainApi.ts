@@ -59,8 +59,9 @@ export class API {
         }
     }
 
-    getMetaAttentions(sentence: string, layer: number, hashObj: {} | null = null): Promise<tp.AttentionResponse> {
+    getMetaAttentions(model: string, sentence: string, layer: number, hashObj: {} | null = null): Promise<tp.AttentionResponse> {
         const toSend = {
+            model: model,
             sentence: sentence,
             layer: layer
         };
@@ -87,10 +88,10 @@ export class API {
      * @param layer Which layer to search at
      * @param hashObj If not null, store the information of the responses into the passed object. Used for creating demos.
      */
-    updateMaskedAttentions(tokens: TokenDisplay, sentence: string, layer: number, hashObj: {} | null = null): Promise<tp.AttentionResponse> {
+    updateMaskedAttentions(model: string, tokens: TokenDisplay, sentence: string, layer: number, hashObj: {} | null = null): Promise<tp.AttentionResponse> {
         const toSend = {
+            model: model,
             tokens: R.map(R.prop('text'), tokens.tokenData),
-
             sentence: sentence,
 
             // Empty masks need to be sent as a number, unfortunately. Choosing -1 for this
@@ -101,7 +102,7 @@ export class API {
         const url = makeUrl(this.baseURL + '/update-mask');
         const payload = toPayload(toSend)
 
-        
+
         if (hashObj != null) {
             // Add hash and value to hashObj for demo purposes
             const key = hash.sha1(toSend)
@@ -121,15 +122,17 @@ export class API {
      * @param layer In the l'th layer
      * @param k how many results to retrieve
      */
-    getNearestWozEmbeddings(embedding: number[], layer: number, heads: number[], k = 10, hashObj: {} | null = null): Promise<tp.FaissSearchResults[]> {
+    getNearestEmbeddings(model: string, corpus: string, embedding: number[], layer: number, heads: number[], k = 10, hashObj: {} | null = null): Promise<tp.FaissSearchResults[]> {
         const toSend = {
+            model: model,
+            corpus: corpus,
             embedding: embedding,
             layer: layer,
             heads: heads,
             k: k,
         }
 
-        const url = makeUrl(this.baseURL + '/woz-k-nearest-embeddings', toSend);
+        const url = makeUrl(this.baseURL + '/k-nearest-embeddings', toSend);
         console.log("--- GET " + url);
 
         if (hashObj != null) {
@@ -142,15 +145,17 @@ export class API {
         return checkDemoAPI(toSend, url)
     }
 
-    getNearestWozContexts(context: number[], layer: number, heads: number[], k = 10, hashObj: {} | null = null): Promise<tp.FaissSearchResults[]> {
+    getNearestContexts(model: string, corpus: string, context: number[], layer: number, heads: number[], k = 10, hashObj: {} | null = null): Promise<tp.FaissSearchResults[]> {
         const toSend = {
+            model: model,
+            corpus: corpus,
             context: context,
             layer: layer,
             heads: heads,
             k: k,
         }
 
-        const url = makeUrl(this.baseURL + '/woz-k-nearest-contexts', toSend);
+        const url = makeUrl(this.baseURL + '/k-nearest-contexts', toSend);
         console.log("--- GET " + url);
 
         if (hashObj != null) {

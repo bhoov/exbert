@@ -47,11 +47,11 @@ class ConvenienceCorpus(GetAttr):
 
     def search_embeddings(self, layer, query, k):
         D, I = self.embedding_faiss.search(layer, query, k)
-        return self.find2d(I)
+        return self.find2d(I)[0]
 
     def search_contexts(self, layer, heads, query, k):
-        D, I = self.contexts_faiss.search(layer, heads, query, k)
-        return self.find2d(I)
+        D, I = self.context_faiss.search(layer, heads, query, k)
+        return self.find2d(I)[0]
 
     def __repr__(self):
         return f"ConvenienceCorpus({self.name})"

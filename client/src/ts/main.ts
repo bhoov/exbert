@@ -24,7 +24,7 @@ function doMySvg() {
  * @param maskInd - Which index to mask in the sentence. Atm, can only record one masking
  * @param outDictPath - Where to save the object of hashkey: filepath
  */
-function createDemos(sentence, maskInd: number, outDictPath) {
+function createDemos(sentence, maskInd: number, modelName: string, corpusName: string, outDictPath) {
     const api = new API()
     const layers = _.range(12)
 
@@ -34,22 +34,22 @@ function createDemos(sentence, maskInd: number, outDictPath) {
 
     // Get the base return for all page initializations
     _.range(12).forEach(L => {
-        api.getMetaAttentions(sentence, L, "", contentHash).then(r0 => {
+        api.getMetaAttentions(modelName, sentence, L, contentHash).then(r0 => {
             const tokCapsule = new TokenWrapper(r0);
 
             // Unmasked response:
-            api.updateMaskedAttentions(tokCapsule.a, sentence, L, emptyTokenDisplay, "", contentHash).then(r1 => {
+            api.updateMaskedAttentions(modelName, tokCapsule.a, sentence, L, contentHash).then(r1 => {
                 // Masked word and searching responses:
                 tokCapsule.a.mask(maskInd)
-                api.updateMaskedAttentions(tokCapsule.a, sentence, L, emptyTokenDisplay, "", contentHash).then(r2 => {
+                api.updateMaskedAttentions(modelName, tokCapsule.a, sentence, L, contentHash).then(r2 => {
                     // Get search results by embedding
                     const embedding = r2['aa']['left'][maskInd].embeddings
-                    api.getNearestWozEmbeddings(embedding, L, _.range(12), 50, contentHash).then(x => {
+                    api.getNearestEmbeddings(modelName, corpusName, embedding, L, _.range(12), 50, contentHash).then(x => {
                     })
 
                     // Get search results by context
                     const context = r2['aa']['left'][maskInd].contexts
-                    api.getNearestWozContexts(context, L, _.range(12), 50, contentHash).then(x => {
+                    api.getNearestContexts(modelName, corpusName, context, L, _.range(12), 50, contentHash).then(x => {
                         console.log(Object.keys(contentHash).length);
                         console.log(contentHash);
                     })
@@ -69,30 +69,30 @@ function createDemos(sentence, maskInd: number, outDictPath) {
  * @param maskInd Desired index to mask (can currently only accept a single mask index)
  * @param outDictPath 
  */
-function inspectDemos(sentence, maskInd: number, outDictPath) {
+function inspectDemos(sentence, maskInd: number, modelName: string, corpusName: string, outDictPath) {
     const api = new API()
 
     const contentHash = {}
 
     // Get the base return for all page initializations
     _.range(1).forEach(L => {
-        api.getMetaAttentions(sentence, L, "").then(r0 => {
+        api.getMetaAttentions(modelName, sentence, L, "").then(r0 => {
             const tokCapsule = new TokenWrapper(r0);
 
             // Unmasked response:
-            api.updateMaskedAttentions(tokCapsule.a, sentence, L, emptyTokenDisplay, "").then(r1 => {
+            api.updateMaskedAttentions(modelName, tokCapsule.a, sentence, L, emptyTokenDisplay).then(r1 => {
                 // Masked word and searching responses:
                 tokCapsule.a.mask(maskInd)
-                api.updateMaskedAttentions(tokCapsule.a, sentence, L, emptyTokenDisplay, "").then(r2 => {
+                api.updateMaskedAttentions(modelName, tokCapsule.a, sentence, L, emptyTokenDisplay).then(r2 => {
                     console.log(r2);
                     // Get search results by embedding
                     const embedding = r2['aa']['left'][maskInd].embeddings
-                    api.getNearestWozEmbeddings(embedding, L, _.range(12), 50, contentHash).then(x => {
+                    api.getNearestEmbeddings(modelName, corpusName, embedding, L, _.range(12), 50, contentHash).then(x => {
                     })
 
                     // Get search results by context
                     const context = r2['aa']['left'][maskInd].contexts
-                    api.getNearestWozContexts(context, L, _.range(12), 50).then(x => {
+                    api.getNearestContexts(modelName, corpusName, context, L, _.range(12), 50).then(x => {
                     })
                 })
             })

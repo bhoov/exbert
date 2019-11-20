@@ -21,6 +21,10 @@ paths:
       operationId: main.get_attention_and_meta
       summary: Get the attention information, BERT Embeddings, and spacy meta info for an input sentence
       parameters:
+        - name: model
+          description: Which pretrained transformer information is requested from
+          in: query
+          type: string
         - name: sentence
           description: Sentence to analyze
           in: query
@@ -48,12 +52,20 @@ paths:
         200:
           description: Update BERT's masked behavior for passed tokens
 
-  /woz-k-nearest-embeddings:
+  /k-nearest-embeddings:
     get:
       tags: [All]
-      operationId: main.woz_nearest_embedding_search
+      operationId: main.nearest_embedding_search
       summary: Search for the nearest embeddings to a token sent from the frontend by layer
       parameters:
+        - name: model
+          description: Which model to get information from
+          in: query
+          type: string
+        - name: corpus
+          description: Which corpus to search
+          in: query
+          type: string
         - name: embedding
           description: Query vector on which to search the dataset
           in: query
@@ -78,12 +90,20 @@ paths:
         200:
           description: Return related embeddings and associated metadata
 
-  /woz-k-nearest-contexts:
+  /k-nearest-contexts:
     get:
       tags: [All]
-      operationId: main.woz_nearest_context_search
+      operationId: main.nearest_context_search
       summary: Search for the nearest embeddings BY SELECTED HEADS to a token sent from the frontend by layer
       parameters:
+        - name: model
+          description: Which model to get information from
+          in: query
+          type: string
+        - name: corpus
+          description: Which corpus to search
+          in: query
+          type: string
         - name: context
           description: Query vector on which to search the dataset
           in: query
@@ -113,11 +133,17 @@ definitions:
   maskPayload:
     type: object
     properties:
+      model: 
+        type: string
+        description: Which model to get results from
       tokens:
         type: array
         items: 
           type: string
         description: Main sentence tokens to analyze
+      sentence:
+        type: string
+        description: The original sentence the tokens came from, for extracting metadata
       mask:
         type: array
         items: 
@@ -128,6 +154,8 @@ definitions:
         description: Layer to get results for
       
     required:
+      - model
       - tokens
+      - sentence
       - mask
       - layer
