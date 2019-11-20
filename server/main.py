@@ -8,8 +8,7 @@ import utils.path_fixes as pf
 import config
 from utils.f import ifnone
 
-from data_processing.create_faiss import Indexes, ContextIndexes
-from data_processing.corpus_data_wrapper import CorpusDataWrapper
+from data_processing import Indexes, ContextIndexes, CorpusDataWrapper, ConvenienceCorpus
 from transformer_details import from_pretrained
 
 
@@ -60,10 +59,9 @@ details_data = from_pretrained(config.MODEL_VERSION)
 ## CONNEXION API ##
 # ======================================================================
 def get_attention_and_meta(**request):
-    sent_a = request["sentenceA"]
-    sent_b = request["sentenceB"]
+    sentence = request["sentence"]
     layer = int(request["layer"])
-    deets = details_data.att_from_sentence(sent_a)
+    deets = details_data.att_from_sentence(sentence)
 
     return deets.to_old_json(layer + 1) # CHANGE +1 WHEN FRONTEND FIXED
 
@@ -75,12 +73,9 @@ def update_masked_attention(**request):
     Object: {"a" : {"sentence":__, "mask_inds"}, "b" : {...}}
     """
     payload = request["payload"]
-    a = payload["tokensA"]
-    b = payload["tokensB"]
-    sent_a = payload["sentenceA"]
-    sent_b = payload["sentenceB"]
-    mask_a = payload["maskA"]
-    mask_b = payload["maskB"]
+    tokens = payload["tokens"]
+    sentence = payload["sentence"]
+    mask = payload["mask"]
     layer = int(payload["layer"])
 
     MASK = details_data.aligner.mask_token
@@ -88,10 +83,9 @@ def update_masked_attention(**request):
         t if i not in maskinds else ifnone(MASK, t) for (i, t) in enumerate(toks)
     ]
 
-    tokens_a = mask_tokens(a, mask_a)
-    tokens_b = mask_tokens(b, mask_b)
+    tokens_a = mask_tokens(tokens, mask)
 
-    deets = details_data.att_from_tokens(tokens_a, sent_a)
+    deets = details_data.att_from_tokens(tokens, sentence)
     out = deets.to_old_json(layer + 1) # CHANGE THIS
     return out
 
@@ -103,7 +97,7 @@ def woz_nearest_embedding_search(**request):
     heads = list(map(int, list(set(request["heads"]))))
     k = int(request["k"])
 
-    layer = layer + 1 # CHANGE THIS
+    layer = layer # CHANGE THIS
 
     nearest_dists, nearest_idxs = faiss_loader.embedding_faiss.search(layer, q, k)
 
@@ -128,7 +122,6 @@ def woz_nearest_context_search(**request):
     return_obj = [o.to_json(layer, heads) for o in out]
 
     return return_obj
-
 
 app.add_api("swagger.yaml")
 

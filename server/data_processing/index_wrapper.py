@@ -1,7 +1,7 @@
 from functools import partial
-
 import faiss
 import numpy as np
+from pathlib import Path
 
 FAISS_LAYER_PATTERN = 'layer_*.faiss'
 LAYER_TEMPLATE = 'layer_{:02d}.faiss' 

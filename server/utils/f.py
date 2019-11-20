@@ -69,9 +69,9 @@ def memoize(f):
     Use lookup table when the same inputs are passed to the function instead of running that function again
     """
     memo = {}
-    def helper(x):
+    def helper(*x):
         if x not in memo:            
-            memo[x] = f(x)
+            memo[x] = f(*x)
         return memo[x]
     return helper
 

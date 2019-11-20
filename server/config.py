@@ -9,7 +9,7 @@ ROOT = Path(os.path.abspath(__file__)).parent
 CORPORA = ROOT / "corpora"
 
 # Change this to indicate what data is loaded for searching
-RESOURCE_DIR = CORPORA / "woz_gpt2" 
+RESOURCE_DIR = CORPORA / "gpt2" / "woz"
 MODEL_VERSION = "gpt2"
 # RESOURCE_DIR = CORPORA / "woz_bert-base-cased" 
 # MODEL_VERSION = "bert-base-cased"

@@ -1,5 +1,6 @@
-import { BertAPI } from './api/bertApi'
-import { DemoAPI } from './api/demoApi'
+// import { BertAPI } from './api/bertApi'
+// import { DemoAPI } from './api/demoApi'
+import {API} from './api/mainApi'
 import * as d3 from 'd3'
 import * as R from 'ramda'
 import * as _ from 'lodash'
@@ -10,7 +11,7 @@ import {TokenDisplay, TokenWrapper, sideToLetter} from './data/TokenWrapper'
 import {AttentionWrapper} from "./data/AttentionCapsule"
 import {FaissSearchResultWrapper} from "./data/FaissSearchWrapper"
 
-const api = new BertAPI()
+const api = new API()
 
 
 /**

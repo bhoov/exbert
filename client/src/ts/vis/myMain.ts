@@ -3,7 +3,7 @@ import * as _ from "lodash"
 import * as R from 'ramda'
 import * as tp from '../etc/types';
 import '../etc/xd3'
-import { BertAPI } from '../api/bertApi'
+import { API } from '../api/mainApi'
 import { UIConfig } from '../uiConfig'
 import { TextTokens, LeftTextToken, RightTextToken } from './TextToken'
 import { AttentionHeadBox, getAttentionInfo } from './AttentionHeadBox'
@@ -69,7 +69,7 @@ function setSelDisabled(attr: boolean, sel: D3Sel) {
 }
 
 export class MainGraphic {
-    api: BertAPI
+    api: API
     uiConf: UIConfig
     attCapsule: AttentionWrapper
     tokCapsule: TokenWrapper
@@ -78,7 +78,7 @@ export class MainGraphic {
     eventHandler: SimpleEventHandler    // Orchestrates events raised from components
 
     constructor() {
-        this.api = new BertAPI()
+        this.api = new API()
         this.uiConf = new UIConfig()
         this._mainInit();
     }
@@ -130,6 +130,8 @@ export class MainGraphic {
             body: d3.select('body'),
             atnContainer: d3.select('#atn-container'),
             atnDisplay: d3.select("#atn-display"),
+            modelSelector: d3.select("#model-option-selector"),
+            corpusSelector: d3.select("#corpus-select"),
             atnHeads: {
                 left: d3.select("#left-att-heads"),
                 right: d3.select("#right-att-heads"),
@@ -315,8 +317,52 @@ export class MainGraphic {
         this._searchDisabler()
     }
 
+    private _initModelSelection() {
+        // Add "current model" to UIConfig
+        const self = this
+
+        const data = [{name: "bert-base-cased"}, {name: "gpt2"}]
+
+        this.sels.modelSelector.selectAll('.model-option')
+            .data(data)
+            .join('option')
+            .classed('model-option', true)
+            .property('value', d => d.name)
+            .text(d => d.name)
+
+        this.sels.modelSelector.on('change', function() {
+            const me = d3.select(this)
+            self.uiConf.model(me.property('value'))
+            // Call api: update_from_model, giving new model name, and 
+
+        })
+    }
+
+    private _initCorpusSelection() {
+        const data = [
+            {code: "woz", display: "Wizard of Oz"},
+            {code: "wiki", display: "Wikipedia"},
+        ]
+
+        const self = this
+        self.sels.corpusSelector.selectAll('option')
+            .data(data)
+            .join('option')
+            .property('value', d => d.code)
+            .text(d => d.display)
+
+        this.sels.corpusSelector.on('change', function() {
+            const me = d3.select(this)
+            self.uiConf.corpus(me.property('value'))
+        })
+
+        
+    }
+
     private _staticInits() {
         this._initSentenceForm();
+        this._initModelSelection();
+        this._initCorpusSelection();
         this._initQueryForm();
         this._initCheckboxes();
         this._initAdder();

@@ -1,5 +1,5 @@
 import { MainGraphic } from './vis/myMain'
-import { BertAPI, emptyTokenDisplay } from './api/bertApi'
+import { API, emptyTokenDisplay } from './api/mainApi'
 import * as _ from 'lodash'
 import { TokenWrapper } from './data/TokenWrapper'
 // import { Tester } from "../ts/test"
@@ -25,7 +25,7 @@ function doMySvg() {
  * @param outDictPath - Where to save the object of hashkey: filepath
  */
 function createDemos(sentence, maskInd: number, outDictPath) {
-    const api = new BertAPI()
+    const api = new API()
     const layers = _.range(12)
 
     const L = 0
@@ -70,7 +70,7 @@ function createDemos(sentence, maskInd: number, outDictPath) {
  * @param outDictPath 
  */
 function inspectDemos(sentence, maskInd: number, outDictPath) {
-    const api = new BertAPI()
+    const api = new API()
 
     const contentHash = {}
 

@@ -21,12 +21,8 @@ paths:
       operationId: main.get_attention_and_meta
       summary: Get the attention information, BERT Embeddings, and spacy meta info for an input sentence
       parameters:
-        - name: sentenceA
-          description: First sentence to analyze
-          in: query
-          type: string
-        - name: sentenceB
-          description: Second sentence to analyze
+        - name: sentence
+          description: Sentence to analyze
           in: query
           type: string
         - name: layer
@@ -117,33 +113,21 @@ definitions:
   maskPayload:
     type: object
     properties:
-      tokensA:
+      tokens:
         type: array
         items: 
           type: string
         description: Main sentence tokens to analyze
-      tokensB:
-        type: array
-        items: 
-          type: string
-        description: Contains '[SEP]' in current implementation
-      maskA:
+      mask:
         type: array
         items: 
           type: number
         description: Indices of tokens to mask
-      maskB:
-        type: array
-        items: 
-          type: number
-        description: Contains -1 indicating no masking
       layer:
         type: number
         description: Layer to get results for
       
     required:
-      - tokensA
-      - tokensB
-      - maskA
-      - maskB
+      - tokens
+      - mask
       - layer

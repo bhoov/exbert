@@ -39,6 +39,7 @@ class CorpusDataWrapper:
         self.__curr = 0
         
         self.__name = ifnone(name, "CorpusData")
+        self.fname = fname
         self.data = h5py.File(fname, 'r')
 
         main_keys = self.data.keys()
@@ -56,6 +57,9 @@ class CorpusDataWrapper:
 
         # If run as a script, won't be able to close because of an import error
         except ImportError: pass
+
+        except AttributeError:
+            print(f"Never successfully loaded {self.fname}")
         
     def __iter__(self):
         return self

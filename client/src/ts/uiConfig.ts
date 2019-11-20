@@ -14,6 +14,8 @@ type InspectorOptions = "context" | "embeddings" | null
 // Must be optional params for initializations
 interface URLParameters {
     sentence?: string
+    model?: string
+    corpus?: string
     layer?: number
     heads?: number[]
     threshold?: number
@@ -47,7 +49,9 @@ export class UIConfig {
         const params = URLHandler.parameters
 
         this._conf = {
+            model: params['model'] || 'bert-base-cased',
             sentence: params['sentence'] || "The girl ran to a local pub to escape the din of her city.",
+            corpus: params['corpus'] || 'woz',
             layer: params['layer'] || 0,
             heads: this._initHeads(params['heads']),
             threshold: params['threshold'] || 0.7,
@@ -267,5 +271,23 @@ export class UIConfig {
         this._conf.hideClsSep = truthy(val);
         this.toURL();
         return this;
+    }
+
+    model(): string;
+    model(val: string): this;
+    model(val?) {
+        if (val == null) return this._conf.model
+        this._conf.model = val
+        this.toURL();
+        return this
+    }
+
+    corpus(): string;
+    corpus(val: string): this;
+    corpus(val?) {
+        if (val == null) return this._conf.corpus
+        this._conf.corpus = val
+        this.toURL();
+        return this
     }
 }
