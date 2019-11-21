@@ -41,8 +41,8 @@ def from_pretrained(model_name):
         'roberta-large-openai-detector': RobertaDetails,
         'distilbert-base-uncased': DistilBertDetails,
         'distilbert-base-uncased-distilled-squad': DistilBertDetails,
-        'distilgpt2': DistilBertDetails,
-        'distilroberta-base': DistilBertDetails,
+        'distilgpt2': GPT2Details,
+        'distilroberta-base': RobertaDetails,
     }
 
     try: out = cls_type[model_name].from_pretrained(model_name)

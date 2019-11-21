@@ -335,11 +335,12 @@ export class MainGraphic {
     private _initModelSelection() {
         const self = this
 
-        // Below are the available models. I can load up to 3 at once
+        // Below are the available models. Will need to choose 3 to be available ONLY
         const data = [
             { name: "bert-base-cased" },
             { name: "gpt2" },
             { name: "distilbert-base-uncased" },
+            { name: "distilgpt2" },
         ]
 
 

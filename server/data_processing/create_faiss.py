@@ -57,7 +57,7 @@ def save_indexes(idxs, outdir, base_name=LAYER_TEMPLATE):
 def main(basedir):
     base = Path(basedir)
     h5_fname = base / 'data.hdf5'
-    corpus = CorpusDataWrapper(h5_fname, "woz_tst")
+    corpus = CorpusDataWrapper(h5_fname)
     embedding_faiss, context_faiss = train_indexes(corpus)
 
     context_faiss_dir = base / "context_faiss"
