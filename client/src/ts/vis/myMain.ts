@@ -158,6 +158,7 @@ export class MainGraphic {
     }
 
     private mainInit() {
+        this.sels.body.style("cursor", "progress")
         this.api.getModelDetails(this.uiConf.model()).then(md => {
             this.uiConf.nLayers(md.nlayers).nHeads(md.nheads)
             this.initLayers(this.uiConf.nLayers())
@@ -192,6 +193,7 @@ export class MainGraphic {
                     this.update()
                     postResponseDisplayCleanup()
                 }
+                this.sels.body.style("cursor", "default")
             });
         })
 
@@ -337,8 +339,9 @@ export class MainGraphic {
         const data = [
             { name: "bert-base-cased" },
             { name: "gpt2" },
-            { name: "distilbert-base-uncased"},
+            { name: "distilbert-base-uncased" },
         ]
+
 
         this.sels.modelSelector.selectAll('.model-option')
             .data(data)
@@ -346,6 +349,8 @@ export class MainGraphic {
             .classed('model-option', true)
             .property('value', d => d.name)
             .text(d => d.name)
+
+        this.sels.modelSelector.property('value', this.uiConf.model());
 
         this.sels.modelSelector.on('change', function () {
             const me = d3.select(this)
@@ -675,12 +680,28 @@ export class MainGraphic {
 
     private initLayers(nLayers: number) {
         const self = this;
+        let hasActive = false;
 
         const checkboxes = self.sels.layerCheckboxes.selectAll(".layerCheckbox")
-            .data(_.range(0, nLayers))
+            .data(_.range(1, nLayers + 1))
             .join("label")
             .attr("class", "btn button layerCheckbox")
-            .classed('active', (d, i) => i == self.uiConf.layer())
+            .classed('active', (d, i) => {
+                // Assign to largest layer available if uiConf.layer() > new nLayers
+                if (d == self.uiConf.layer()) {
+                    hasActive = true;
+                    return true
+                }
+
+                if (!hasActive && d == nLayers) {
+                    self.uiConf.layer(d)
+                    hasActive = true
+                    return true
+                }
+
+                return false
+                
+            })
             .text((d) => d)
             .append("input")
             .attr("type", "radio")
@@ -808,7 +829,6 @@ export class MainGraphic {
         this.renderTokens();
         this.renderSvg();
         this.renderAttHead();
-        // displaySelectedToken
     }
 
     update() {

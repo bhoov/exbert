@@ -39,7 +39,7 @@ export class UIConfig {
     private _token: tp.TokenEvent;
 
     constructor(){
-        this._nHeads = null;
+        this._nHeads = 12; // How do I automate this?
         this._nLayers = null;
         this.attType = 'aa'; // Don't allow this to be modified by the user.
         this.fromURL()
@@ -54,7 +54,7 @@ export class UIConfig {
             model: params['model'] || 'bert-base-cased',
             sentence: params['sentence'] || "The girl ran to a local pub to escape the din of her city.",
             corpus: params['corpus'] || 'woz',
-            layer: params['layer'] || 0,
+            layer: params['layer'] || 1,
             heads: this._initHeads(params['heads']),
             threshold: params['threshold'] || 0.7,
             tokenInd: params['tokenInd'] || null,
@@ -86,11 +86,11 @@ export class UIConfig {
     }
 
     private _initHeads(v:number[] | null) {
-        if (v == null) {
+        if (v == null || v.length < 1) {
             this.selectAllHeads()
         }
         else {
-            this.headSet(new Set(v))._conf.heads;
+            console.log(this.headSet(new Set(v))._conf.heads);
         }
 
         return this.heads()

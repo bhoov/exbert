@@ -58,7 +58,7 @@ def get_attention_and_meta(**request):
 
     deets = details.att_from_sentence(sentence)
 
-    return deets.to_old_json(layer + 1) # CHANGE +1 WHEN FRONTEND FIXED
+    return deets.to_old_json(layer) # +1 + 1 Modification
 
 
 def update_masked_attention(**request):
@@ -85,7 +85,7 @@ def update_masked_attention(**request):
     token_inputs = mask_tokens(tokens, mask)
 
     deets = details.att_from_tokens(token_inputs, sentence)
-    out = deets.to_old_json(layer + 1) # CHANGE THIS
+    out = deets.to_old_json(layer) # + 1 +1
     return out
 
 
@@ -101,12 +101,9 @@ def nearest_embedding_search(**request):
     heads = list(map(int, list(set(request["heads"]))))
     k = int(request["k"])
 
-    layer = layer # CHANGE THIS
+    layer = layer - 1 # + 1 +1
 
     out = cc.search_embeddings(layer, q, k)
-
-    # nearest_dists, nearest_idxs = faiss_loader.embedding_faiss.search(layer, q, k)
-    # out = faiss_loader.corpus.find2d(nearest_idxs)[0]
 
     return_obj = [o.to_json(layer, heads) for o in out]
     return return_obj
@@ -124,12 +121,9 @@ def nearest_context_search(**request):
     heads = list(map(int, list(set(request["heads"]))))
     k = int(request["k"])
 
-    layer = layer + 1 # CHANGE THIS
+    layer = layer # + 1 +1
 
     out = cc.search_contexts(layer, heads, q, k)
-    # nearest_dists, nearest_idxs = faiss_loader.context_faiss.search(layer, heads, q, k)
-
-    # out = faiss_loader.corpus.find2d(nearest_idxs)[0]
     return_obj = [o.to_json(layer, heads) for o in out]
 
     return return_obj
