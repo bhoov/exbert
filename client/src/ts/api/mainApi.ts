@@ -59,6 +59,24 @@ export class API {
         }
     }
 
+    getModelDetails(model: string, hashObj: {} | null = null): Promise<tp.ModelInfo> {
+        const toSend = {
+            model: model
+        }
+
+        const url = makeUrl(this.baseURL + "/get-model-details", toSend)
+        console.log("--- GET " + url);
+
+        if (hashObj != null) {
+            const key = hash.sha1(toSend)
+            d3.json(url).then(r => {
+                hashObj[key] = r;
+            })
+        }
+
+        return checkDemoAPI(toSend, url)
+    }
+
     getMetaAttentions(model: string, sentence: string, layer: number, hashObj: {} | null = null): Promise<tp.AttentionResponse> {
         const toSend = {
             model: model,

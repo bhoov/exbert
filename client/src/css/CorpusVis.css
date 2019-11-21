@@ -1,0 +1,125 @@
+#corpus-vis {
+  margin: 0 auto;
+  /* Tooltip container */
+  /* Tooltip text */
+  /* Show the tooltip text when you mouse over the tooltip container */
+  /* Add little arrow to box */
+}
+
+#corpus-vis #main-corpus-vis {
+  display: -webkit-box;
+  display: -ms-flexbox;
+  display: flex;
+}
+
+#corpus-vis #main-corpus-vis #corpus-mat-container {
+  -webkit-box-flex: initial;
+      -ms-flex: initial;
+          flex: initial;
+  vertical-align: top;
+  float: left;
+}
+
+#corpus-vis #main-corpus-vis #corpus-mat-container .corpus-mat {
+  display: inline-block;
+  margin-right: 0.05em;
+  margin-left: 0.05em;
+}
+
+#corpus-vis #main-corpus-vis #corpus-mat-container .offset-0 {
+  border: 0.2em solid black;
+}
+
+#corpus-vis #main-corpus-vis #corpus-mat-container .mat-hover-display {
+  display: -webkit-box;
+  display: -ms-flexbox;
+  display: flex;
+  position: absolute;
+  visibility: hidden;
+  background-color: #c8c8c8;
+  border-radius: 8px 8px 1px 8px;
+  margin: auto;
+}
+
+#corpus-vis #main-corpus-vis #corpus-mat-container .mat-hover-display p {
+  margin: auto;
+}
+
+#corpus-vis #main-corpus-vis #corpus-similar-sentences-div {
+  -webkit-box-flex: 1;
+      -ms-flex: 1;
+          flex: 1;
+  vertical-align: top;
+  float: left;
+  max-width: 80%;
+  max-height: 100%;
+}
+
+#corpus-vis #main-corpus-vis #corpus-similar-sentences-div .hovered-col {
+  color: orange;
+}
+
+#corpus-vis .btn {
+  margin-left: 0.25em;
+}
+
+#corpus-vis .inspector-row {
+  display: block;
+  margin-left: 10px;
+  padding-top: 0.5em;
+  padding-bottom: 0.5em;
+}
+
+#corpus-vis .inspector-cell {
+  display: inline-block;
+  margin-right: 3px;
+  text-align: left;
+}
+
+#corpus-vis .celltooltip {
+  position: relative;
+  display: inline-block;
+  border-bottom: 1px dotted black;
+  /* If you want dots under the hoverable text */
+}
+
+#corpus-vis .celltooltip .tooltiptext {
+  visibility: hidden;
+  width: 120px;
+  background-color: black;
+  color: #fff;
+  text-align: center;
+  padding: 5px 0;
+  border-radius: 6px;
+  /* Position the tooltip text - see examples below! */
+  position: absolute;
+}
+
+#corpus-vis .celltooltip:hover .tooltiptext {
+  width: 120px;
+  bottom: 100%;
+  left: 50%;
+  margin-left: -60px;
+  /* Use half of the width (120/2 = 60), to center the tooltip */
+  visibility: visible;
+}
+
+#corpus-vis .celltooltip .tooltiptext::after {
+  content: " ";
+  position: absolute;
+  top: 100%;
+  /* At the bottom of the tooltip */
+  left: 50%;
+  margin-left: -5px;
+  border-width: 5px;
+  border-style: solid;
+  border-color: black transparent transparent transparent;
+}
+
+#corpus-vis .matched-cell {
+  border-style: solid;
+  border-color: rgba(128, 0, 128, 0.7);
+  border-width: 3px;
+  border-radius: 0.4em;
+}
+/*# sourceMappingURL=CorpusVis.css.map */

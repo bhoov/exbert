@@ -80,52 +80,15 @@ export class MainGraphic {
     constructor() {
         this.api = new API()
         this.uiConf = new UIConfig()
-        this._mainInit();
+        this.firstInit();
     }
 
     /**
-     * Get the attentions present in uiConf. Created to allow back button to update based on the URL, but it didn't work great
+     * Functions that can be called without any information of a response.
+     * 
+     * This should be called once and only once
      */
-    private _mainInit() {
-
-        this.api.getMetaAttentions(this.uiConf.model(), this.uiConf.sentence(), this.uiConf.layer()).then(attention => {
-            this.uiConf.nHeads = attention[this.uiConf.attType].att.length // To verify that the default 12 is correct
-            this._init(attention)
-
-            // Wrap postInit into function so asynchronous call does not mess with necessary inits
-            const postInit = () => {
-                this._toggleTokenSel()
-
-                const toDisplay = this.uiConf.displayInspector()
-                this._searchDisabler()
-
-                if (toDisplay == 'context') {
-                    this._queryContext()
-                } else if (toDisplay == 'embeddings') {
-                    this._queryEmbeddings()
-                }
-            }
-
-            if (this.uiConf.maskInds().length > 0) {
-                this.tokCapsule.a.maskInds = this.uiConf.maskInds()
-
-                this.api.updateMaskedAttentions(this.uiConf.model(), this.tokCapsule.a, this.uiConf.sentence(), this.uiConf.layer()).then(r => {
-                    this.attCapsule.updateFromNormal(r, this.uiConf.hideClsSep());
-                    this.tokCapsule.updateEmbeddings(r)
-                    this.update()
-                    postInit()
-                })
-            } else {
-                this.update()
-                postInit()
-            }
-        });
-    }
-
-    private _init(attention: tp.AttentionResponse) {
-        this.attCapsule = makeFromMetaResponse(attention, this.uiConf.hideClsSep())
-        this.tokCapsule = new TokenWrapper(attention);
-
+    skeletonInit() {
         this.sels = {
             body: d3.select('body'),
             atnContainer: d3.select('#atn-container'),
@@ -191,8 +154,58 @@ export class MainGraphic {
             },
         }
 
-        this._staticInits()
         this._bindEventHandler()
+    }
+
+    private mainInit() {
+        this.api.getModelDetails(this.uiConf.model()).then(md => {
+            this.uiConf.nLayers(md.nlayers).nHeads(md.nheads)
+            this.initLayers(this.uiConf.nLayers())
+
+            this.api.getMetaAttentions(this.uiConf.model(), this.uiConf.sentence(), this.uiConf.layer()).then(attention => {
+                this.initFromResponse(attention)
+
+                // Wrap postInit into function so asynchronous call does not mess with necessary inits
+                const postResponseDisplayCleanup = () => {
+                    this._toggleTokenSel()
+
+                    const toDisplay = this.uiConf.displayInspector()
+                    this._searchDisabler()
+
+                    if (toDisplay == 'context') {
+                        this._queryContext()
+                    } else if (toDisplay == 'embeddings') {
+                        this._queryEmbeddings()
+                    }
+                }
+
+                if (this.uiConf.maskInds().length > 0) {
+                    this.tokCapsule.a.maskInds = this.uiConf.maskInds()
+
+                    this.api.updateMaskedAttentions(this.uiConf.model(), this.tokCapsule.a, this.uiConf.sentence(), this.uiConf.layer()).then(r => {
+                        this.attCapsule.updateFromNormal(r, this.uiConf.hideClsSep());
+                        this.tokCapsule.updateEmbeddings(r)
+                        this.update()
+                        postResponseDisplayCleanup()
+                    })
+                } else {
+                    this.update()
+                    postResponseDisplayCleanup()
+                }
+            });
+        })
+
+    }
+
+    private firstInit() {
+        this.skeletonInit()
+        this.mainInit()
+    }
+
+    private initFromResponse(attention: tp.AttentionResponse) {
+        this.attCapsule = makeFromMetaResponse(attention, this.uiConf.hideClsSep())
+        this.tokCapsule = new TokenWrapper(attention);
+        this._staticInits()
     }
 
     private _bindEventHandler() {
@@ -202,15 +215,15 @@ export class MainGraphic {
             this.tokCapsule[letter].toggle(e.ind)
             this.sels.body.style("cursor", "progress")
 
-            this.api.updateMaskedAttentions(this.uiConf.model(), this.tokCapsule.a, this.uiConf.sentence(), this.uiConf.layer()).then( (r: tp.AttentionResponse) => {
-                    this.attCapsule.updateFromNormal(r, this.uiConf.hideClsSep());
-                    this.tokCapsule.updateEmbeddings(r);
+            this.api.updateMaskedAttentions(this.uiConf.model(), this.tokCapsule.a, this.uiConf.sentence(), this.uiConf.layer()).then((r: tp.AttentionResponse) => {
+                this.attCapsule.updateFromNormal(r, this.uiConf.hideClsSep());
+                this.tokCapsule.updateEmbeddings(r);
 
-                    this.uiConf.maskInds(this.tokCapsule.a.maskInds)
+                this.uiConf.maskInds(this.tokCapsule.a.maskInds)
 
-                    this.update();
-                    this.sels.body.style("cursor", "default")
-                }
+                this.update();
+                this.sels.body.style("cursor", "default")
+            }
             )
         })
 
@@ -318,10 +331,14 @@ export class MainGraphic {
     }
 
     private _initModelSelection() {
-        // Add "current model" to UIConfig
         const self = this
 
-        const data = [{name: "bert-base-cased"}, {name: "gpt2"}]
+        // Below are the available models. I can load up to 3 at once
+        const data = [
+            { name: "bert-base-cased" },
+            { name: "gpt2" },
+            { name: "distilbert-base-uncased"},
+        ]
 
         this.sels.modelSelector.selectAll('.model-option')
             .data(data)
@@ -330,18 +347,17 @@ export class MainGraphic {
             .property('value', d => d.name)
             .text(d => d.name)
 
-        this.sels.modelSelector.on('change', function() {
+        this.sels.modelSelector.on('change', function () {
             const me = d3.select(this)
             self.uiConf.model(me.property('value'))
-            // Call api: update_from_model, giving new model name, and 
-
+            self.mainInit()
         })
     }
 
     private _initCorpusSelection() {
         const data = [
-            {code: "woz", display: "Wizard of Oz"},
-            {code: "wiki", display: "Wikipedia"},
+            { code: "woz", display: "Wizard of Oz" },
+            { code: "wiki", display: "Wikipedia" },
         ]
 
         const self = this
@@ -351,12 +367,12 @@ export class MainGraphic {
             .property('value', d => d.code)
             .text(d => d.display)
 
-        this.sels.corpusSelector.on('change', function() {
+        this.sels.corpusSelector.on('change', function () {
             const me = d3.select(this)
             self.uiConf.corpus(me.property('value'))
         })
 
-        
+
     }
 
     private _staticInits() {
@@ -364,7 +380,6 @@ export class MainGraphic {
         this._initModelSelection();
         this._initCorpusSelection();
         this._initQueryForm();
-        this._initCheckboxes();
         this._initAdder();
         this._renderHeadSummary();
         this._initMetaSelectors();
@@ -658,14 +673,14 @@ export class MainGraphic {
         return wrappedVals
     }
 
-    private _initCheckboxes() {
+    private initLayers(nLayers: number) {
         const self = this;
 
-        const checkboxes = this.sels.layerCheckboxes.selectAll(".layerCheckbox")
-            .data(_.range(0, this.attCapsule.nLayers))
+        const checkboxes = self.sels.layerCheckboxes.selectAll(".layerCheckbox")
+            .data(_.range(0, nLayers))
             .join("label")
             .attr("class", "btn button layerCheckbox")
-            .classed('active', (d, i) => i == 0)
+            .classed('active', (d, i) => i == self.uiConf.layer())
             .text((d) => d)
             .append("input")
             .attr("type", "radio")
@@ -702,6 +717,7 @@ export class MainGraphic {
         })
 
         const layerId = `#layerCheckbox${this.uiConf.layer()}`
+        console.log("Layer ID: ", layerId);
         d3.select(layerId).attr("checked", "checked")
 
         // Init threshold stuff
@@ -729,6 +745,7 @@ export class MainGraphic {
             self.renderAttHead()
             Sel.setHidden(".atn-curve")
         })
+
     }
 
     _initToggle() {
@@ -746,7 +763,7 @@ export class MainGraphic {
     }
 
     renderAttHead() {
-        const heads = _.range(0, this.uiConf.nHeads)
+        const heads = _.range(0, this.uiConf._nHeads)
         const focusAtt = this.attCapsule.att
         const leftAttInfo = getAttentionInfo(focusAtt, heads, "left");
         const rightAttInfo = getAttentionInfo(focusAtt, heads, "right");

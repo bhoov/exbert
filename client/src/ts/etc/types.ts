@@ -4,6 +4,11 @@
  * Contain the attentions and embeddings for all combinations of returns from the backend
  */
 
+export type ModelInfo = {
+    nlayers: number
+    nheads: number
+}
+
 type AbstractAttentionResponse<T> = {
     aa: T
 }

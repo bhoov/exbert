@@ -15,6 +15,20 @@ basePath: /api
 # ===============================================================================
 paths:
 
+  /get-model-details:
+    get:
+      tags: [All]
+      operationId: main.get_model_details
+      summary: Get necessary information about the model, such as number of layers and heads
+      parameters:
+        - name: model
+          description: Short string representing pretrained model, such as 'bert-base-uncased'
+          in: query
+          type: string
+      responses:
+        200:
+          description: Returns information about the model
+
   /attend+meta:
     get:
       tags: [All]

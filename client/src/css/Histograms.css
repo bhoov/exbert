@@ -1,0 +1,22 @@
+#histograms {
+  display: block;
+  max-width: 100%;
+}
+
+#histograms .histogram {
+  display: inline-block;
+  overflow-x: auto;
+}
+
+#histograms div {
+  margin-top: 10px;
+}
+
+#histograms #max-att-histogram .bar {
+  fill: black;
+}
+
+.pos-selector {
+  margin-bottom: 40px;
+}
+/*# sourceMappingURL=Histograms.css.map */

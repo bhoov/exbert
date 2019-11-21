@@ -2,7 +2,7 @@ from pathlib import Path
 import faiss
 import numpy as np
 from data_processing.corpus_data_wrapper import CorpusDataWrapper
-from .index_wrapper import LAYER_TEMPLATE
+from data_processing.index_wrapper import LAYER_TEMPLATE
 import argparse
 
 
@@ -30,6 +30,10 @@ def train_indexes(ce:CorpusDataWrapper, stepsize=100):
         cdata = ce[ix:ix+stepsize]
 
         embeddings = np.concatenate([c.embeddings for c in cdata], axis=1)
+        list_contexts = [c.contexts for c in cdata]
+        lc_shapes = [c.shape for c in list_contexts]
+        print(lc_shapes[1])
+
         contexts = np.concatenate([c.contexts for c in cdata], axis=1)
 
         for i in range(NUM_LAYERS):

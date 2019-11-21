@@ -34,11 +34,13 @@ export class UIConfig {
     private _conf: URLParameters = {}
     private _headSet: Set<number>;
     attType: tp.SentenceOptions;
-    nHeads: number;
+    _nHeads: number | null;
+    _nLayers: number | null;
     private _token: tp.TokenEvent;
 
-    constructor(nHeads=12){
-        this.nHeads = nHeads
+    constructor(){
+        this._nHeads = null;
+        this._nLayers = null;
         this.attType = 'aa'; // Don't allow this to be modified by the user.
         this.fromURL()
         this.toURL(false)
@@ -94,6 +96,22 @@ export class UIConfig {
         return this.heads()
     }
 
+    nHeads(): number
+    nHeads(val:number): this
+    nHeads(val?) {
+        if (val == null) return this._nHeads
+        this._nHeads = val
+        return this
+    }
+
+    nLayers(): number
+    nLayers(val:number): this
+    nLayers(val?) {
+        if (val == null) return this._nLayers
+        this._nLayers = val
+        return this
+    }
+
     toggleSelectAllHeads() {
         if (this.heads().length == 0) {
             this.selectAllHeads()
@@ -104,7 +122,7 @@ export class UIConfig {
     }
 
     selectAllHeads() {
-        this.headSet(new Set(_.range(0, this.nHeads)))
+        this.headSet(new Set(_.range(0, this._nHeads)))
     }
 
     selectNoHeads() {

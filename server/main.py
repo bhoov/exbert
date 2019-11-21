@@ -36,6 +36,19 @@ def send_static_client(path):
 # ======================================================================
 ## CONNEXION API ##
 # ======================================================================
+def get_model_details(**request):
+    model = request['model']
+    deets = from_pretrained(model)
+
+    info = deets.model.config
+    nlayers = info.num_hidden_layers
+    nheads = info.num_attention_heads
+
+    return {
+        "nlayers": nlayers,
+        "nheads": nheads,
+    }
+
 def get_attention_and_meta(**request):
     model = request["model"]
     details = from_pretrained(model)

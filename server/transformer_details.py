@@ -253,4 +253,5 @@ class DistilBertDetails(TransformerBaseDetails):
         """
         _, hidden_states, attentions, contexts = output
 
+        contexts = tuple([c.permute(0, 2, 1, 3) for c in contexts])
         return hidden_states, attentions, contexts

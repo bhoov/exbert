@@ -1,0 +1,159 @@
+body {
+  background-color: white;
+  font-family: 'IBM Plex Sans', sans-serif;
+  font-weight: 400;
+}
+
+.sticky {
+  position: fixed;
+}
+
+.noscroll {
+  overflow: hidden;
+}
+
+.vpartial {
+  max-height: 90vh;
+}
+
+.scrolling {
+  overflow: auto;
+  max-height: 98%;
+}
+
+.btn .btn-xs {
+  padding: .25rem .4rem;
+  font-size: .875rem;
+  line-height: .5;
+  border-radius: .2rem;
+}
+
+button {
+  -webkit-transition-duration: 0.4s;
+  /* Safari */
+  transition-duration: 0.4s;
+  background: transparent;
+  padding: 5px;
+  border-radius: 5px;
+  background-color: lightgray;
+}
+
+button.selected {
+  background-color: #98b7d9;
+}
+
+button:active :focus {
+  background-color: #98b7d9;
+}
+
+#loader {
+  border: 5px solid #f3f3f3;
+  border-radius: 50%;
+  border-top: 5px solid #3498db;
+  width: 100px;
+  height: 100px;
+  -webkit-animation: spin 2s linear infinite;
+  /* Safari */
+  animation: spin 2s linear infinite;
+  position: absolute;
+  left: 50%;
+  top: 20%;
+  display: none;
+}
+
+/* Safari */
+@-webkit-keyframes spin {
+  0% {
+    -webkit-transform: rotate(0deg);
+  }
+  100% {
+    -webkit-transform: rotate(360deg);
+  }
+}
+
+@keyframes spin {
+  0% {
+    -webkit-transform: rotate(0deg);
+            transform: rotate(0deg);
+  }
+  100% {
+    -webkit-transform: rotate(360deg);
+            transform: rotate(360deg);
+  }
+}
+
+svg {
+  vertical-align: top;
+}
+
+select {
+  font-size: 9pt;
+  font-weight: 600;
+  background-color: transparent;
+  padding: 8px 6px;
+  -webkit-box-sizing: border-box;
+  box-sizing: border-box;
+  border-radius: 4px;
+  border: 0;
+  outline: 0;
+}
+
+.navbar {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 50px;
+  background-color: antiquewhite;
+}
+
+.navbarContent {
+  margin: 10px 20px;
+}
+
+.navbarContent span {
+  padding-left: 10px;
+}
+
+.navbarContent button {
+  margin-left: 10px;
+}
+
+.navbarTitle {
+  font-size: 12pt;
+  font-weight: bold;
+}
+
+.main_frame {
+  position: fixed;
+  top: 55px;
+  overflow-x: hidden;
+  overflow-y: auto;
+}
+
+.floating_content {
+  padding: 10px;
+  height: 94%;
+}
+
+.container {
+  width: 100%;
+  height: 95%;
+  text-align: center;
+  display: inline-block;
+  margin: 5px auto;
+}
+
+#bottom-margin {
+  height: 100px;
+}
+
+.content {
+  max-width: 960px;
+  margin: auto;
+}
+
+.whitespace {
+  height: 8vh;
+}
+/*# sourceMappingURL=base.css.map */
