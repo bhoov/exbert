@@ -337,7 +337,9 @@ export class MainGraphic {
         // Below are the available models. Will need to choose 3 to be available ONLY
         const data = [
             { name: "bert-base-cased" },
+            { name: "bert-base-uncased" },
             { name: "gpt2" },
+            { name: "gpt2-medium" },
             { name: "distilbert-base-uncased" },
             { name: "distilgpt2" },
             { name: "distilroberta-base" },
