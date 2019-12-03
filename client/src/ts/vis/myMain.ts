@@ -211,7 +211,6 @@ export class MainGraphic {
     }
 
     private _bindEventHandler() {
-        //#region event handler binding
         this.eventHandler.bind(TextTokens.events.tokenDblClick, (e) => {
             const letter = sideToLetter(e.side, this.uiConf.attType)
             this.tokCapsule[letter].toggle(e.ind)
@@ -341,8 +340,9 @@ export class MainGraphic {
             { name: "gpt2" },
             { name: "distilbert-base-uncased" },
             { name: "distilgpt2" },
+            { name: "distilroberta-base" },
+            { name: "roberta-base" },
         ]
-
 
         this.sels.modelSelector.selectAll('.model-option')
             .data(data)

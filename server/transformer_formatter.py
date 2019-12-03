@@ -141,10 +141,6 @@ class TransformerOutputFormatter:
                 "contexts": nested_rounder(contexts),
             }
 
-        # Drop the first value in embeddings
-        print(layer)
-        print("EMBEDDING SHAPE: ", self.embeddings[layer].shape)
-        print("CONTEXT SHAPE: ", self.contexts[layer].shape)
         side_info = [to_resp(t, e, c) for t,e,c in zip(self.tokens, tolist(self.embeddings[layer]), tolist(self.contexts[layer]))]
 
         out = {"aa": {

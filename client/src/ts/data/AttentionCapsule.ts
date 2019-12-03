@@ -10,7 +10,7 @@ import * as tf from '@tensorflow/tfjs'
  * - When layer format changes from list, drop the index into conf.layer
  */
 
-const bpeTokens = ["[CLS]", "[SEP]"]
+const bpeTokens = ["[CLS]", "[SEP]", "<s>", "</s>"]
 const findBadIndexes = (x: tp.FullSingleTokenInfo[]) => x_.findAllIndexes(x.map(t => t.text), (a) => _.includes(bpeTokens, a))
 
 export function makeFromMetaResponse(r:tp.AttentionResponse, isZeroed){

@@ -32,7 +32,6 @@ def train_indexes(ce:CorpusDataWrapper, stepsize=100):
         embeddings = np.concatenate([c.embeddings for c in cdata], axis=1)
         list_contexts = [c.contexts for c in cdata]
         lc_shapes = [c.shape for c in list_contexts]
-        print(lc_shapes[1])
 
         contexts = np.concatenate([c.contexts for c in cdata], axis=1)
 
