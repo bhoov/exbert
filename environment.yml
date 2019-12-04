@@ -5,6 +5,7 @@ channels:
   - defaults
   - anaconda
 dependencies:
+  - python=3.7
   - connexion=1.5.3
   - h5py
   - spacy
@@ -12,12 +13,12 @@ dependencies:
   - regex
   - flask-cors
   - faiss-cpu
-  - jinja2=2.10=py36_0
+  - jinja2=2.10
   - numpy=1.16.2
-  - olefile=0.46=py36_0
-  - pickleshare=0.7.5=py36_0
+  - olefile=0.46
+  - pickleshare=0.7.5
   - pillow=5.4.1
-  - pip=19.0.3=py36_0
+  - pip=19.0.3
   - pytorch=1.0.1
   - sacremoses
   - pip:
