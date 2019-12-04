@@ -78,6 +78,7 @@ export class AttentionHeadBox extends VComponent<AttentionHeadBoxI>{
         yscale: 1, // Amount to scale boxheight to get individual heads
         xscale: 0.5, // Amount to scale boxwidth to get individual heads
         side: "left",
+        maxWidth: 200, // Maximum width of SVG
     };
 
     // D3 Components
@@ -100,11 +101,28 @@ export class AttentionHeadBox extends VComponent<AttentionHeadBoxI>{
     private updateCurrent():Partial<CurrentOptions> {
         const op = this.options
         const cur = this._current
+
+        const nHeads = this._data.rows[0].length
+        const baseHeadWidth = op.boxDim * op.xscale
+
+        // Scale headwidth according to maximum width
+        const getHeadScale = (nH) => (Math.min(op.maxWidth/nH, baseHeadWidth) / baseHeadWidth) * op.xscale;
         
         cur.headHeight = op.boxDim * op.yscale;
-        cur.headWidth = op.boxDim * op.xscale;
+        cur.headWidth = getHeadScale(nHeads) * op.boxDim;
         cur.xPad = cur.headWidth;
         cur.yPad = (op.boxDim - cur.headHeight) / 2;
+
+        const getBoxWidth = (headWidth) => {
+            const maxBwidth = 100;
+            const bwidth = this._data.rows[0].length * cur.headWidth
+            const scale = d3.scaleLinear
+            if (bwidth > maxBwidth) {
+                return 
+            }
+
+        }
+
         cur.boxWidth = (this._data.rows[0].length * cur.headWidth);
         cur.totalWidth = (2 * cur.xPad) + cur.boxWidth;
         cur.totalHeight = (op.boxDim * this._data.rows.length);
