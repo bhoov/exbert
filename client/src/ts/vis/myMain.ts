@@ -139,7 +139,7 @@ export class MainGraphic {
         this.eventHandler = new SimpleEventHandler(<Element>this.sels.body.node());
 
         this.vizs = {
-            leftHeads: new AttentionHeadBox(this.sels.atnHeads.left, this.eventHandler, { side: "left" }),
+            leftHeads: new AttentionHeadBox(this.sels.atnHeads.left, this.eventHandler, { side: "left", }),
             rightHeads: new AttentionHeadBox(this.sels.atnHeads.right, this.eventHandler, { side: "right" }),
             tokens: {
                 left: new LeftTextToken(this.sels.tokens.left, this.eventHandler),
@@ -211,21 +211,35 @@ export class MainGraphic {
     }
 
     private _bindEventHandler() {
+        const self = this;
         this.eventHandler.bind(TextTokens.events.tokenDblClick, (e) => {
-            const letter = sideToLetter(e.side, this.uiConf.attType)
-            this.tokCapsule[letter].toggle(e.ind)
-            this.sels.body.style("cursor", "progress")
+            switch (self.uiConf.modelKind()) {
+                case tp.ModelKind.Bidirectional: {
+                    e.sel.classed("masked-token", !e.sel.classed("masked-token"));
+                    const letter = sideToLetter(e.side, this.uiConf.attType)
+                    self.tokCapsule[letter].toggle(e.ind)
+                    self.sels.body.style("cursor", "progress")
 
-            this.api.updateMaskedAttentions(this.uiConf.model(), this.tokCapsule.a, this.uiConf.sentence(), this.uiConf.layer()).then((r: tp.AttentionResponse) => {
-                this.attCapsule.updateFromNormal(r, this.uiConf.hideClsSep());
-                this.tokCapsule.updateEmbeddings(r);
+                    self.api.updateMaskedAttentions(this.uiConf.model(), this.tokCapsule.a, this.uiConf.sentence(), this.uiConf.layer()).then((r: tp.AttentionResponse) => {
+                        self.attCapsule.updateFromNormal(r, this.uiConf.hideClsSep());
+                        self.tokCapsule.updateEmbeddings(r);
 
-                this.uiConf.maskInds(this.tokCapsule.a.maskInds)
+                        self.uiConf.maskInds(this.tokCapsule.a.maskInds)
 
-                this.update();
-                this.sels.body.style("cursor", "default")
+                        self.update();
+                        self.sels.body.style("cursor", "default")
+                    })
+                    break;
+                }
+                case tp.ModelKind.Autoregressive: {
+                    console.log("Autoregressive model doesn't do masking");
+                    break;
+                }
+                default: {
+                    console.log("What kind of model is this?");
+                    break;
+                }
             }
-            )
         })
 
         this.eventHandler.bind(TextTokens.events.tokenMouseOver, (e: tp.TokenEvent) => {
@@ -240,6 +254,12 @@ export class MainGraphic {
             this.uiConf.toggleToken(e)
             this._toggleTokenSel()
             showBySide(e)
+            if (this.uiConf.modelKind() == tp.ModelKind.Autoregressive) {
+                const ename = `#right-token-${+e.ind + 1}`
+                const toMaskSel = d3.select(ename)
+
+                toMaskSel.classed('masked-token', !toMaskSel.classed('masked-token'))
+            }
         })
 
 
@@ -336,29 +356,36 @@ export class MainGraphic {
 
         // Below are the available models. Will need to choose 3 to be available ONLY
         const data = [
-            { name: "bert-base-cased" },
-            { name: "bert-base-uncased" },
-            { name: "gpt2" },
-            { name: "gpt2-medium" },
-            { name: "distilbert-base-uncased" },
-            { name: "distilgpt2" },
-            { name: "distilroberta-base" },
-            { name: "roberta-base" },
+            { name: "bert-base-cased", kind: tp.ModelKind.Bidirectional },
+            { name: "bert-base-uncased", kind: tp.ModelKind.Bidirectional },
+            { name: "distilbert-base-uncased", kind: tp.ModelKind.Bidirectional },
+            { name: "distilroberta-base", kind: tp.ModelKind.Bidirectional },
+            { name: "roberta-base", kind: tp.ModelKind.Bidirectional },
+            { name: "gpt2", kind: tp.ModelKind.Autoregressive },
+            { name: "gpt2-medium", kind: tp.ModelKind.Autoregressive },
+            { name: "distilgpt2", kind: tp.ModelKind.Autoregressive },
         ]
+
+        const names = R.map(R.prop('name'))(data)
+        const kinds = R.map(R.prop('kind'))(data)
+        const kindmap = R.zipObj(names, kinds)
 
         this.sels.modelSelector.selectAll('.model-option')
             .data(data)
             .join('option')
             .classed('model-option', true)
             .property('value', d => d.name)
+            .attr("modelkind", d => d.kind)
             .text(d => d.name)
 
         this.sels.modelSelector.property('value', this.uiConf.model());
 
         this.sels.modelSelector.on('change', function () {
             const me = d3.select(this)
-            self.uiConf.model(me.property('value'))
-            self.mainInit()
+            const mname = me.property('value')
+            self.uiConf.model(mname);
+            self.uiConf.modelKind(kindmap[mname]);
+            self.mainInit();
         })
     }
 
@@ -393,6 +420,7 @@ export class MainGraphic {
         this._initMetaSelectors();
         this._initToggle();
         this.renderAttHead();
+        this.renderTokens();
     }
 
     private _initAdder() {
@@ -703,7 +731,7 @@ export class MainGraphic {
                 }
 
                 return false
-                
+
             })
             .text((d) => d)
             .append("input")
@@ -791,6 +819,7 @@ export class MainGraphic {
         const focusAtt = this.attCapsule.att
         const leftAttInfo = getAttentionInfo(focusAtt, heads, "left");
         const rightAttInfo = getAttentionInfo(focusAtt, heads, "right");
+        this.vizs.leftHeads.options.offset = this.uiConf.offset
         this.vizs.leftHeads.update(leftAttInfo)
         this.vizs.rightHeads.update(rightAttInfo)
         this._renderHeadSummary();
@@ -809,6 +838,8 @@ export class MainGraphic {
         const left = this.tokCapsule[this.uiConf.attType[0]]
         const right = this.tokCapsule[this.uiConf.attType[1]]
 
+        console.log("now: ", this.uiConf.offset);
+        this.vizs.tokens.left.options.offset = this.uiConf.offset
         this.vizs.tokens.left.update(left.tokenData);
         this.vizs.tokens.left.mask(left.maskInds);
         this.vizs.tokens.right.update(right.tokenData);
@@ -818,6 +849,7 @@ export class MainGraphic {
 
     renderSvg() {
         const att = this.attCapsule.byHeads(this.uiConf.heads())
+        this.vizs.attentionSvg.options.offset = this.uiConf.offset
         const svg = <AttentionGraph>this.vizs.attentionSvg.data(att);
         svg.update(att)
         const maxTokens = _.max([this.tokCapsule.a.length()])

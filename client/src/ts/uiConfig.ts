@@ -15,11 +15,12 @@ type InspectorOptions = "context" | "embeddings" | null
 interface URLParameters {
     sentence?: string
     model?: string
+    modelKind?: string
     corpus?: string
     layer?: number
     heads?: number[]
     threshold?: number
-    tokenInd?: number| 'null'
+    tokenInd?: number | 'null'
     tokenSide?: tp.SideOptions
     metaMatch?: tp.SimpleMeta | null
     metaMax?: tp.SimpleMeta | null
@@ -38,7 +39,7 @@ export class UIConfig {
     _nLayers: number | null;
     private _token: tp.TokenEvent;
 
-    constructor(){
+    constructor() {
         this._nHeads = 12; // How do I automate this?
         this._nLayers = null;
         this.attType = 'aa'; // Don't allow this to be modified by the user.
@@ -52,6 +53,7 @@ export class UIConfig {
 
         this._conf = {
             model: params['model'] || 'bert-base-cased',
+            modelKind: params['modelKind'] || tp.ModelKind.Bidirectional,
             sentence: params['sentence'] || "The girl ran to a local pub to escape the din of her city.",
             corpus: params['corpus'] || 'woz',
             layer: params['layer'] || 1,
@@ -67,15 +69,15 @@ export class UIConfig {
             hideClsSep: truthy(params['hideClsSep']) || true,
         }
 
-        this._token = {side: this._conf.tokenSide, ind: this._conf.tokenInd}
+        this._token = { side: this._conf.tokenSide, ind: this._conf.tokenInd }
 
     }
 
-    toURL(updateHistory=false) {
+    toURL(updateHistory = false) {
         URLHandler.updateUrl(this._conf, updateHistory)
     }
 
-    private _initOffsetIdxs(v:(string | number)[] | null) {
+    private _initOffsetIdxs(v: (string | number)[] | null) {
         if (v == null) {
             return [-1, 0, 1]
         }
@@ -85,7 +87,7 @@ export class UIConfig {
         }
     }
 
-    private _initHeads(v:number[] | null) {
+    private _initHeads(v: number[] | null) {
         if (v == null || v.length < 1) {
             this.selectAllHeads()
         }
@@ -97,7 +99,7 @@ export class UIConfig {
     }
 
     nHeads(): number
-    nHeads(val:number): this
+    nHeads(val: number): this
     nHeads(val?) {
         if (val == null) return this._nHeads
         this._nHeads = val
@@ -105,7 +107,7 @@ export class UIConfig {
     }
 
     nLayers(): number
-    nLayers(val:number): this
+    nLayers(val: number): this
     nLayers(val?) {
         if (val == null) return this._nLayers
         this._nLayers = val
@@ -129,9 +131,9 @@ export class UIConfig {
         this.headSet(new Set([]))
     }
 
-    toggleHead(head:number):tp.Toggled {
+    toggleHead(head: number): tp.Toggled {
         let out;
-        if (this.headSet().has(head)){
+        if (this.headSet().has(head)) {
             this.headSet().delete(head);
             out = tp.Toggled.REMOVED
         }
@@ -146,13 +148,12 @@ export class UIConfig {
         return out
     }
 
-    toggleToken(e:tp.TokenEvent):this {
+    toggleToken(e: tp.TokenEvent): this {
         const picker = R.pick(['ind', 'side'])
         const compareEvent = picker(e)
         const compareToken = picker(this.token())
 
-        if (R.equals(compareToken,compareEvent)) {
-            console.log("REMOVING TOKEN");
+        if (R.equals(compareToken, compareEvent)) {
             this.rmToken();
         }
         else {
@@ -162,8 +163,8 @@ export class UIConfig {
     }
 
     token(): tp.TokenEvent;
-    token(val:tp.TokenEvent): this;
-    token(val?:tp.TokenEvent) {
+    token(val: tp.TokenEvent): this;
+    token(val?: tp.TokenEvent) {
         if (val == null)
             return this._token
 
@@ -176,12 +177,12 @@ export class UIConfig {
     }
 
     rmToken() {
-        this.token({ind:null, side:null});
+        this.token({ ind: null, side: null });
         return this
     }
 
     sentence(): string;
-    sentence(val:string): this;
+    sentence(val: string): this;
     sentence(val?) {
         if (val == null)
             return this._conf.sentence
@@ -298,6 +299,32 @@ export class UIConfig {
         this._conf.model = val
         this.toURL();
         return this
+    }
+
+    modelKind(): string;
+    modelKind(val: string): this;
+    modelKind(val?) {
+        if (val == null) return this._conf.modelKind
+        this._conf.modelKind = val
+        this.toURL();
+        return this
+    }
+
+    /**
+     * Return the offset needed for the modelKind in the configuration
+     */
+    get offset() {
+        switch (this.modelKind()) {
+            case tp.ModelKind.Bidirectional: {
+                return 0
+            }
+            case tp.ModelKind.Autoregressive: {
+                return 1
+            }
+            default: {
+                return 0
+            }
+        }
     }
 
     corpus(): string;

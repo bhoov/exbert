@@ -133,8 +133,6 @@ app.add_api("swagger.yaml")
 # Setup code
 if __name__ != "__main__":
     print("SETTING UP ENDPOINTS")
-    # faiss_loader.load_info()
-    # print("AFTER SETUP")
 
 # Then deploy app
 else:

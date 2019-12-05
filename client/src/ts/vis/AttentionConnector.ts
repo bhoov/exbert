@@ -1,10 +1,10 @@
 import * as d3 from "d3";
 import 'd3-selection-multi'
-import {D3Sel} from "../etc/Util";
-import {Edge, EdgeData} from "./EdgeConnector"
+import { D3Sel } from "../etc/Util";
+import { Edge, EdgeData } from "./EdgeConnector"
 import { VComponent } from "./VisComponent";
 import { SimpleEventHandler } from "../etc/SimpleEventHandler";
-import {scaleLinearWidth} from "./FormatUtils"
+import { scaleLinearWidth } from "./FormatUtils"
 
 export type AttentionData = number[][]
 
@@ -33,15 +33,16 @@ export class AttentionGraph extends VComponent<AttentionData>{
     _threshold = 0.7; // Accumulation threshold. Between 0-1
     normByGroup = false; // Whether to normalize connection width by src-group or not
 
-    static events = { } // No events needed for this one
+    static events = {} // No events needed for this one
 
     options = {
         boxheight: 26, // The height of the div boxes around the SVG element
         height: 500,
         width: 200,
+        offset: 0, // Should I offset the left side by 1 or not?
     }
 
-    constructor(d3Parent: D3Sel, eventHandler?:SimpleEventHandler, options: {} = {}) {
+    constructor(d3Parent: D3Sel, eventHandler?: SimpleEventHandler, options: {} = {}) {
         super(d3Parent, eventHandler)
         this.superInitSVG(options)
         this._init()
@@ -59,21 +60,22 @@ export class AttentionGraph extends VComponent<AttentionData>{
      * Create connections between locations of the SVG using D3's linkGen
      */
     private createConnections() {
+        const self = this;
         const op = this.options;
         if (this.paths) {
             this.paths.attrs({
                 'd': (d, i) => {
                     const data: { source: [number, number], target: [number, number] } =
-                        {
-                            source: [0, op.boxheight * (d.i + 0.5)],
-                            target: [op.width, op.boxheight * (d.j + 0.5)] // + 2 allows small offset
-                        };
+                    {
+                        source: [0, op.boxheight * (d.i + 0.5 + op.offset)],
+                        target: [op.width, op.boxheight * (d.j + 0.5)] // + 2 allows small offset
+                    };
                     return this.linkGen(data);
                 },
                 'class': 'atn-curve'
             })
-            .attr("src-idx", (d, i) => d.i)
-            .attr("target-idx", (d, i) => d.j);
+                .attr("src-idx", (d, i) => d.i)
+                .attr("target-idx", (d, i) => d.j);
         }
     }
 
@@ -81,8 +83,9 @@ export class AttentionGraph extends VComponent<AttentionData>{
      * Change the height of the SVG
      */
     private updateHeight() {
+        const op = this.options;
         if (this.svg != null) {
-            this.svg.attr("height", this.options.height)
+            this.svg.attr("height", this.options.height + (op.offset * this.options.boxheight))
         }
         return this;
     }
@@ -126,9 +129,9 @@ export class AttentionGraph extends VComponent<AttentionData>{
                 .data(this.plotData)
                 .join('path');
 
-                this.createConnections();
-                this.updateOpacity();
-            
+            this.createConnections();
+            this.updateOpacity();
+
             return this;
         }
     }
@@ -144,11 +147,11 @@ export class AttentionGraph extends VComponent<AttentionData>{
         if (this.normByGroup) {
             const arr = this.edgeData.extent(1);
             this.opacityScales = [];
-            arr.forEach((v,i) => {
+            arr.forEach((v, i) => {
                 (this.opacityScales as d3.ScaleLinear<any, any>[]).push(
                     d3.scaleLinear()
                         .domain([0, v[1]])
-                        .range([0,0.9])
+                        .range([0, 0.9])
                 )
             })
         }
@@ -157,7 +160,7 @@ export class AttentionGraph extends VComponent<AttentionData>{
         else {
             const maxIn = d3.max(this.plotData.map((d) => d.v))
             for (let i = 0; i < this._data.length; i++) {
-                this.opacityScales.push( d3.scaleLinear()
+                this.opacityScales.push(d3.scaleLinear()
                     .domain([0, maxIn])
                     .range([0, 1]));
             }
@@ -167,13 +170,13 @@ export class AttentionGraph extends VComponent<AttentionData>{
     /**
      * Access / modify the data in a D3 style way. If modified, the component will update just the part that is needed to be updated
      */
-    data():AttentionData
-    data(value:AttentionData):this
+    data(): AttentionData
+    data(value: AttentionData): this
     data(value?) {
         if (value == null) {
             return this._data;
         }
-        
+
         this._data = value;
         this.edgeData = new EdgeData(value);
         this.plotData = this.edgeData.format(this._threshold);
@@ -185,8 +188,8 @@ export class AttentionGraph extends VComponent<AttentionData>{
     /**
      * Access / modify the height in a D3 style way. If modified, the component will update just the part that is needed to be updated
      */
-    height():number
-    height(value:number):this
+    height(): number
+    height(value: number): this
     height(value?) {
         if (value == null) {
             return this.options.height
@@ -200,9 +203,9 @@ export class AttentionGraph extends VComponent<AttentionData>{
     /**
      * Access / modify the width in a D3 style way. If modified, the component will update just the part that is needed to be updated
      */
-    width():number
-    width(value:number):this
-    width(value?:number):this|number {
+    width(): number
+    width(value: number): this
+    width(value?: number): this | number {
         if (value == null) {
             return this.options.width;
         }
@@ -214,13 +217,13 @@ export class AttentionGraph extends VComponent<AttentionData>{
     /**
      * Access / modify the threshold in a D3 style way. If modified, the component will update just the part that is needed to be updated
      */
-    threshold():number
-    threshold(value:number):this
-    threshold(value?){
+    threshold(): number
+    threshold(value: number): this
+    threshold(value?) {
         if (value == null) {
             return this._threshold;
         }
-        
+
         this._threshold = value;
         this.plotData = this.edgeData.format(this._threshold);
         this.createScales();

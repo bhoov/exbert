@@ -1,3 +1,5 @@
+import { D3Sel } from "./Util"
+
 /**
  * ATTENTION RESPONSES FROM BACKEND
  *
@@ -15,12 +17,24 @@ type AbstractAttentionResponse<T> = {
 
 export type AttentionResponse = AbstractAttentionResponse<AttentionMetaResult>
 
+export function makeBlankFullSingleToken(text) {
+    return {
+        text: text,
+        embeddings: [[]],
+        contexts: [[]],
+        bpe_token: null,
+        bpe_pos: null,
+        bpe_dep: null,
+        bpe_is_ent: null,
+    }
+
+}
+
 /**
  * ATTENTION RESULTS FROM BACKEND
  *
  * These are the results that are encased in the 'aa' and 'ab' keys returned
  */
-
 export type FullSingleTokenInfo = {
     text: string,
     embeddings: number[],
@@ -78,6 +92,7 @@ export interface TokenFaissMatch {
  * EVENT TYPES
  */
 export interface TokenEvent {
+    sel?: D3Sel,
     side: SideOptions,
     ind: number | "null",
 }
@@ -127,4 +142,9 @@ export interface ColorMetaScale {
     is_ent: (d: string) => string,
     ents: (d: string) => string,
     offset?: (d: string) => string,
+}
+
+export enum ModelKind {
+    Bidirectional = "bidirectional",
+    Autoregressive = "autoregressive"
 }

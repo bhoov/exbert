@@ -1,8 +1,8 @@
 import * as d3 from "d3";
-import {VComponent} from "./VisComponent";
-import {SimpleEventHandler} from "../etc/SimpleEventHandler";
-import {D3Sel} from "../etc/Util";
-import {SVG} from "../etc/SVGplus"
+import { VComponent } from "./VisComponent";
+import { SimpleEventHandler } from "../etc/SimpleEventHandler";
+import { D3Sel } from "../etc/Util";
+import { SVG } from "../etc/SVGplus"
 import * as tf from '@tensorflow/tfjs'
 
 // The below two (interface and function) can become a class
@@ -20,7 +20,7 @@ export type AttentionHeadBoxI = {
  * @param side Is this the right or the left display?
  * @returns Information needed to label the headbox
  */
-export function getAttentionInfo(headMat:number[][][], headList:number[], side:"right"|"left"="left"):AttentionHeadBoxI {
+export function getAttentionInfo(headMat: number[][][], headList: number[], side: "right" | "left" = "left"): AttentionHeadBoxI {
     // Collect only from headlist, average each head, transpose to ease iteration
     if (headList.length == 0) {
         return {
@@ -37,7 +37,7 @@ export function getAttentionInfo(headMat:number[][][], headList:number[], side:"
 
     const rowInfo = <number[][]>gatheredMat.arraySync();
 
-    const out:AttentionHeadBoxI = {
+    const out: AttentionHeadBoxI = {
         rows: rowInfo,
         labels: headList,
         max: <number>gatheredMat.max().arraySync(),
@@ -47,14 +47,14 @@ export function getAttentionInfo(headMat:number[][][], headList:number[], side:"
 }
 
 interface CurrentOptions {
-        headHeight: number
-        headWidth: number
-        xPad: number
-        yPad: number
-        boxWidth: number
-        totalWidth: number
-        totalHeight: number
-    };
+    headHeight: number
+    headWidth: number
+    xPad: number
+    yPad: number
+    boxWidth: number
+    totalWidth: number
+    totalHeight: number
+};
 
 export class AttentionHeadBox extends VComponent<AttentionHeadBoxI>{
     css_name = '';
@@ -79,6 +79,7 @@ export class AttentionHeadBox extends VComponent<AttentionHeadBoxI>{
         xscale: 0.5, // Amount to scale boxwidth to get individual heads
         side: "left",
         maxWidth: 200, // Maximum width of SVG
+        offset: 0, // 1 if for autoregressive models
     };
 
     // D3 Components
@@ -86,7 +87,7 @@ export class AttentionHeadBox extends VComponent<AttentionHeadBoxI>{
     headCells: D3Sel;
     opacityScale: d3.ScaleLinear<any, any>;
 
-    constructor(d3Parent: D3Sel, eventHandler?:SimpleEventHandler, options: {} = {}) {
+    constructor(d3Parent: D3Sel, eventHandler?: SimpleEventHandler, options: {} = {}) {
         super(d3Parent, eventHandler);
         this.superInitSVG(options);
         this._init()
@@ -95,10 +96,10 @@ export class AttentionHeadBox extends VComponent<AttentionHeadBoxI>{
     _init() {
         this.headRows = this.base.selectAll(`.${this.rowCssName}`)
         this.headCells = this.headRows.selectAll(`${this.boxCssName}`)
-        this.opacityScale = d3.scaleLinear().range([0,1]);
+        this.opacityScale = d3.scaleLinear().range([0, 1]);
     }
 
-    private updateCurrent():Partial<CurrentOptions> {
+    private updateCurrent(): Partial<CurrentOptions> {
         const op = this.options
         const cur = this._current
 
@@ -106,8 +107,8 @@ export class AttentionHeadBox extends VComponent<AttentionHeadBoxI>{
         const baseHeadWidth = op.boxDim * op.xscale
 
         // Scale headwidth according to maximum width
-        const getHeadScale = (nH) => (Math.min(op.maxWidth/nH, baseHeadWidth) / baseHeadWidth) * op.xscale;
-        
+        const getHeadScale = (nH) => (Math.min(op.maxWidth / nH, baseHeadWidth) / baseHeadWidth) * op.xscale;
+
         cur.headHeight = op.boxDim * op.yscale;
         cur.headWidth = getHeadScale(nHeads) * op.boxDim;
         cur.xPad = cur.headWidth;
@@ -118,14 +119,14 @@ export class AttentionHeadBox extends VComponent<AttentionHeadBoxI>{
             const bwidth = this._data.rows[0].length * cur.headWidth
             const scale = d3.scaleLinear
             if (bwidth > maxBwidth) {
-                return 
+                return
             }
 
         }
 
         cur.boxWidth = (this._data.rows[0].length * cur.headWidth);
         cur.totalWidth = (2 * cur.xPad) + cur.boxWidth;
-        cur.totalHeight = (op.boxDim * this._data.rows.length);
+        cur.totalHeight = (op.boxDim * (this._data.rows.length + op.offset));
 
         return this._current
     }
@@ -133,7 +134,7 @@ export class AttentionHeadBox extends VComponent<AttentionHeadBoxI>{
     private updateData() {
         const op = this.options;
         const self = this;
-        const boxEvent = (i) => { return {ind:i, side:op.side, head: self._data.labels[i]} }
+        const boxEvent = (i) => { return { ind: i, side: op.side, head: self._data.labels[i] } }
         const cur = this.updateCurrent()
 
         this.base.html('');
@@ -147,23 +148,24 @@ export class AttentionHeadBox extends VComponent<AttentionHeadBoxI>{
             .join("g")
             .attrs({
                 class: (d, i) => `${self.rowCssName} ${self.rowCssName}-${i}`,
-                transform:  (d, i) => {
+                transform: (d, i) => {
                     return SVG.translate(
                         {
-                            x: cur.xPad, 
-                            y:op.boxDim * i + cur.yPad,
-                        })},
+                            x: cur.xPad,
+                            y: (op.boxDim * (i + op.offset)) + cur.yPad,
+                        })
+                },
                 width: cur.boxWidth,
-                height: cur.headHeight, 
+                height: cur.headHeight,
 
             })
             .on("mouseover", (d, i) => {
-                self.eventHandler.trigger(AttentionHeadBox.events.rowMouseOver, {ind:i, side:op.side})
+                self.eventHandler.trigger(AttentionHeadBox.events.rowMouseOver, { ind: i, side: op.side })
             })
             .on("mouseout", (d, i) => {
-                self.eventHandler.trigger(AttentionHeadBox.events.rowMouseOut, {ind:i, side:op.side})
+                self.eventHandler.trigger(AttentionHeadBox.events.rowMouseOut, { ind: i, side: op.side })
             })
-            
+
         this.headCells = this.headRows
             .selectAll(`${this.boxCssName}`)
             .data(d => d)
@@ -175,7 +177,7 @@ export class AttentionHeadBox extends VComponent<AttentionHeadBoxI>{
                 head: (d, i) => self._data.labels[i],
                 width: cur.headWidth,
                 height: cur.headHeight,
-                opacity: (d:number) => this.opacityScale(d),
+                opacity: (d: number) => this.opacityScale(d),
                 fill: "blue"
             })
             .on("mouseover", (d, i) => {
