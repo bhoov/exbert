@@ -52,7 +52,7 @@ def squeeze_contexts(x: Tuple[torch.Tensor]) -> Tuple[torch.Tensor]:
     return tuple([x_.view(new_shape) for x_ in x])
 
 def add_blank(xs: Tuple[torch.tensor]) -> Tuple[torch.Tensor]:
-    """The embeddings have n_layers + 1, indicating the input hidden state."""
+    """The embeddings have n_layers + 1, indicating the final output embedding."""
 
     return (torch.zeros_like(xs[0]),) + xs
 
@@ -69,9 +69,8 @@ class TransformerOutputFormatter:
         assert len(tokens) > 0, "Cannot have an empty token output!"
 
         modified_embeddings = flatten_batch(embeddings)
-        modified_att = add_blank(flatten_batch(att))
-        modified_contexts = add_blank(flatten_batch(contexts))
-
+        modified_att = flatten_batch(att)
+        modified_contexts = flatten_batch(contexts)
 
         self.sentence = sentence
         self.tokens = tokens
@@ -184,8 +183,16 @@ class TransformerOutputFormatter:
             "attentions": atts
         }
 
+    @property
+    def searchable_embeddings(self):
+        return np.array(list(map(to_searchable, self.embeddings)))
+
+    @property
+    def searchable_contexts(self):
+        return np.array(list(map(to_searchable, self.contexts)))
+
     def __repr__(self):
-        lim = 40
+        lim = 50
         if len(self.sentence) > lim: s = self.sentence[:lim - 3] + "..."
         else: s = self.sentence[:lim]
 
@@ -198,3 +205,6 @@ def to_numpy(x):
     """Embeddings, contexts, and attentions are stored as torch.Tensors in a tuple. Convert this to a numpy array
     for storage in hdf5"""
     return np.array([x_.detach().numpy() for x_ in x])
+
+def to_searchable(t: Tuple[torch.Tensor]):
+    return t.detach().numpy().astype(np.float32)

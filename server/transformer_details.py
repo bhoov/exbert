@@ -108,7 +108,7 @@ class TransformerBaseDetails(ABC):
             - attentions (tuple of n_layers)
             - contexts (tuple of n_layers)
         """
-        _, _, hidden_state, attentions, contexts = output
+        _1, _2, hidden_state, attentions, contexts = output
 
         return hidden_state, attentions, contexts
 
