@@ -36,10 +36,22 @@ class SentenceH5Data:
     @property
     def embeddings(self):
         return self.grp['embeddings'][:]
+
+    @property
+    def zero_special_embeddings(self):
+        out = self.embeddings.copy()
+        out[:, self.mask_is_special] = np.zeros(out[:, self.mask_is_special].shape)
+        return out
     
     @property
     def contexts(self):
         return self.grp['contexts'][:]
+    
+    @property
+    def zero_special_contexts(self):
+        out = self.contexts.copy()
+        out[:, self.mask_is_special] = np.zeros(out[:, self.mask_is_special].shape)
+        return out
 
     @property
     def attentions(self):
@@ -47,6 +59,10 @@ class SentenceH5Data:
         
         Note that if the hdf5 is created with CLS and SEP attentions, it will have CLS and SEP attentions"""
         return self.grp['attentions'][:] # Converts to numpy array
+
+    @property
+    def mask_is_special(self):
+        return np.logical_or(self.deps == '', self.poss == '')
 
     @property
     def tokens(self):

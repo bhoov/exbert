@@ -101,8 +101,6 @@ def nearest_embedding_search(**request):
     heads = list(map(int, list(set(request["heads"]))))
     k = int(request["k"])
 
-    layer = layer - 1 # + 1 +1
-
     out = cc.search_embeddings(layer, q, k)
 
     return_obj = [o.to_json(layer, heads) for o in out]
@@ -120,8 +118,6 @@ def nearest_context_search(**request):
     layer = int(request["layer"])
     heads = list(map(int, list(set(request["heads"]))))
     k = int(request["k"])
-
-    layer = layer - 1# + 1 +1
 
     out = cc.search_contexts(layer, heads, q, k)
     return_obj = [o.to_json(layer, heads) for o in out]

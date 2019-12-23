@@ -5,6 +5,11 @@ from data_processing.corpus_data_wrapper import CorpusDataWrapper
 from data_processing.index_wrapper import LAYER_TEMPLATE
 import argparse
 
+# Get model from base_dir
+# Use that information to get the model's configuration
+# From this, get the special tokens associated with that model
+# Have flag to allow model's special tokens to be ignored
+# Test what items match 'bert-base-cased'
 
 def parse_args():
     parser = argparse.ArgumentParser()
@@ -13,15 +18,16 @@ def parse_args():
     args = parser.parse_args()
     return args
 
-def train_indexes(ce:CorpusDataWrapper, stepsize=100):
+def train_indexes(ce:CorpusDataWrapper, stepsize=100, drop_null=True):
     """
-    
+
     Parameters:
     ===========
     - corpus_embedding: Wrapper around HDF5 file for easy access to data
     - stepsize: How many sentences to train with at once
+    - drop_null: Don't index the embeddings of special tokens (e.g., [CLS] and [SEP]) whose spacy POS are null
     """
-    NUM_LAYERS = ce.n_layers + 1 # want to account for the input layer, which for attentions + contexts is all value 0
+    NUM_LAYERS = ce.n_layers # want to account for the input layer, which for attentions + contexts is all value 0
     
     embedding_indexes = [faiss.IndexFlatIP(ce.embedding_dim) for i in range(NUM_LAYERS)]
     context_indexes = [faiss.IndexFlatIP(ce.embedding_dim) for i in range(NUM_LAYERS)]
@@ -29,11 +35,12 @@ def train_indexes(ce:CorpusDataWrapper, stepsize=100):
     for ix in range(0, len(ce), stepsize):
         cdata = ce[ix:ix+stepsize]
 
-        embeddings = np.concatenate([c.embeddings for c in cdata], axis=1)
-        list_contexts = [c.contexts for c in cdata]
-        lc_shapes = [c.shape for c in list_contexts]
-
-        contexts = np.concatenate([c.contexts for c in cdata], axis=1)
+        if drop_null: 
+            embeddings = np.concatenate([c.zero_special_embeddings for c in cdata], axis=1)
+            contexts = np.concatenate([c.zero_special_contexts for c in cdata], axis=1)
+        else:
+            embeddings = np.concatenate([c.embeddings for c in cdata], axis=1)
+            contexts = np.concatenate([c.contexts for c in cdata], axis=1)
 
         for i in range(NUM_LAYERS):
             embedding_indexes[i].add(embeddings[i])

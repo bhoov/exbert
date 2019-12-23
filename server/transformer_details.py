@@ -23,9 +23,7 @@ from transformers import (
 
 from utils.f import delegates, pick, memoize
 
-@memoize
-def from_pretrained(model_name):
-    """Convert model name into appropriate transformer details"""
+def get_cls(class_name):
     cls_type = {
         'bert-base-uncased': BertDetails,
         'bert-base-cased': BertDetails,
@@ -44,8 +42,12 @@ def from_pretrained(model_name):
         'distilgpt2': GPT2Details,
         'distilroberta-base': RobertaDetails,
     }
+    return cls_type[class_name]
 
-    try: out = cls_type[model_name].from_pretrained(model_name)
+@memoize
+def from_pretrained(model_name):
+    """Convert model name into appropriate transformer details"""
+    try: out = get_cls(model_name).from_pretrained(model_name)
     except KeyError: raise KeyError(f"The model name of '{model_name}' either does not exist or is currently not supported")
 
     return out

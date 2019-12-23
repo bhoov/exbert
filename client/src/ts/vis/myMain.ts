@@ -158,6 +158,7 @@ export class MainGraphic {
     }
 
     private mainInit() {
+        const self = this;
         this.sels.body.style("cursor", "progress")
         this.api.getModelDetails(this.uiConf.model()).then(md => {
             this.uiConf.nLayers(md.nlayers).nHeads(md.nheads)
@@ -258,7 +259,11 @@ export class MainGraphic {
                 const ename = `#right-token-${+e.ind + 1}`
                 const toMaskSel = d3.select(ename)
 
-                toMaskSel.classed('masked-token', !toMaskSel.classed('masked-token'))
+                d3.selectAll('.right-token').each(function () {
+                    const s = d3.select(this)
+                    const crit = (s.node() == toMaskSel.node() && !s.classed('masked-token'))
+                    s.classed("masked-token", crit)
+                })
             }
         })
 
@@ -405,6 +410,7 @@ export class MainGraphic {
         this.sels.corpusSelector.on('change', function () {
             const me = d3.select(this)
             self.uiConf.corpus(me.property('value'))
+            console.log(self.uiConf.corpus());
         })
 
 
@@ -714,12 +720,12 @@ export class MainGraphic {
         let hasActive = false;
 
         const checkboxes = self.sels.layerCheckboxes.selectAll(".layerCheckbox")
-            .data(_.range(1, nLayers + 1))
+            .data(_.range(0, nLayers))
             .join("label")
             .attr("class", "btn button layerCheckbox")
             .classed('active', (d, i) => {
                 // Assign to largest layer available if uiConf.layer() > new nLayers
-                if (d == self.uiConf.layer()) {
+                if (d == self.uiConf.layer() - 1) { // Javascript is 0 indexed!
                     hasActive = true;
                     return true
                 }
@@ -733,7 +739,7 @@ export class MainGraphic {
                 return false
 
             })
-            .text((d) => d)
+            .text((d) => d + 1)
             .append("input")
             .attr("type", "radio")
             .attr("class", "checkbox-inline")
