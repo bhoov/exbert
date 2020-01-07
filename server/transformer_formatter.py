@@ -102,7 +102,7 @@ class TransformerOutputFormatter:
         squeezed_normed_cs = squeeze_contexts(normed_cs)
         return squeezed_normed_cs
     
-    def to_old_json(self, layer:int, ndigits=5):
+    def to_json(self, layer:int, ndigits=5):
         """The original API expects the following response:
 
         aa: {

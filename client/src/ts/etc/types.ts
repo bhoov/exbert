@@ -15,26 +15,14 @@ type AbstractAttentionResponse<T> = {
     aa: T
 }
 
-export type AttentionResponse = AbstractAttentionResponse<AttentionMetaResult>
-
-export function makeBlankFullSingleToken(text) {
-    return {
-        text: text,
-        embeddings: [[]],
-        contexts: [[]],
-        bpe_token: null,
-        bpe_pos: null,
-        bpe_dep: null,
-        bpe_is_ent: null,
-    }
-
-}
-
 /**
  * ATTENTION RESULTS FROM BACKEND
  *
  * These are the results that are encased in the 'aa' and 'ab' keys returned
  */
+export type AttentionResponse = AbstractAttentionResponse<AttentionMetaResult>
+export type AttentionMetaResult = AbstractAttentionResult<FullSingleTokenInfo[]>
+
 export type FullSingleTokenInfo = {
     text: string,
     embeddings: number[],
@@ -45,14 +33,11 @@ export type FullSingleTokenInfo = {
     bpe_is_ent: boolean,
 }
 
-
-type AbstractAttentionResult<T> = {
+interface AbstractAttentionResult<T> {
     att: number[][][],
     left: T,
     right: T,
 }
-
-export type AttentionMetaResult = AbstractAttentionResult<FullSingleTokenInfo[]>
 
 /**
  * SEARCH RESULT TYPES

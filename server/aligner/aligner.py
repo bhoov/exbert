@@ -33,6 +33,7 @@ def MakeAligner(pretrained_tokenizer, spacy_language_model):
         def __init__(self, **kwargs):
             super().__init__(**kwargs)
             self.nlp = spacy.load(spacy_language_model)
+            self.meta_container = SimpleSpacyToken
 
         def prep_sentence(self, s: str) -> str:
             """Remove contractions and multiple spaces from input sentence"""
@@ -58,7 +59,7 @@ def MakeAligner(pretrained_tokenizer, spacy_language_model):
             """Convert existing tokens into their metadata, ignoring effects of special tokens from the tokenizer
             
             NOTE that the sentence MUST be the same sentence that produced the tokens, otherwise,
-            an unpredictable error may occur. Or worse, it will act like it works.
+            an unpredictable error may occur. Or worse, it will act like it works when it in fact doesn't.
 
             Parameters:
                 - sentence: Sentence the tokens came from
@@ -80,7 +81,7 @@ def MakeAligner(pretrained_tokenizer, spacy_language_model):
 
             for i, b in enumerate(tokens):
                 if b in self.all_special_tokens:
-                    new_meta.append(SimpleSpacyToken(b))
+                    new_meta.append(self.meta_container(b))
                 else:
                     new_meta.append(orig_meta[j])
                     j += 1
@@ -96,7 +97,7 @@ def MakeAligner(pretrained_tokenizer, spacy_language_model):
         def _to_spacy_meta(self, s: str) -> List[SimpleSpacyToken]: # list of simple spacy tokens...
             """Convert a string into a list of records containing simplified spacy information"""
             doc = self.nlp(s)
-            out = [SimpleSpacyToken(t) for t in doc]
+            out = [self.meta_container(t) for t in doc]
             return out
 
         @delegates(pretrained_tokenizer.tokenize)

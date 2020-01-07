@@ -67,3 +67,7 @@ client/src/demo
 
 # Mypy static checking
 .mypy_cache
+
+# Emacs things
+\#*
+.#*

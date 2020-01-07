@@ -58,7 +58,7 @@ def get_attention_and_meta(**request):
 
     deets = details.att_from_sentence(sentence)
 
-    return deets.to_old_json(layer) # +1 + 1 Modification
+    return deets.to_json(layer)
 
 
 def update_masked_attention(**request):
@@ -85,7 +85,7 @@ def update_masked_attention(**request):
     token_inputs = mask_tokens(tokens, mask)
 
     deets = details.att_from_tokens(token_inputs, sentence)
-    out = deets.to_old_json(layer) # + 1 +1
+    out = deets.to_json(layer)
     return out
 
 
@@ -111,8 +111,16 @@ def nearest_context_search(**request):
     """Return the token text and the metadata in JSON"""
     model = request["model"]
     corpus = request["corpus"]
-    details = from_pretrained(model)
-    cc = from_model(model, corpus)
+    try:
+        details = from_pretrained(model)
+    except KeyError as e:
+        return {'status': 405}
+
+    try:
+        cc = from_model(model, corpus)
+    except FileNotFoundError as e:
+        return {'status': 406}
+
 
     q = np.array(request["context"]).reshape((1, -1)).astype(np.float32)
     layer = int(request["layer"])

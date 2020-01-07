@@ -155,9 +155,7 @@ Promptly refresh your shell environment and run `conda update conda` to be able 
 If you want to make custom changes to the code, these are some hints to get you started. 
 
 ### Use as package
-Some find it useful to expose the code inside `server` for development in an environment like Jupyter Notebooks. To set up a development environment, perform the following:
-
-From the root folder with the `exbert` environment active:
+Some find it useful to expose the code inside `server` for development in an environment like Jupyter Notebooks. From the root folder with the `exbert` environment active:
 
 ```bash
 conda env update -f environment-dev.yml
@@ -166,7 +164,7 @@ pip install -e ./server
 
 Now the `exbert` environment should allow the server code to be accessible in any folder so long as there are no additional module name clashes in the environment.
 
-### [Optional] Compiling the frontend
+### Compiling the frontend
 
 ```bash
 cd client/src
@@ -174,6 +172,37 @@ npm install #installs all necessary node packages
 npm run build #This will create the static files living in `client/dist`. 
 ```
 
+## Running a development environment
+You can run a client server that automatically recompiles the frontend with `npm run ww`. After making a change, you should be able to refresh the browser window to see your most recent changes.
+
+Because the backend has to load in a lot of data for inference, we do not allow auto-backend refresh on every saved change in flask even though the framework supports it.
+
+### Uploading your own model locally
+Uploading your own model consists of the following steps:
+
+1. *Save your pretrained huggingface model* according to the naming conventions specified in the "modeling_auto.py" of the original transformers repo:
+
+```
+The model class to instantiate is selected as the first pattern matching
+        in the `pretrained_model_name_or_path` string (in the following order):
+            - contains `t5`: T5Model (T5 model)
+            - contains `distilbert`: DistilBertModel (DistilBERT model)
+            - contains `albert`: AlbertModel (ALBERT model)
+            - contains `camembert`: CamembertModel (CamemBERT model)
+            - contains `xlm-roberta`: XLMRobertaModel (XLM-RoBERTa model)
+            - contains `roberta`: RobertaModel (RoBERTa model)
+            - contains `bert`: BertModel (Bert model)
+            - contains `openai-gpt`: OpenAIGPTModel (OpenAI GPT model)
+            - contains `gpt2`: GPT2Model (OpenAI GPT-2 model)
+            - contains `transfo-xl`: TransfoXLModel (Transformer-XL model)
+            - contains `xlnet`: XLNetModel (XLNet model)
+            - contains `xlm`: XLMModel (XLM model)
+            - contains `ctrl`: CTRLModel (Salesforce CTRL model)
+```
+
+Right now, only BERT, RoBERTa, GPT2, and DistilBERT are supported for context searching. You can use the rest without the context searching as desired.
+
+2. *Create the reference corpus*. **Warning**: Depending on the number of layers and size of the hidden dimension in the model, this step could take many gigabytes on your computer to store the hidden representations and attentions at every layer.
 
 
 ## Acknowledgements

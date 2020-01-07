@@ -36,7 +36,7 @@ class Indexes:
     """
     def __init__(self, folder, pattern=FAISS_LAYER_PATTERN):
         self.base_dir = Path(folder)
-        self.n_layers = len(list(self.base_dir.glob(pattern))) - 1 # Subtract input dimension
+        self.n_layers = len(list(self.base_dir.glob(pattern))) - 1 # Subtract final output
         self.indexes = [None] * (self.n_layers + 1) # Initialize empty list, adding 1 for input
         self.pattern = pattern
         self.__init_indexes()

@@ -142,7 +142,6 @@ paths:
         200:
           description: Return related embeddings by that head and the associated metadata
 
-
 definitions:
   maskPayload:
     type: object

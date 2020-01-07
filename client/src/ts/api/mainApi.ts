@@ -140,7 +140,7 @@ export class API {
      * @param layer In the l'th layer
      * @param k how many results to retrieve
      */
-    getNearestEmbeddings(model: string, corpus: string, embedding: number[], layer: number, heads: number[], k = 10, hashObj: {} | null = null): Promise<tp.FaissSearchResults[]> {
+    getNearestEmbeddings(model: string, corpus: string, embedding: number[], layer: number, heads: number[], k = 10, hashObj: {} | null = null): Promise<tp.FaissSearchResults[] | number> {
         const toSend = {
             model: model,
             corpus: corpus,
@@ -163,7 +163,7 @@ export class API {
         return checkDemoAPI(toSend, url)
     }
 
-    getNearestContexts(model: string, corpus: string, context: number[], layer: number, heads: number[], k = 10, hashObj: {} | null = null): Promise<tp.FaissSearchResults[]> {
+    getNearestContexts(model: string, corpus: string, context: number[], layer: number, heads: number[], k = 10, hashObj: {} | null = null): Promise<tp.FaissSearchResults[] | number> {
         const toSend = {
             model: model,
             corpus: corpus,

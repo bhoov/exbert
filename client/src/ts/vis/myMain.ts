@@ -68,6 +68,7 @@ function setSelDisabled(attr: boolean, sel: D3Sel) {
     sel.attr('disabled', val)
 }
 
+
 export class MainGraphic {
     api: API
     uiConf: UIConfig
@@ -80,7 +81,8 @@ export class MainGraphic {
     constructor() {
         this.api = new API()
         this.uiConf = new UIConfig()
-        this.firstInit();
+        this.skeletonInit()
+        this.mainInit();
     }
 
     /**
@@ -119,6 +121,7 @@ export class MainGraphic {
             threshSlider: d3.select("#my-range"),
             corpusInspector: d3.select("#corpus-similar-sentences-div"),
             corpusMatManager: d3.select("#corpus-mat-container"),
+            corpusMsgBox: d3.select("#corpus-msg-box"),
             histograms: {
                 matchedWord: d3.select("#matched-histogram-container"),
                 maxAtt: d3.select("#max-att-histogram-container"),
@@ -200,15 +203,18 @@ export class MainGraphic {
 
     }
 
-    private firstInit() {
-        this.skeletonInit()
-        this.mainInit()
-    }
-
     private initFromResponse(attention: tp.AttentionResponse) {
         this.attCapsule = makeFromMetaResponse(attention, this.uiConf.hideClsSep())
         this.tokCapsule = new TokenWrapper(attention);
         this._staticInits()
+    }
+
+    private leaveCorpusMsg(msg: string) {
+        this.vizs.corpusInspector.hideView()
+        this.vizs.corpusMatManager.hideView()
+        console.log("Running leave msg");
+        Sel.unhideElement(this.sels.corpusMsgBox)
+        this.sels.corpusMsgBox.text(msg)
     }
 
     private _bindEventHandler() {
@@ -606,19 +612,29 @@ export class MainGraphic {
 
         this.sels.body.style("cursor", "progress")
         self.api.getNearestEmbeddings(self.uiConf.model(), self.uiConf.corpus(), embed, layer, heads, k)
-            .then((val: tp.FaissSearchResults[]) => {
-                // Get heights of corpus inspector rows.
-                self.vizs.corpusInspector.update(val)
+            .then((val: tp.FaissSearchResults[] | number) => {
+                if (val == 406) {
+                    console.log("Embeddings are not available!");
+                    self.leaveCorpusMsg("Embeddings are not available at this time.")
+                }
+                else {
+                    const v = <tp.FaissSearchResults[]>val
+                    
+                    self.vizs.corpusInspector.unhideView()
+                    self.vizs.corpusMatManager.unhideView()
 
-                const wrappedVals = self._wrapResults(val)
-                const countedVals = wrappedVals.getMatchedHistogram()
-                const offsetVals = wrappedVals.getMaxAttHistogram()
+                    // Get heights of corpus inspector rows.
+                    self.vizs.corpusInspector.update(v)
+                    const wrappedVals = self._wrapResults(v)
+                    const countedVals = wrappedVals.getMatchedHistogram()
+                    const offsetVals = wrappedVals.getMaxAttHistogram()
 
-                self.vizs.corpusMatManager.update(wrappedVals.data)
-                self.vizs.histograms.matchedWord.update(countedVals)
-                self.vizs.histograms.maxAtt.update(offsetVals)
-                self.uiConf.displayInspector('embeddings')
-                this._updateCorpusInspectorFromMeta(this.uiConf.metaMatch())
+                    self.vizs.corpusMatManager.update(wrappedVals.data)
+                    self.vizs.histograms.matchedWord.update(countedVals)
+                    self.vizs.histograms.maxAtt.update(offsetVals)
+                    self.uiConf.displayInspector('embeddings')
+                    this._updateCorpusInspectorFromMeta(this.uiConf.metaMatch())
+                }
                 this.sels.body.style("cursor", "default")
             })
     }
@@ -634,22 +650,35 @@ export class MainGraphic {
         this.sels.body.style("cursor", "progress")
 
         self.api.getNearestContexts(self.uiConf.model(), self.uiConf.corpus(), context, layer, heads, k)
-            .then((val: tp.FaissSearchResults[]) => {
+            .then((val: tp.FaissSearchResults[] | number) => {
                 // Get heights of corpus inspector rows.
-                self.vizs.corpusInspector.update(val)
+                if (val == 406) {
+                    console.log("Contexts are not available!");
+                    self.leaveCorpusMsg("Contexts are not available at this time.")
+                }
+                else {
+                    const v = <tp.FaissSearchResults[]>val
+                    console.log("HIDING");
 
-                const wrappedVals = self._wrapResults(val)
-                const countedVals = wrappedVals.getMatchedHistogram()
-                const offsetVals = wrappedVals.getMaxAttHistogram()
-                self.vizs.corpusMatManager.update(wrappedVals.data)
+                    self.vizs.corpusInspector.update(v)
 
-                self.vizs.histograms.matchedWord.update(countedVals)
-                self.vizs.histograms.maxAtt.update(offsetVals)
+                    Sel.hideElement(self.sels.corpusMsgBox)
+                    self.vizs.corpusInspector.unhideView()
+                    self.vizs.corpusMatManager.unhideView()
 
-                self.uiConf.displayInspector('context')
-                this._updateCorpusInspectorFromMeta(this.uiConf.metaMatch())
-                self.vizs.histograms.maxAtt.meta(self.uiConf.metaMax())
-                this.sels.body.style("cursor", "default")
+                    const wrappedVals = self._wrapResults(v)
+                    const countedVals = wrappedVals.getMatchedHistogram()
+                    const offsetVals = wrappedVals.getMaxAttHistogram()
+                    self.vizs.corpusMatManager.update(wrappedVals.data)
+
+                    self.vizs.histograms.matchedWord.update(countedVals)
+                    self.vizs.histograms.maxAtt.update(offsetVals)
+
+                    self.uiConf.displayInspector('context')
+                    this._updateCorpusInspectorFromMeta(this.uiConf.metaMatch())
+                    self.vizs.histograms.maxAtt.meta(self.uiConf.metaMax())
+                    this.sels.body.style("cursor", "default")
+                }
             })
     }
 

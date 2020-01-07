@@ -16,14 +16,19 @@ def from_model(model_name, corpus_name):
     model_dir = Path(CORPORA) / model_name
     available = get_dir_names(model_dir)
     if not model_dir.exists() or len(available) == 0:
-        raise ValueError("There are no corpora present for this model")
+        raise FileNotFoundError("There are no corpora present for this model")
 
     base_dir = model_dir / corpus_name
     if not base_dir.exists(): base_dir = model_dir / available[0]
 
     return ConvenienceCorpus(base_dir)
 
+def files_available(base_dir, glob_pattern="*.faiss"):
+    """Determine whether the base_dir contains indexed files"""
+    if not base_dir.exists() or len(list(base_dir.glob(glob_pattern))) == 0:
+        return False
 
+    return True
 class ConvenienceCorpus(GetAttr):
     def __init__(self, base_dir):
         bd = Path(base_dir)
@@ -38,6 +43,13 @@ class ConvenienceCorpus(GetAttr):
         self.corpus_f = bd / 'data.hdf5'
         self.embedding_dir = bd / 'embedding_faiss'
         self.context_dir = bd / 'context_faiss'
+
+        # Define whether these different files exist or not
+        if not self.corpus_f.exists(): 
+            raise FileNotFoundError("Main HDF5 file does not exist")
+
+        self.embeddings_available = files_available(self.embedding_dir)
+        self.contexts_available = files_available(self.context_dir)
 
         self.corpus = CorpusDataWrapper(self.corpus_f, self.name)
         self.embedding_faiss = Indexes(self.embedding_dir)
