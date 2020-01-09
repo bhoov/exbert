@@ -2,6 +2,7 @@ import * as d3 from 'd3';
 import * as _ from "lodash"
 import * as R from 'ramda'
 import * as tp from '../etc/types';
+import * as rsp from '../api/responses';
 import '../etc/xd3'
 import { API } from '../api/mainApi'
 import { UIConfig } from '../uiConfig'
@@ -164,11 +165,13 @@ export class MainGraphic {
         const self = this;
         this.sels.body.style("cursor", "progress")
         this.api.getModelDetails(this.uiConf.model()).then(md => {
-            this.uiConf.nLayers(md.nlayers).nHeads(md.nheads)
+            const val = md.payload
+            this.uiConf.nLayers(val.nlayers).nHeads(val.nheads)
             this.initLayers(this.uiConf.nLayers())
 
             this.api.getMetaAttentions(this.uiConf.model(), this.uiConf.sentence(), this.uiConf.layer()).then(attention => {
-                this.initFromResponse(attention)
+                const att = attention.payload;
+                this.initFromResponse(att)
 
                 // Wrap postInit into function so asynchronous call does not mess with necessary inits
                 const postResponseDisplayCleanup = () => {
@@ -187,7 +190,8 @@ export class MainGraphic {
                 if (this.uiConf.maskInds().length > 0) {
                     this.tokCapsule.a.maskInds = this.uiConf.maskInds()
 
-                    this.api.updateMaskedAttentions(this.uiConf.model(), this.tokCapsule.a, this.uiConf.sentence(), this.uiConf.layer()).then(r => {
+                    this.api.updateMaskedAttentions(this.uiConf.model(), this.tokCapsule.a, this.uiConf.sentence(), this.uiConf.layer()).then(resp => {
+                        const r = resp.payload;
                         this.attCapsule.updateFromNormal(r, this.uiConf.hideClsSep());
                         this.tokCapsule.updateEmbeddings(r)
                         this.update()
@@ -227,7 +231,8 @@ export class MainGraphic {
                     self.tokCapsule[letter].toggle(e.ind)
                     self.sels.body.style("cursor", "progress")
 
-                    self.api.updateMaskedAttentions(this.uiConf.model(), this.tokCapsule.a, this.uiConf.sentence(), this.uiConf.layer()).then((r: tp.AttentionResponse) => {
+                    self.api.updateMaskedAttentions(this.uiConf.model(), this.tokCapsule.a, this.uiConf.sentence(), this.uiConf.layer()).then((resp: rsp.AttentionDetailsResponse) => {
+                        const r = resp.payload;
                         self.attCapsule.updateFromNormal(r, this.uiConf.hideClsSep());
                         self.tokCapsule.updateEmbeddings(r);
 
@@ -561,7 +566,8 @@ export class MainGraphic {
             if (sentence_a.length) {
                 this.sels.body.style("cursor", "progress")
                 this.api.getMetaAttentions(this.uiConf.model(), sentence_a, this.uiConf.layer())
-                    .then((r: tp.AttentionResponse) => {
+                    .then((resp: rsp.AttentionDetailsResponse) => {
+                        const r = resp.payload
                         this.uiConf.sentence(sentence_a)
                         this.uiConf.rmToken();
                         this.attCapsule.updateFromNormal(r, this.uiConf.hideClsSep());
@@ -612,13 +618,13 @@ export class MainGraphic {
 
         this.sels.body.style("cursor", "progress")
         self.api.getNearestEmbeddings(self.uiConf.model(), self.uiConf.corpus(), embed, layer, heads, k)
-            .then((val: tp.FaissSearchResults[] | number) => {
-                if (val == 406) {
+            .then((val: rsp.NearestNeighborResponse) => {
+                if (val.status == 406) {
                     console.log("Embeddings are not available!");
                     self.leaveCorpusMsg("Embeddings are not available at this time.")
                 }
                 else {
-                    const v = <tp.FaissSearchResults[]>val
+                    const v = val.payload
                     
                     self.vizs.corpusInspector.unhideView()
                     self.vizs.corpusMatManager.unhideView()
@@ -650,14 +656,14 @@ export class MainGraphic {
         this.sels.body.style("cursor", "progress")
 
         self.api.getNearestContexts(self.uiConf.model(), self.uiConf.corpus(), context, layer, heads, k)
-            .then((val: tp.FaissSearchResults[] | number) => {
+            .then((val: rsp.NearestNeighborResponse) => {
                 // Get heights of corpus inspector rows.
-                if (val == 406) {
+                if (val.status == 406) {
                     console.log("Contexts are not available!");
                     self.leaveCorpusMsg("Contexts are not available at this time.")
                 }
                 else {
-                    const v = <tp.FaissSearchResults[]>val
+                    const v = val.payload;
                     console.log("HIDING");
 
                     self.vizs.corpusInspector.update(v)
@@ -794,7 +800,7 @@ export class MainGraphic {
             switchMap((v) => from(self.api.updateMaskedAttentions(self.uiConf.model(), self.tokCapsule.a, self.uiConf.sentence(), v))) // USE THIS
         ).subscribe({
             next: (r: tp.AttentionResponse) => {
-                this.attCapsule.updateFromNormal(r, this.uiConf.hideClsSep());
+                self.attCapsule.updateFromNormal(r, this.uiConf.hideClsSep());
                 self.tokCapsule.updateEmbeddings(r);
                 self.uiConf.maskInds(self.tokCapsule.a.maskInds)
                 self.update();

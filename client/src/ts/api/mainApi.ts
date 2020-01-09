@@ -2,6 +2,7 @@ import * as d3 from 'd3';
 import { debug } from 'util';
 import { TokenDisplay } from '../data/TokenWrapper'
 import * as tp from '../etc/types'
+import * as rsp from './responses'
 import * as R from 'ramda'
 import { DemoAPI } from './demoAPI'
 import * as hash from 'object-hash'
@@ -59,7 +60,7 @@ export class API {
         }
     }
 
-    getModelDetails(model: string, hashObj: {} | null = null): Promise<tp.ModelInfo> {
+    getModelDetails(model: string, hashObj: {} | null = null): Promise<rsp.ModelDetailResponse> {
         const toSend = {
             model: model
         }
@@ -77,7 +78,7 @@ export class API {
         return checkDemoAPI(toSend, url)
     }
 
-    getMetaAttentions(model: string, sentence: string, layer: number, hashObj: {} | null = null): Promise<tp.AttentionResponse> {
+    getMetaAttentions(model: string, sentence: string, layer: number, hashObj: {} | null = null): Promise<rsp.AttentionDetailsResponse> {
         const toSend = {
             model: model,
             sentence: sentence,
@@ -106,7 +107,7 @@ export class API {
      * @param layer Which layer to search at
      * @param hashObj If not null, store the information of the responses into the passed object. Used for creating demos.
      */
-    updateMaskedAttentions(model: string, tokens: TokenDisplay, sentence: string, layer: number, hashObj: {} | null = null): Promise<tp.AttentionResponse> {
+    updateMaskedAttentions(model: string, tokens: TokenDisplay, sentence: string, layer: number, hashObj: {} | null = null): Promise<rsp.AttentionDetailsResponse> {
         const toSend = {
             model: model,
             tokens: R.map(R.prop('text'), tokens.tokenData),
@@ -140,7 +141,7 @@ export class API {
      * @param layer In the l'th layer
      * @param k how many results to retrieve
      */
-    getNearestEmbeddings(model: string, corpus: string, embedding: number[], layer: number, heads: number[], k = 10, hashObj: {} | null = null): Promise<tp.FaissSearchResults[] | number> {
+    getNearestEmbeddings(model: string, corpus: string, embedding: number[], layer: number, heads: number[], k = 10, hashObj: {} | null = null): Promise<rsp.NearestNeighborResponse> {
         const toSend = {
             model: model,
             corpus: corpus,
@@ -163,7 +164,7 @@ export class API {
         return checkDemoAPI(toSend, url)
     }
 
-    getNearestContexts(model: string, corpus: string, context: number[], layer: number, heads: number[], k = 10, hashObj: {} | null = null): Promise<tp.FaissSearchResults[] | number> {
+    getNearestContexts(model: string, corpus: string, context: number[], layer: number, heads: number[], k = 10, hashObj: {} | null = null): Promise<rsp.NearestNeighborResponse> {
         const toSend = {
             model: model,
             corpus: corpus,

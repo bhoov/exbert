@@ -35,7 +35,7 @@ function createDemos(sentence, maskInd: number, modelName: string, corpusName: s
     // Get the base return for all page initializations
     _.range(12).forEach(L => {
         api.getMetaAttentions(modelName, sentence, L, contentHash).then(r0 => {
-            const tokCapsule = new TokenWrapper(r0);
+            const tokCapsule = new TokenWrapper(r0.payload);
 
             // Unmasked response:
             api.updateMaskedAttentions(modelName, tokCapsule.a, sentence, L, contentHash).then(r1 => {
@@ -77,7 +77,7 @@ function inspectDemos(sentence, maskInd: number, modelName: string, corpusName: 
     // Get the base return for all page initializations
     _.range(1).forEach(L => {
         api.getMetaAttentions(modelName, sentence, L, "").then(r0 => {
-            const tokCapsule = new TokenWrapper(r0);
+            const tokCapsule = new TokenWrapper(r0.payload);
 
             // Unmasked response:
             api.updateMaskedAttentions(modelName, tokCapsule.a, sentence, L, emptyTokenDisplay).then(r1 => {
