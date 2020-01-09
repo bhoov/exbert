@@ -44,9 +44,14 @@ def get_model_details(**request):
     nlayers = info.num_hidden_layers
     nheads = info.num_attention_heads
 
-    return {
+    payload_out = {
         "nlayers": nlayers,
         "nheads": nheads,
+    }
+
+    return {
+        "status": 200,
+        "payload": payload_out,
     }
 
 def get_attention_and_meta(**request):
@@ -58,7 +63,12 @@ def get_attention_and_meta(**request):
 
     deets = details.att_from_sentence(sentence)
 
-    return deets.to_json(layer)
+    payload_out = deets.to_json(layer)
+
+    return {
+        "status": 200,
+        "payload": payload_out
+    }
 
 
 def update_masked_attention(**request):
@@ -85,16 +95,31 @@ def update_masked_attention(**request):
     token_inputs = mask_tokens(tokens, mask)
 
     deets = details.att_from_tokens(token_inputs, sentence)
-    out = deets.to_json(layer)
-    return out
+    payload_out = deets.to_json(layer)
+
+    return {
+        "status": 200,
+        "payload": payload_out,
+    }
 
 
 def nearest_embedding_search(**request):
     """Return the token text and the metadata in JSON"""
     model = request["model"]
     corpus = request["corpus"]
-    details = from_pretrained(model)
-    cc = from_model(model, corpus)
+
+    try:
+        details = from_pretrained(model)
+    except KeyError as e:
+        return {'status': 405, "payload": None}
+
+    try:
+        cc = from_model(model, corpus)
+    except FileNotFoundError as e:
+        return {
+            "status": 406,
+            "payload": None
+        }
 
     q = np.array(request["embedding"]).reshape((1, -1)).astype(np.float32)
     layer = int(request["layer"])
@@ -103,24 +128,29 @@ def nearest_embedding_search(**request):
 
     out = cc.search_embeddings(layer, q, k)
 
-    return_obj = [o.to_json(layer, heads) for o in out]
-    return return_obj
+    payload_out = [o.to_json(layer, heads) for o in out]
+
+    return {
+        "status": 200,
+        "payload": payload_out
+    }
 
 
 def nearest_context_search(**request):
     """Return the token text and the metadata in JSON"""
     model = request["model"]
     corpus = request["corpus"]
+    print("CORPUS: ", corpus)
+
     try:
         details = from_pretrained(model)
     except KeyError as e:
-        return {'status': 405}
+        return {'status': 405, "payload": None}
 
     try:
         cc = from_model(model, corpus)
     except FileNotFoundError as e:
-        return {'status': 406}
-
+        return {'status': 406, "payload": None}
 
     q = np.array(request["context"]).reshape((1, -1)).astype(np.float32)
     layer = int(request["layer"])
@@ -128,9 +158,12 @@ def nearest_context_search(**request):
     k = int(request["k"])
 
     out = cc.search_contexts(layer, heads, q, k)
-    return_obj = [o.to_json(layer, heads) for o in out]
+    payload_out = [o.to_json(layer, heads) for o in out]
 
-    return return_obj
+    return {
+        "status": 200,
+        "payload": payload_out,
+    }
 
 app.add_api("swagger.yaml")
 

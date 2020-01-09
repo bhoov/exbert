@@ -19,7 +19,9 @@ def from_model(model_name, corpus_name):
         raise FileNotFoundError("There are no corpora present for this model")
 
     base_dir = model_dir / corpus_name
-    if not base_dir.exists(): base_dir = model_dir / available[0]
+
+    if not base_dir.exists(): 
+        raise FileNotFoundError(f"Desired corpus '{corpus_name}' not available")
 
     return ConvenienceCorpus(base_dir)
 

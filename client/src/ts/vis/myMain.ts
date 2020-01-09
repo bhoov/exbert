@@ -192,6 +192,7 @@ export class MainGraphic {
 
                     this.api.updateMaskedAttentions(this.uiConf.model(), this.tokCapsule.a, this.uiConf.sentence(), this.uiConf.layer()).then(resp => {
                         const r = resp.payload;
+                        console.log("R: ", r);
                         this.attCapsule.updateFromNormal(r, this.uiConf.hideClsSep());
                         this.tokCapsule.updateEmbeddings(r)
                         this.update()
@@ -620,8 +621,7 @@ export class MainGraphic {
         self.api.getNearestEmbeddings(self.uiConf.model(), self.uiConf.corpus(), embed, layer, heads, k)
             .then((val: rsp.NearestNeighborResponse) => {
                 if (val.status == 406) {
-                    console.log("Embeddings are not available!");
-                    self.leaveCorpusMsg("Embeddings are not available at this time.")
+                    self.leaveCorpusMsg(`Embeddings are not available for model '${self.uiConf.model()}' and corpus '${self.uiConf.corpus()}' at this time.`)
                 }
                 else {
                     const v = val.payload
@@ -660,7 +660,7 @@ export class MainGraphic {
                 // Get heights of corpus inspector rows.
                 if (val.status == 406) {
                     console.log("Contexts are not available!");
-                    self.leaveCorpusMsg("Contexts are not available at this time.")
+                    self.leaveCorpusMsg(`Contexts are not available for model '${self.uiConf.model()}' and corpus '${self.uiConf.corpus()}' at this time.`)
                 }
                 else {
                     const v = val.payload;
@@ -683,8 +683,8 @@ export class MainGraphic {
                     self.uiConf.displayInspector('context')
                     this._updateCorpusInspectorFromMeta(this.uiConf.metaMatch())
                     self.vizs.histograms.maxAtt.meta(self.uiConf.metaMax())
-                    this.sels.body.style("cursor", "default")
                 }
+                this.sels.body.style("cursor", "default")
             })
     }
 
@@ -789,7 +789,6 @@ export class MainGraphic {
                 console.log(myData, "--- myData");
                 this.sels.layerCheckboxes.selectAll(".layerCheckbox")
                     .classed('active', d => d === myData)
-
             }),
             map((v: Event) => +d3.select(<BaseType>v.target).datum()),
             tap(v => {
@@ -799,7 +798,8 @@ export class MainGraphic {
             }),
             switchMap((v) => from(self.api.updateMaskedAttentions(self.uiConf.model(), self.tokCapsule.a, self.uiConf.sentence(), v))) // USE THIS
         ).subscribe({
-            next: (r: tp.AttentionResponse) => {
+            next: (resp: rsp.AttentionDetailsResponse) => {
+                const r = resp.payload;
                 self.attCapsule.updateFromNormal(r, this.uiConf.hideClsSep());
                 self.tokCapsule.updateEmbeddings(r);
                 self.uiConf.maskInds(self.tokCapsule.a.maskInds)

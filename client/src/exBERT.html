@@ -5,7 +5,7 @@
     <script async src="https://www.googletagmanager.com/gtag/js?id=UA-149275901-1"></script>
     <script>
         window.dataLayer = window.dataLayer || [];
-        function gtag(){dataLayer.push(arguments);}
+        function gtag() { dataLayer.push(arguments); }
         gtag('js', new Date());
 
         gtag('config', 'UA-149275901-2');
@@ -24,7 +24,7 @@
         <div class="header-logo">
             <a href="/"><img src="./img/exBERT.png" alt="exBERT Logo" height="30px"></a>
         </div>
-       <div id="headertext">
+        <div id="headertext">
             An Explorable BERT
         </div>
 
@@ -55,36 +55,37 @@
 
                     <div class="connector-controls">
                         <div class="left-control-half">
-                        <div id="model-selection">
-                            <label for="model-options">Select model: </label>
-                            <select id="model-option-selector" name="model-options"></select>
-                        </div>
-                        <div class="slide-container">
-                            <div>
-                                <label for="my-range">
-                                    Display top <span id="my-range-value">…</span>% of attention
+                            <div id="model-selection">
+                                <label for="model-options">Select model: </label>
+                                <select id="model-option-selector" name="model-options"></select>
+                            </div>
+                            <div class="slide-container">
+                                <div>
+                                    <label for="my-range">
+                                        Display top <span id="my-range-value">…</span>% of attention
+                                    </label>
+                                    <input type="range" min="0" max="100" value="70" class="slider" id="my-range"> <br>
+                                </div>
+                            </div>
+
+                            <div id="layer-selection">
+                                <div class="input-description">
+                                    Layer:
+                                </div>
+
+                                <div class="layer-select btn-group btn-group-toggle" data-toggle="buttons"
+                                    id="layer-select"> </div>
+                            </div>
+                            <div id="cls-toggle">
+                                <div class="input-description">
+                                    Hide [CLS] and [SEP]
+                                </div>
+
+                                <label class="switch">
+                                    <input type="checkbox" checked='checked'>
+                                    <span class="short-slider round"></span>
                                 </label>
-                                <input type="range" min="0" max="100" value="70" class="slider" id="my-range"> <br>
                             </div>
-                        </div>
-
-                        <div id="layer-selection">
-                            <div class="input-description">
-                                Layer:
-                            </div>
-
-                            <div class="layer-select btn-group btn-group-toggle" data-toggle="buttons" id="layer-select"> </div>
-                        </div>
-                        <div id="cls-toggle">
-                            <div class="input-description">
-                                Hide [CLS] and [SEP]
-                            </div>
-
-                            <label class="switch">
-                                <input type="checkbox" checked='checked'>
-                                <span class="short-slider round"></span>
-                            </label>
-                        </div>
                         </div>
 
                         <div class="head-control">
@@ -101,8 +102,8 @@
                             </div>
 
                             <div id="usage-info">
-                                <p> You focus on one token by <b>click</b>.<br/>
-                                You can mask any token by <b>double click</b>.</p>
+                                <p> You focus on one token by <b>click</b>.<br />
+                                    You can mask any token by <b>double click</b>.</p>
                                 <p>You can select and de-select a head by a <b>click</b> on the heatmap columns</p>
 
                             </div>
@@ -134,9 +135,8 @@
 
                 <div id="corpus-querying">
                     <form>
-                        <button class="btn btn-primary" id="search-contexts" type="button">by Head</button>
-                        <button class="btn btn-primary" id="search-embeddings" type="button">by
-                            Embedding</button>
+                        <button class="btn btn-primary" id="search-contexts" type="button">by Context</button>
+                        <button class="btn btn-primary" id="search-embeddings" type="button">by Embedding</button>
                     </form>
                 </div>
 
