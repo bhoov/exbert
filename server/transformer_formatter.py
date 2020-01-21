@@ -4,7 +4,7 @@ import numpy as np
 import torch
 import json
 
-from aligner.simple_spacy_token import SimpleSpacyToken
+from spacyface.simple_spacy_token import SimpleSpacyToken
 from utils.token_processing import fix_byte_spaces
 from utils.gen_utils import map_nlist
 

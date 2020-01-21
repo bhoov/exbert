@@ -7,7 +7,7 @@ from abc import ABC, abstractmethod
 
 from transformer_formatter import TransformerOutputFormatter
 from utils.token_processing import reshape
-from aligner import (
+from spacyface import (
     BertAligner,
     GPT2Aligner,
     RobertaAligner,

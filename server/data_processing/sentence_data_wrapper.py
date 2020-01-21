@@ -3,7 +3,7 @@ import numpy as np
 from functools import partial
 from utils.gen_utils import map_nlist, vround
 import regex as re
-from aligner.simple_spacy_token import SimpleSpacyToken
+from spacyface.simple_spacy_token import SimpleSpacyToken
 
 ZERO_BUFFER = 12 # Number of decimal places each index takes
 main_key = r"{:0" + str(ZERO_BUFFER) + r"}"

@@ -3,7 +3,7 @@ import numpy as np
 from functools import partial
 from utils.gen_utils import map_nlist, vround
 import regex as re
-from aligner.simple_spacy_token import SimpleSpacyToken
+from spacyface.simple_spacy_token import SimpleSpacyToken
 from data_processing.sentence_data_wrapper import SentenceH5Data, TokenH5Data
 from utils.f import ifnone
     
