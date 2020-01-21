@@ -204,6 +204,11 @@ Right now, only BERT, RoBERTa, GPT2, and DistilBERT are supported for context se
 
 2. *Create the reference corpus*. **Warning**: Depending on the number of layers and size of the hidden dimension in the model, this step could take many gigabytes on your computer to store the hidden representations and attentions at every layer.
 
+## Notes on SubRepo Usage
+This project makes use of two public pip repositories (`transformers` and `spacyface`), both of which needed modification as this project was being developed. The `git-subrepo` tool was used to achieve this workflow with a forked repository of both transformers and spacyface. However, this introduces the following steps when setting up the environment:
+
+1. From the `transformers/` directory, run `pip install -e .`
+2. Repeat for the `spacyface/` directory.
 
 ## Acknowledgements
 This project was inspired in part by the original [BertViz by Jesse Vig](https://github.com/jessevig/bertviz).
