@@ -1,0 +1,12 @@
+; DO NOT EDIT (unless you know what you are doing)
+;
+; This subdirectory is a git "subrepo", and this file is maintained by the
+; git-subrepo command. See https://github.com/git-commands/git-subrepo#readme
+;
+[subrepo]
+	remote = git@github.com:bhoov/spacyface-dev.git
+	branch = master
+	commit = 1b1df2cb074876bc5a64f934f2aa2c6822d219c0
+	parent = 358151dfadb49f44770bb8e031bcb7e586ff858e
+	method = merge
+	cmdver = 0.4.1
