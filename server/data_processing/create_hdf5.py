@@ -18,7 +18,7 @@ def parse_args():
     parser.add_argument("-m", "--model", default="bert-base-cased", help="Which pretrained transformer model to use. See 'transformer_details.py' for supported models")
     parser.add_argument("--nomask", action='store_false', help="By default, ignore attentions to special tokens like '[CLS]' and '[SEP]'. If given, include these attentions")
     parser.add_argument("--force", action="store_true", help="If given, overwrite existing hdf5 files.")
-    
+
     args = parser.parse_args()
     return args
 
@@ -30,14 +30,14 @@ def main(infile, outdir, force, model_name, mask_attentions):
     if force: f.clear()
 
     extractor = from_pretrained(model_name)
-    
+
     print_every = 50
     long_strings = extract_chars(infile, 10000)
     cutoff_sent = ""
     i = 0
     for strip in long_strings:
         sentences = [sent.text for sent in extractor.aligner.nlp(strip).sents]
-        fixed_sentences = [cutoff_sent + sentences[0]] + sentences[1:-1] 
+        fixed_sentences = [cutoff_sent + sentences[0]] + sentences[1:-1]
 
         # This leads to the possibility that there will be an input that is two sentences long. This is ok.
         cutoff_sent = sentences[-1]
@@ -53,13 +53,13 @@ def main(infile, outdir, force, model_name, mask_attentions):
                 meta = out.to_hdf5_meta()
                 for k,v in content.items(): grp.create_dataset(k, data=v)
                 for k, v in meta.items(): grp.attrs[k] = v
-            
+
             except Exception as e:
                 print(f"Error {e} occured at sentence {i}:\n{s}")
                 raise
 
             i += 1 # Increment to mark the next sentence
-    
+
     print("FINISHED CORPUS PROCESSING SUCCESSFULLY")
 
 if __name__ == "__main__":

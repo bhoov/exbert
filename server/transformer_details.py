@@ -84,7 +84,7 @@ class TransformerBaseDetails(ABC):
 
     def format_model_output(self, inputs, sentence:str, output):
         """Convert model output to the desired format.
-        
+
         Formatter additionally needs access to the tokens and the original sentence
         """
         hidden_state, attentions, contexts = self.get_state_att_contexts(output)
@@ -104,7 +104,7 @@ class TransformerBaseDetails(ABC):
 
     def get_state_att_contexts(self, output):
         """Extract the desired hidden states as passed by a particular model through the output
-        
+
         In all cases, we care for:
             - hidden state embeddings (tuple of n_layers + 1)
             - attentions (tuple of n_layers)
@@ -115,10 +115,10 @@ class TransformerBaseDetails(ABC):
         return hidden_state, attentions, contexts
 
     def format_model_input(self, inputs, mask_attentions=False):
-        """Parse the input for the model according to what is expected in the forward pass. 
-        
+        """Parse the input for the model according to what is expected in the forward pass.
+
         If not otherwise defined, outputs a dict containing the keys:
-        
+
         {'input_ids', 'token_type_ids', 'attention_mask'}
         """
         return pick(self.forward_inputs, self.parse_inputs(inputs, mask_attentions=mask_attentions))
@@ -127,27 +127,27 @@ class TransformerBaseDetails(ABC):
         """View what the tokenizer thinks certain ids are"""
         if type(ids) == torch.Tensor:
             # Remove batch dimension
-            ids = ids.squeeze(0).tolist() 
+            ids = ids.squeeze(0).tolist()
 
         out = self.aligner.convert_ids_to_tokens(ids)
         return out
 
     def parse_inputs(self, inputs, mask_attentions=False):
         """Parse the output from `tokenizer.prepare_for_model` to the desired attention mask from special tokens
-        
+
         Args:
-            - inputs: The output of `tokenizer.prepare_for_model`. 
+            - inputs: The output of `tokenizer.prepare_for_model`.
                 A dict with keys: {'special_token_mask', 'token_type_ids', 'input_ids'}
             - mask_attentions: Flag indicating whether to mask the attentions or not
-            
+
         Returns:
             Dict with keys: {'input_ids', 'token_type_ids', 'attention_mask', 'special_tokens_mask'}
-            
+
         Usage:
-            
+
             ```
             s = "test sentence"
-            
+
             # from raw sentence to tokens
             tokens = tokenizer.tokenize(s)
 
@@ -157,7 +157,7 @@ class TransformerBaseDetails(ABC):
             # From ids to input
             inputs = tokenizer.prepare_for_model(ids, return_tensors='pt')
 
-            # Parse the input. Optionally mask the special tokens from the analysis. 
+            # Parse the input. Optionally mask the special tokens from the analysis.
             parsed_input = parse_inputs(inputs)
 
             # Run the model, pick from this output whatever inputs you want
@@ -247,7 +247,7 @@ class DistilBertDetails(TransformerBaseDetails):
 
     def get_state_att_contexts(self, output):
         """Extract the desired hidden states as passed by a particular model through the output
-        
+
         In all cases, we care for:
             - hidden state embeddings (tuple of n_layers + 1)
             - attentions (tuple of n_layers)
