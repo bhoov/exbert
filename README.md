@@ -212,3 +212,6 @@ This project makes use of two public pip repositories (`transformers` and `spacy
 
 ## Acknowledgements
 This project was inspired in part by the original [BertViz by Jesse Vig](https://github.com/jessevig/bertviz).
+
+## Debugging
+- If you get a `No module named '_swigfaiss'` error, check that `libomp` is installed on your system. If you are on a mac, this is as simple as `brew install libomp`.

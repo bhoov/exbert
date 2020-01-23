@@ -260,8 +260,6 @@ class BertSelfAttention(nn.Module):
         if self.output_additional_info:
             outputs += (context_layer,)
 
-        # outputs = (new_context_layer, attention_probs) if self.output_attentions else (new_context_layer,)
-        # outputs = (new_context_layer, attention_probs, context_layer) if self.output_attentions else (new_context_layer,)
         return outputs
 
 
