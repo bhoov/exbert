@@ -45,20 +45,19 @@ def main(infile, outdir, force, model_name, mask_attentions):
             if len(s) < MIN_SENTENCE_CHARLEN: continue
             if ((i + 1) % print_every) == 0: print(f"Starting sentence {i+1}: \n", s)
 
-            grp = f.create_group(to_idx(i))
-
             try:
                 out = extractor.att_from_sentence(s, mask_attentions=mask_attentions)
-                content = out.to_hdf5_content()
-                meta = out.to_hdf5_meta()
-                for k,v in content.items(): grp.create_dataset(k, data=v)
-                for k, v in meta.items(): grp.attrs[k] = v
 
             except Exception as e:
                 print(f"Error {e} occured at sentence {i}:\n{s}. Skipping")
                 i += 1
                 continue
 
+            content = out.to_hdf5_content()
+            meta = out.to_hdf5_meta()
+            grp = f.create_group(to_idx(i))
+            for k,v in content.items(): grp.create_dataset(k, data=v)
+            for k, v in meta.items(): grp.attrs[k] = v
 
             i += 1 # Increment to mark the next sentence
 
