@@ -187,6 +187,11 @@ export class MainGraphic {
                     }
                 }
 
+                if (this.uiConf.modelKind() == tp.ModelKind.Autoregressive && this.uiConf.maskInds().length > 1) {
+                    // Ensure only 1 mask ind is present for autoregressive models
+                    this.uiConf.maskInds([this.uiConf.maskInds()[0]])
+                }
+
                 if (this.uiConf.maskInds().length > 0) {
                     this.tokCapsule.a.maskInds = this.uiConf.maskInds()
 
@@ -374,13 +379,13 @@ export class MainGraphic {
         // Below are the available models. Will need to choose 3 to be available ONLY
         const data = [
             { name: "bert-base-cased", kind: tp.ModelKind.Bidirectional },
-            { name: "bert-base-uncased", kind: tp.ModelKind.Bidirectional },
-            { name: "distilbert-base-uncased", kind: tp.ModelKind.Bidirectional },
-            { name: "distilroberta-base", kind: tp.ModelKind.Bidirectional },
+            // { name: "bert-base-uncased", kind: tp.ModelKind.Bidirectional },
+            // { name: "distilbert-base-uncased", kind: tp.ModelKind.Bidirectional },
+            // { name: "distilroberta-base", kind: tp.ModelKind.Bidirectional },
             { name: "roberta-base", kind: tp.ModelKind.Bidirectional },
             { name: "gpt2", kind: tp.ModelKind.Autoregressive },
-            { name: "gpt2-medium", kind: tp.ModelKind.Autoregressive },
-            { name: "distilgpt2", kind: tp.ModelKind.Autoregressive },
+            // { name: "gpt2-medium", kind: tp.ModelKind.Autoregressive },
+            // { name: "distilgpt2", kind: tp.ModelKind.Autoregressive },
         ]
 
         const names = R.map(R.prop('name'))(data)
@@ -402,6 +407,10 @@ export class MainGraphic {
             const mname = me.property('value')
             self.uiConf.model(mname);
             self.uiConf.modelKind(kindmap[mname]);
+            if (kindmap[mname] == tp.ModelKind.Autoregressive) {
+                console.log("RESETTING MASK INDS");
+                self.uiConf.maskInds([])
+            }
             self.mainInit();
         })
     }

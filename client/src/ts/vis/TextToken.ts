@@ -32,6 +32,8 @@ export abstract class TextTokens extends VComponent<tp.FullSingleTokenInfo[]>{
         offset: 0
     };
 
+    textBoxes: D3Sel
+
     constructor(d3Parent: D3Sel, eventHandler?: SimpleEventHandler, options: {} = {}) {
         super(d3Parent, eventHandler);
         this.superInitHTML(options);
@@ -77,7 +79,7 @@ export abstract class TextTokens extends VComponent<tp.FullSingleTokenInfo[]>{
 
 
         // Render normal text box data
-        const textBoxes = <D3Sel>this.base.selectAll(`.${this.css_name}`)
+        self.textBoxes = <D3Sel>this.base.selectAll(`.${this.css_name}`)
             .data(data)
             .join("div")
             .attr("class", (d, i) => `token ${this.css_name} token-${i}`)
@@ -96,6 +98,14 @@ export abstract class TextTokens extends VComponent<tp.FullSingleTokenInfo[]>{
                 sel.style('background', 0)
                 self.eventHandler.trigger(TextTokens.events.tokenMouseOut, self.eInfo(sel, i))
             })
+
+        self.addClick(self.textBoxes)
+    }
+
+    addClick(textboxes: D3Sel){
+        const self = this;
+
+        self.textBoxes = textboxes
             .on('click', (d, i, n) => {
                 const sel = d3.select(n[i]);
                 self.eventHandler.trigger(TextTokens.events.tokenClick, self.eEmbedding(sel, i, d.embeddings))
