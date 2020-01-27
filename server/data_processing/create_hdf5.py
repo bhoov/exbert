@@ -36,7 +36,7 @@ def main(infile, outdir, force, model_name, mask_attentions):
     cutoff_sent = ""
     i = 0
     for strip in long_strings:
-        sentences = [sent.text for sent in extractor.aligner.nlp(strip).sents]
+        sentences = [sent.text for sent in extractor.aligner.spacy_nlp(strip).sents]
         fixed_sentences = [cutoff_sent + sentences[0]] + sentences[1:-1]
 
         # This leads to the possibility that there will be an input that is two sentences long. This is ok.
