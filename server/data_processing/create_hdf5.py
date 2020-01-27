@@ -55,8 +55,10 @@ def main(infile, outdir, force, model_name, mask_attentions):
                 for k, v in meta.items(): grp.attrs[k] = v
 
             except Exception as e:
-                print(f"Error {e} occured at sentence {i}:\n{s}")
-                raise
+                print(f"Error {e} occured at sentence {i}:\n{s}. Skipping")
+                i += 1
+                continue
+
 
             i += 1 # Increment to mark the next sentence
 
