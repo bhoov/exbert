@@ -6,18 +6,19 @@ SCRIPT_DIR=$( dirname "$0")
 WOZ_NAME="woz"
 WIKI_NAME="wiki"
 CORPORA="$WOZ_NAME $WIKI_NAME"
-MODELS="bert-base-uncased gpt2 roberta-base"
+# MODELS="bert-base-uncased gpt2 roberta-base"
+MODELS="bert-base-cased distilbert distilgpt2 distilroberta-base"
 OUT_DIR="./$SCRIPT_DIR/corpora"
 RAW_TEXT_DIR="./$SCRIPT_DIR/raw_data"
 PYTHON_SCRIPT="./$SCRIPT_DIR/data_processing/create_corpus.py"
 
 # Download the models, hardcoded for now
-mkdir -p $RAW_TEXT_DIR
-WOZURL="https://ibm.box.com/shared/static/uchx6xdvb1ghhrv3ztxk9dvyvfxy31ce.txt"
-WIKIURL="https://ibm.box.com/shared/static/3rfbn3v3h6wpjalwob1pl0geppzx9746.txt"
-
-wget -O "$RAW_TEXT_DIR/$WOZ_NAME.txt" -L $WOZURL
-wget -O "$RAW_TEXT_DIR/$WIKI_NAME.txt" -L $WIKIURL
+# mkdir -p $RAW_TEXT_DIR
+# WOZURL="https://ibm.box.com/shared/static/uchx6xdvb1ghhrv3ztxk9dvyvfxy31ce.txt"
+# WIKIURL="https://ibm.box.com/shared/static/3rfbn3v3h6wpjalwob1pl0geppzx9746.txt"
+# 
+# wget -O "$RAW_TEXT_DIR/$WOZ_NAME.txt" -L $WOZURL
+# wget -O "$RAW_TEXT_DIR/$WIKI_NAME.txt" -L $WIKIURL
 
 # Create the corpus
 mkdir -p $OUT_DIR

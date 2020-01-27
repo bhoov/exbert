@@ -1,8 +1,8 @@
-ENV_NAME="exbert2"
+ENV_NAME="exbert"
 
 env:
 	conda env create -f ./environment.yml; \
-	conda activate $ENV_NAME; \
+	conda activate $(ENV_NAME); \
 	pip install -e server/spacyface; \
 	pip install -e server/transformers; \
-	pip intsall -e server; \
+	pip install -e server; \

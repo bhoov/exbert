@@ -17,7 +17,7 @@ CORS(flask_app)
 
 parser = argparse.ArgumentParser(formatter_class=argparse.ArgumentDefaultsHelpFormatter)
 parser.add_argument("--debug", action="store_true", help=" Debug mode")
-parser.add_argument("--port", default=5555, help="Port to run the app. ")
+parser.add_argument("--port", default=5050, help="Port to run the app. ")
 
 # Flask main routes
 @app.route("/")
