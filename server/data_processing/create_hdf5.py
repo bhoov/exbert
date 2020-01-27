@@ -49,8 +49,7 @@ def main(infile, outdir, force, model_name, mask_attentions):
                 out = extractor.att_from_sentence(s, mask_attentions=mask_attentions)
 
             except Exception as e:
-                print(f"Error {e} occured at sentence {i}:\n{s}. Skipping")
-                i += 1
+                print(f"Error {e} occured at sentence {i}:\n{s}\n\n Skipping, not creating hdf5 grp")
                 continue
 
             content = out.to_hdf5_content()

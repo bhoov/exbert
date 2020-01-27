@@ -167,7 +167,6 @@ class Attention(nn.Module):
 
             if self.output_additional_info:
                 contexts = contexts.permute(0, 2, 1, 3).contiguous()
-                print("CONTEXTS: ", contexts.shape)
                 outputs.append(contexts)
 
         return outputs
