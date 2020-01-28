@@ -35,8 +35,9 @@ export abstract class TextTokens extends VComponent<tp.FullSingleTokenInfo[]>{
         divHover: {
             width: 150,
             height: 150,
-            offset: [3, 3]
-        }
+            offset: [3, 3],
+            textInfo: "Would predict..."
+        },
     };
 
     textBoxes: D3Sel
@@ -78,6 +79,8 @@ export abstract class TextTokens extends VComponent<tp.FullSingleTokenInfo[]>{
     }
 
     _render(data: tp.FullSingleTokenInfo[]) {
+        const op = this.options;
+        const self = this;
         // Reset token display
         this.base.selectAll("*").remove()
 
@@ -88,8 +91,12 @@ export abstract class TextTokens extends VComponent<tp.FullSingleTokenInfo[]>{
             .style('width', String(this.options.divHover.width) + 'px')
             .style('height', String(this.options.divHover.height) + 'px')
 
-        const op = this.options;
-        const self = this;
+            this.divHover
+                .append('p')
+                .classed('p-info', true)
+                .style('font-weight', 'bold')
+                .text(op.divHover.textInfo)
+
 
         // Add blank divs
         console.log(`Internal offset (${this.side}): `, op.offset);

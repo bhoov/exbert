@@ -207,12 +207,13 @@ export class MainGraphic {
                     // Ensure only 1 mask ind is present for autoregressive models
                     if (this.uiConf.hasToken()) {
                         this.grayToggle(<number>this.uiConf.token().ind)
-
                     }
-                    // if (this.uiConf.maskInds().length > 0) {
-                    //     this.uiConf.maskInds([this.uiConf.maskInds()[0]])
-                    //     this.grayToggle(this.uiConf.maskInds[0])
-                    // }
+                    self.vizs.tokens.left.options.divHover.textInfo = "Would predict next..."
+                    self.vizs.tokens.right.options.divHover.textInfo = "Would predict next..."
+                }
+                else {
+                    self.vizs.tokens.left.options.divHover.textInfo = "Would predict here..."
+                    self.vizs.tokens.right.options.divHover.textInfo = "Would predict here..."
                 }
 
                 this.sels.body.style("cursor", "default")
