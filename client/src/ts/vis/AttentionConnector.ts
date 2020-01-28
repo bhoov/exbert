@@ -4,9 +4,10 @@ import { D3Sel } from "../etc/Util";
 import { Edge, EdgeData } from "./EdgeConnector"
 import { VComponent } from "./VisComponent";
 import { SimpleEventHandler } from "../etc/SimpleEventHandler";
-import { scaleLinearWidth } from "./FormatUtils"
 
 export type AttentionData = number[][]
+
+export const scaleLinearWidth = opacity => 5 * opacity^0.33;
 
 export class AttentionGraph extends VComponent<AttentionData>{
     css_name = '';
@@ -121,12 +122,14 @@ export class AttentionGraph extends VComponent<AttentionData>{
     /**
      * Rerender the graph in the event that the data changes
      */
-    private updateData = () => {
+    private updateData() {
         if (this.graph != null) {
             d3.selectAll(".atn-curve").remove();
 
+            const data = this.plotData
+
             this.paths = this.graph
-                .data(this.plotData)
+                .data(data)
                 .join('path');
 
             this.createConnections();

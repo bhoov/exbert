@@ -190,7 +190,7 @@ export class AttentionHeadBox extends VComponent<AttentionHeadBoxI>{
                 self.eventHandler.trigger(AttentionHeadBox.events.boxClick, boxEvent(i))
             })
             .append("svg:title")
-            .text((d, i) => "Head " + self._data.labels[i])
+            .text((d, i) => "Head " + (self._data.labels[i] + 1))
     }
 
 

@@ -11,14 +11,15 @@ from spacyface import (
     BertAligner,
     GPT2Aligner,
     RobertaAligner,
-    DistilBertAligner
+    DistilBertAligner,
+    auto_aligner
 )
 
 from transformers import (
-    BertModel,
-    GPT2Model,
-    RobertaModel,
-    DistilBertModel,
+    BertForMaskedLM,
+    GPT2LMHeadModel,
+    RobertaForMaskedLM,
+    DistilBertForMaskedLM,
 )
 
 from utils.f import delegates, pick, memoize
@@ -52,6 +53,7 @@ def from_pretrained(model_name):
 
     return out
 
+
 class TransformerBaseDetails(ABC):
     """ All API calls will interact with this class to get the hidden states and attentions for any input sentence."""
 
@@ -59,7 +61,7 @@ class TransformerBaseDetails(ABC):
         self.model = model
         self.aligner = aligner
         self.model.eval()
-        self.forward_inputs = ['input_ids', 'token_type_ids', 'attention_mask']
+        self.forward_inputs = ['input_ids', 'attention_mask']
 
     @classmethod
     def from_pretrained(cls, model_name: str):
@@ -79,15 +81,17 @@ class TransformerBaseDetails(ABC):
         ids = self.aligner.convert_tokens_to_ids(tokens)
         inputs = self.aligner.prepare_for_model(ids, add_special_tokens=add_special_tokens, return_tensors="pt")
         parsed_input = self.format_model_input(inputs, mask_attentions=mask_attentions)
-        output = self.model(**parsed_input)
+        output = self.model(parsed_input['input_ids'], attention_mask=parsed_input['attention_mask'])
         return self.format_model_output(inputs, orig_sentence, output)
 
-    def format_model_output(self, inputs, sentence:str, output):
+    def format_model_output(self, inputs, sentence:str, output, topk=5):
         """Convert model output to the desired format.
 
         Formatter additionally needs access to the tokens and the original sentence
         """
-        hidden_state, attentions, contexts = self.get_state_att_contexts(output)
+        hidden_state, attentions, contexts, logits = self.select_outputs(output)
+
+        words, probs = self.logits2words(logits, topk)
 
         tokens = self.view_ids(inputs["input_ids"])
         toks = self.aligner.meta_from_tokens(sentence, tokens, perform_check=False)
@@ -99,29 +103,38 @@ class TransformerBaseDetails(ABC):
             attentions,
             hidden_state,
             contexts,
+            words,
+            probs.tolist()
         )
         return formatted_output
 
-    def get_state_att_contexts(self, output):
+    def select_outputs(self, output):
         """Extract the desired hidden states as passed by a particular model through the output
 
         In all cases, we care for:
             - hidden state embeddings (tuple of n_layers + 1)
             - attentions (tuple of n_layers)
             - contexts (tuple of n_layers)
+            - Top predicted words
+            - Probabilities of top predicted words
         """
-        _1, _2, hidden_state, attentions, contexts = output
+        logits, hidden_state, attentions, contexts = output
 
-        return hidden_state, attentions, contexts
+        return hidden_state, attentions, contexts, logits
 
     def format_model_input(self, inputs, mask_attentions=False):
         """Parse the input for the model according to what is expected in the forward pass.
 
         If not otherwise defined, outputs a dict containing the keys:
 
-        {'input_ids', 'token_type_ids', 'attention_mask'}
+        {'input_ids', 'attention_mask'}
         """
         return pick(self.forward_inputs, self.parse_inputs(inputs, mask_attentions=mask_attentions))
+
+    def logits2words(self, logits, topk=5):
+        probs, idxs = torch.topk(torch.softmax(logits.squeeze(0), 1), topk)
+        words = [self.aligner.convert_ids_to_tokens(i) for i in idxs]
+        return words, probs
 
     def view_ids(self, ids: Union[List[int], torch.Tensor]) -> List[str]:
         """View what the tokenizer thinks certain ids are"""
@@ -191,7 +204,7 @@ class BertDetails(TransformerBaseDetails):
     @classmethod
     def from_pretrained(cls, model_name: str):
         return cls(
-            BertModel.from_pretrained(
+            BertForMaskedLM.from_pretrained(
                 model_name,
                 output_attentions=True,
                 output_hidden_states=True,
@@ -205,7 +218,7 @@ class GPT2Details(TransformerBaseDetails):
     @classmethod
     def from_pretrained(cls, model_name: str):
         return cls(
-            GPT2Model.from_pretrained(
+            GPT2LMHeadModel.from_pretrained(
                 model_name,
                 output_attentions=True,
                 output_hidden_states=True,
@@ -214,12 +227,16 @@ class GPT2Details(TransformerBaseDetails):
             GPT2Aligner.from_pretrained(model_name),
         )
 
+    def select_outputs(self, output):
+        logits, _ , hidden_states, att, contexts = output
+        return hidden_states, att, contexts, logits
+
 class RobertaDetails(TransformerBaseDetails):
 
     @classmethod
     def from_pretrained(cls, model_name: str):
         return cls(
-            RobertaModel.from_pretrained(
+            RobertaForMaskedLM.from_pretrained(
                 model_name,
                 output_attentions=True,
                 output_hidden_states=True,
@@ -236,7 +253,7 @@ class DistilBertDetails(TransformerBaseDetails):
     @classmethod
     def from_pretrained(cls, model_name: str):
         return cls(
-            DistilBertModel.from_pretrained(
+            DistilBertForMaskedLM.from_pretrained(
                 model_name,
                 output_attentions=True,
                 output_hidden_states=True,
@@ -245,7 +262,7 @@ class DistilBertDetails(TransformerBaseDetails):
             DistilBertAligner.from_pretrained(model_name),
         )
 
-    def get_state_att_contexts(self, output):
+    def select_outputs(self, output):
         """Extract the desired hidden states as passed by a particular model through the output
 
         In all cases, we care for:
@@ -253,7 +270,7 @@ class DistilBertDetails(TransformerBaseDetails):
             - attentions (tuple of n_layers)
             - contexts (tuple of n_layers)
         """
-        _, hidden_states, attentions, contexts = output
+        logits, hidden_states, attentions, contexts = output
 
         contexts = tuple([c.permute(0, 2, 1, 3).contiguous() for c in contexts])
-        return hidden_states, attentions, contexts
+        return hidden_states, attentions, contexts, logits

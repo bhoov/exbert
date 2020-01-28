@@ -102,12 +102,12 @@ export class CorpusHistogram<T> extends VComponent<T> {
             margin: {
                 top: 10,
                 right: 30,
-                bottom: 30,
+                bottom: 50,
                 left: 40
             },
             barWidth: 25,
             width: 185,
-            height: 200,
+            height: 230,
             val: "pos", // Change Default, pass through constructor
             xLabelRot: 45,
             xLabelOffset: 15,

@@ -12,10 +12,12 @@ from .aligner import (
     OpenAIGPTAligner,
     T5Aligner,
     XLMRobertaAligner,
+    auto_aligner
+    
 )
 
 from .simple_spacy_token import SimpleSpacyToken
 
 __all__ = ["MakeAligner", "SimpleSpacyToken", "BertAligner", "GPT2Aligner", "RobertaAligner", "DistilBertAligner",
            "TransfoXLAligner", "XLNetAligner", "AlbertAligner", "XLMAligner", "AlbertAligner",
-           "CTRLAligner", "OpenAIGPTAligner", "T5Aligner", "XLMRobertaAligner"]
+           "CTRLAligner", "OpenAIGPTAligner", "T5Aligner", "XLMRobertaAligner", "auto_aligner"]

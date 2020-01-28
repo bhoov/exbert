@@ -10,7 +10,7 @@ import '../etc/xd3'
 // Helpers
 const currMatchIdx = (elem) => +(<Element>elem.parentNode).getAttribute('matchidx')
 const currRowNum = (elem) => +(<Element>elem.parentNode).getAttribute('rownum')
-const backgroundColor = x => `rgba(0, 0, 255, ${0.6*x})`
+const backgroundColor = x => `rgba(128, 0, 150, ${0.6*x})`
 
 export class CorpusInspector extends VComponent<tp.FaissSearchResults[]>{
     css_name = 'corpus-inspector';

@@ -65,6 +65,8 @@ class TransformerOutputFormatter:
         att: Tuple[torch.Tensor], 
         embeddings: Tuple[torch.Tensor],
         contexts: Tuple[torch.Tensor],
+        topk_words: List[List[str]],
+        topk_probs: List[List[float]]
     ):
         assert len(tokens) > 0, "Cannot have an empty token output!"
 
@@ -78,6 +80,8 @@ class TransformerOutputFormatter:
         self.embeddings = modified_embeddings
         self.attentions = modified_att
         self.raw_contexts = modified_contexts
+        self.topk_words = topk_words
+        self.topk_probs = topk_probs
 
         self.n_layers = len(contexts) # With +1 for buffer layer at the beginning
         _, self.__len, self.n_heads, self.hidden_dim = contexts[0].shape
@@ -129,7 +133,7 @@ class TransformerOutputFormatter:
 
         def tolist(tens): return [t.tolist() for t in tens]
 
-        def to_resp(tok: SimpleSpacyToken, embeddings: List[float], contexts: List[float]):
+        def to_resp(tok: SimpleSpacyToken, embeddings: List[float], contexts: List[float], topk_words, topk_probs):
             return {
                 "text": tok.token,
                 "bpe_token": tok.token,
@@ -138,17 +142,22 @@ class TransformerOutputFormatter:
                 "bpe_is_ent": tok.is_ent,
                 "embeddings": nested_rounder(embeddings),
                 "contexts": nested_rounder(contexts),
+                "topk_words": topk_words,
+                "topk_probs": nested_rounder(topk_probs)
             }
 
-        side_info = [to_resp(t, e, c) for t,e,c in zip(self.tokens, tolist(self.embeddings[layer]), tolist(self.contexts[layer]))]
+        side_info = [to_resp(t, e, c, w, p) for t,e,c,w,p in zip(
+                                                                self.tokens, 
+                                                                tolist(self.embeddings[layer]), 
+                                                                tolist(self.contexts[layer]),
+                                                                self.topk_words,
+                                                                self.topk_probs)]
 
         out = {"aa": {
             "att": nested_rounder(tolist(self.attentions[layer])),
             "left": side_info,
             "right": side_info
         }}
-
-        print("Shape of attentions:", self.attentions[0].shape)
 
         return out
 

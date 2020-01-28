@@ -187,11 +187,7 @@ export class MainGraphic {
                     }
                 }
 
-                if (this.uiConf.modelKind() == tp.ModelKind.Autoregressive && this.uiConf.maskInds().length > 1) {
-                    // Ensure only 1 mask ind is present for autoregressive models
-                    this.uiConf.maskInds([this.uiConf.maskInds()[0]])
-                }
-
+                this.vizs.attentionSvg.normByGroup = this.uiConf.modelKind() == tp.ModelKind.Autoregressive ? true : false
                 if (this.uiConf.maskInds().length > 0) {
                     this.tokCapsule.a.maskInds = this.uiConf.maskInds()
 
@@ -207,6 +203,19 @@ export class MainGraphic {
                     this.update()
                     postResponseDisplayCleanup()
                 }
+
+                if (this.uiConf.modelKind() == tp.ModelKind.Autoregressive) {
+                    // Ensure only 1 mask ind is present for autoregressive models
+                    if (this.uiConf.hasToken()) {
+                        this.grayToggle(<number>this.uiConf.token().ind)
+
+                    }
+                    // if (this.uiConf.maskInds().length > 0) {
+                    //     this.uiConf.maskInds([this.uiConf.maskInds()[0]])
+                    //     this.grayToggle(this.uiConf.maskInds[0])
+                    // }
+                }
+
                 this.sels.body.style("cursor", "default")
             });
         })
@@ -273,14 +282,7 @@ export class MainGraphic {
             this._toggleTokenSel()
             showBySide(e)
             if (this.uiConf.modelKind() == tp.ModelKind.Autoregressive) {
-                const ename = `#right-token-${+e.ind + 1}`
-                const toMaskSel = d3.select(ename)
-
-                d3.selectAll('.right-token').each(function () {
-                    const s = d3.select(this)
-                    const crit = (s.node() == toMaskSel.node() && !s.classed('masked-token'))
-                    s.classed("masked-token", crit)
-                })
+                self.grayToggle(+e.ind)
             }
         })
 
@@ -352,7 +354,7 @@ export class MainGraphic {
         const alreadySelected = d3.select('.selected-token')
 
         // If no token should be selected, unselect all tokens
-        if (isNullToken(e)) {
+        if (!this.uiConf.hasToken()) {
             const newSel: d3.Selection<BaseType, any, BaseType, any> = d3.selectAll('.selected-token')
             if (!newSel.empty()) newSel.classed('selected-token', false)
         }
@@ -370,7 +372,31 @@ export class MainGraphic {
             alreadySelected.classed('selected-token', false)
         }
 
+        if (this.uiConf.modelKind() == tp.ModelKind.Autoregressive) {
+                this.grayToggle(+e.ind)
+        }
+
         this._searchDisabler()
+    }
+
+    /** Gray all tokens that have index greater than ind */
+    private grayBadToks(ind: number) {
+        if (this.uiConf.modelKind() == tp.ModelKind.Autoregressive) {
+            const grayToks = function (d, i) {
+                const s = d3.select(this)
+                s.classed("masked-token", i > ind)
+            }
+            d3.selectAll('.right-token').each(grayToks)
+            d3.selectAll('.left-token').each(grayToks)
+        }
+    }
+
+    private grayToggle(ind: number) {
+        if (this.uiConf.hasToken())
+            this.grayBadToks(ind)
+        else
+            d3.selectAll('.token').classed('masked-token', false)
+
     }
 
     private _initModelSelection() {
@@ -385,7 +411,7 @@ export class MainGraphic {
             { name: "roberta-base", kind: tp.ModelKind.Bidirectional },
             { name: "gpt2", kind: tp.ModelKind.Autoregressive },
             // { name: "gpt2-medium", kind: tp.ModelKind.Autoregressive },
-            // { name: "distilgpt2", kind: tp.ModelKind.Autoregressive },
+            { name: "distilgpt2", kind: tp.ModelKind.Autoregressive },
         ]
 
         const names = R.map(R.prop('name'))(data)
@@ -634,7 +660,7 @@ export class MainGraphic {
                 }
                 else {
                     const v = val.payload
-                    
+
                     self.vizs.corpusInspector.unhideView()
                     self.vizs.corpusMatManager.unhideView()
 
@@ -700,7 +726,7 @@ export class MainGraphic {
     private _queryContext() {
         const self = this;
 
-        if (!isNullToken(this.uiConf.token())) {
+        if (this.uiConf.hasToken()) {
             this._searchContext();
         } else {
             console.log("Was told to show inspector but was not given a selected token embedding")
@@ -710,7 +736,8 @@ export class MainGraphic {
     private _queryEmbeddings() {
         const self = this;
 
-        if (!isNullToken(this.uiConf.token())) {
+        if (this.uiConf.hasToken()) {
+            console.log("token: ", this.uiConf.token());
             this._searchEmbeddings();
         } else {
             console.log("Was told to show inspector but was not given a selected token embedding")
@@ -718,7 +745,7 @@ export class MainGraphic {
     }
 
     private _searchingDisabled() {
-        return (this.uiConf.heads().length == 0) || (isNullToken(this.uiConf.token()))
+        return (this.uiConf.heads().length == 0) || (!this.uiConf.hasToken())
     }
 
     private _searchDisabler() {
@@ -740,7 +767,7 @@ export class MainGraphic {
 
     private _renderHeadSummary() {
         this.sels.selectedHeads
-            .html(R.join(', ', this.uiConf.heads()))
+            .html(R.join(', ', this.uiConf.heads().map(h => h + 1)))
     }
 
     // Modify faiss results with corresponding heights
@@ -805,7 +832,7 @@ export class MainGraphic {
                 self.uiConf.layer(v);
                 self.sels.body.style("cursor", "progress");
             }),
-            switchMap((v) => from(self.api.updateMaskedAttentions(self.uiConf.model(), self.tokCapsule.a, self.uiConf.sentence(), v))) // USE THIS
+            switchMap((v) => from(self.api.updateMaskedAttentions(self.uiConf.model(), self.tokCapsule.a, self.uiConf.sentence(), v)))
         ).subscribe({
             next: (resp: rsp.AttentionDetailsResponse) => {
                 const r = resp.payload;

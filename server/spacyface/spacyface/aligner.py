@@ -6,6 +6,7 @@ import torch
 import regex as re
 
 from transformers import (
+    AutoTokenizer,
     BertTokenizer,
     GPT2Tokenizer,
     RobertaTokenizer,
@@ -23,7 +24,7 @@ from transformers import (
 )
 
 from .simple_spacy_token import SimpleSpacyToken
-from .utils.f import flatten_, assoc, delegates
+from .utils.f import flatten_, assoc, delegates, memoize
 
 def doc_to_fixed_tokens(doc: SpacyDoc) -> List[str]:
     """Fix the tokens in a document to not have exceptions"""
@@ -253,3 +254,8 @@ AlbertAligner = MakeAligner(AlbertTokenizer, english)
 OpenAIGPTAligner= MakeAligner(OpenAIGPTTokenizer, english)
 T5Aligner= MakeAligner(T5Tokenizer, english)
 XLMRobertaAligner= MakeAligner(XLMRobertaTokenizer, english)
+
+@memoize
+def auto_aligner(pretrained_name_or_path):
+    tok_class = AutoTokenizer.from_pretrained(pretrained_name_or_path).__class__
+    return MakeAligner(tok_class, english).from_pretrained(pretrained_name_or_path)
