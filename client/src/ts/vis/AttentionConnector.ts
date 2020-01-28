@@ -4,6 +4,7 @@ import { D3Sel } from "../etc/Util";
 import { Edge, EdgeData } from "./EdgeConnector"
 import { VComponent } from "./VisComponent";
 import { SimpleEventHandler } from "../etc/SimpleEventHandler";
+import * as tp from "../etc/types"
 
 export type AttentionData = number[][]
 
@@ -32,7 +33,7 @@ export class AttentionGraph extends VComponent<AttentionData>{
 
     // OPTIONS WITH DEFAULTS
     _threshold = 0.7; // Accumulation threshold. Between 0-1
-    normByGroup = false; // Whether to normalize connection width by src-group or not
+    normBy: tp.NormBy
 
     static events = {} // No events needed for this one
 
@@ -55,6 +56,20 @@ export class AttentionGraph extends VComponent<AttentionData>{
         this.linkGen = d3.linkHorizontal()
             .x(d => d[0])
             .y(d => d[1]);
+    }
+
+    // Define whether to use the 'j' or 'i' attribute to calculate opacities
+    private scaleIdx(): "i" | "j" {
+        switch (this.normBy) {
+            case tp.NormBy.Col:
+                return 'j'
+            case tp.NormBy.Row:
+                return 'i'
+            case tp.NormBy.All:
+                return 'i'
+
+        }
+
     }
 
     /**
@@ -105,14 +120,15 @@ export class AttentionGraph extends VComponent<AttentionData>{
      * Change the Opacity of the lines according to the value of the data
      */
     private updateOpacity() {
+        const self = this;
         if (this.paths != null) {
             // paths.transition().duration(500).attr('opacity', (d) => {
             this.paths.attr('opacity', (d) => {
-                const val = this.opacityScales[d.i](d.v);
+                const val = this.opacityScales[d[self.scaleIdx()]](d.v);
                 return val;
             })
             this.paths.attr('stroke-width', (d) => {
-                const val = this.opacityScales[d.i](d.v);
+                const val = this.opacityScales[d[self.scaleIdx()]](d.v);
                 return scaleLinearWidth(val) //5 * val^0.33;
             })
         }
@@ -145,28 +161,43 @@ export class AttentionGraph extends VComponent<AttentionData>{
      */
     private createScales = () => {
         this.opacityScales = [];
+        let arr = []
 
         // Group normalization
-        if (this.normByGroup) {
-            const arr = this.edgeData.extent(1);
-            this.opacityScales = [];
-            arr.forEach((v, i) => {
-                (this.opacityScales as d3.ScaleLinear<any, any>[]).push(
-                    d3.scaleLinear()
-                        .domain([0, v[1]])
-                        .range([0, 0.9])
-                )
-            })
-        }
-
-        // Normalization across the whole
-        else {
-            const maxIn = d3.max(this.plotData.map((d) => d.v))
-            for (let i = 0; i < this._data.length; i++) {
-                this.opacityScales.push(d3.scaleLinear()
-                    .domain([0, maxIn])
-                    .range([0, 1]));
-            }
+        switch (this.normBy){
+            case tp.NormBy.Row:
+                arr = this.edgeData.extent(1);
+                this.opacityScales = [];
+                arr.forEach((v, i) => {
+                    (this.opacityScales as d3.ScaleLinear<any, any>[]).push(
+                        d3.scaleLinear()
+                            .domain([0, v[1]])
+                            .range([0, 0.9])
+                    )
+                })
+                break;
+            case tp.NormBy.Col:
+                arr = this.edgeData.extent(0);
+                this.opacityScales = [];
+                arr.forEach((v, i) => {
+                    (this.opacityScales as d3.ScaleLinear<any, any>[]).push(
+                        d3.scaleLinear()
+                            .domain([0, v[1]])
+                            .range([0, 0.9])
+                    )
+                })
+                break;
+            case tp.NormBy.All:
+                const maxIn = d3.max(this.plotData.map((d) => d.v))
+                for (let i = 0; i < this._data.length; i++) {
+                    this.opacityScales.push(d3.scaleLinear()
+                        .domain([0, maxIn])
+                        .range([0, 1]));
+                }
+                break;
+            default:
+                console.log("Nor norming specified");
+                break;
         }
     }
 

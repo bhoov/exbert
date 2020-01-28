@@ -179,7 +179,7 @@ export class UIConfig {
     hasToken() {
         const conf = this._conf
         const actuallyNull = ((conf.tokenInd == null) && (conf.tokenSide == null))
-        const strNull = ((conf.tokenInd == "null") || (conf.tokenSide == "") || (conf.tokenSide == "null"))
+        const strNull = (conf.tokenInd == "null")
         return (!actuallyNull) && (!strNull)
     }
 

@@ -187,15 +187,14 @@ export class MainGraphic {
                     }
                 }
 
-                this.vizs.attentionSvg.normByGroup = this.uiConf.modelKind() == tp.ModelKind.Autoregressive ? true : false
+                this.vizs.attentionSvg.normBy = this.uiConf.modelKind() == tp.ModelKind.Autoregressive ? tp.NormBy.Col : tp.NormBy.All
                 if (this.uiConf.maskInds().length > 0) {
                     this.tokCapsule.a.maskInds = this.uiConf.maskInds()
 
                     this.api.updateMaskedAttentions(this.uiConf.model(), this.tokCapsule.a, this.uiConf.sentence(), this.uiConf.layer()).then(resp => {
                         const r = resp.payload;
-                        console.log("R: ", r);
                         this.attCapsule.updateFromNormal(r, this.uiConf.hideClsSep());
-                        this.tokCapsule.updateEmbeddings(r)
+                        this.tokCapsule.updateTokens(r)
                         this.update()
                         postResponseDisplayCleanup()
                     })
@@ -249,7 +248,7 @@ export class MainGraphic {
                     self.api.updateMaskedAttentions(this.uiConf.model(), this.tokCapsule.a, this.uiConf.sentence(), this.uiConf.layer()).then((resp: rsp.AttentionDetailsResponse) => {
                         const r = resp.payload;
                         self.attCapsule.updateFromNormal(r, this.uiConf.hideClsSep());
-                        self.tokCapsule.updateEmbeddings(r);
+                        self.tokCapsule.updateTokens(r);
 
                         self.uiConf.maskInds(this.tokCapsule.a.maskInds)
 
@@ -837,7 +836,7 @@ export class MainGraphic {
             next: (resp: rsp.AttentionDetailsResponse) => {
                 const r = resp.payload;
                 self.attCapsule.updateFromNormal(r, this.uiConf.hideClsSep());
-                self.tokCapsule.updateEmbeddings(r);
+                self.tokCapsule.updateTokens(r);
                 self.uiConf.maskInds(self.tokCapsule.a.maskInds)
                 self.update();
                 self.sels.body.style("cursor", "default")

@@ -14,6 +14,8 @@ import * as R from 'ramda'
      bpe_pos: '',
      bpe_dep: '',
      bpe_is_ent: null,
+     topk_words: [],
+     topk_probs: []
  }]
 
 export class TokenDisplay  {
@@ -86,14 +88,16 @@ export class TokenWrapper {
         this.a = new TokenDisplay(a, maskA)
     }
 
-    updateEmbeddings(r: tp.AttentionResponse) {
-        const newTokens = r.aa.left
+    updateTokens(r: tp.AttentionResponse) {
+        const desiredKeys = ['contexts', 'embeddings', 'topk_probs', 'topk_words']
+        const newTokens = r.aa.left.map(v => R.pick(desiredKeys, v))
 
         const pairs = R.zip(this.a.tokenData, newTokens)
 
         pairs.forEach((d, i) => {
-            d[0].embeddings = d[1].embeddings
-            d[0].contexts = d[1].contexts
+            Object.keys(d[1]).map(k => {
+                d[0][k] = d[1][k]
+            })
         })
 
     }

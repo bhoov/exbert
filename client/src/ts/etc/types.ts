@@ -31,6 +31,8 @@ export type FullSingleTokenInfo = {
     bpe_pos: string,
     bpe_dep: string,
     bpe_is_ent: boolean,
+    topk_words: string[],
+    topk_probs: number[]
 }
 
 interface AbstractAttentionResult<T> {
@@ -104,6 +106,12 @@ export type TokenOptions = "a" | "b" | "all"
 export enum Toggled {
     ADDED = 0,
     REMOVED,
+}
+
+export enum NormBy {
+    Row = 0,
+    Col,
+    All
 }
 
 export interface AbstractMetaOptions {

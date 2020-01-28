@@ -157,3 +157,27 @@ label {
 .tick {
   font-size: 18px;
 }
+
+#connector-container {
+  .mat-hover-display{
+    display: block;
+    position: absolute;
+    visibility: hidden;
+    background-color: rgba(200, 200, 200, 0.93);
+    font-size: 14px;
+    p {
+      margin: 4px 1px 1px 4px;
+      // margin: auto;
+    }
+  }
+}
+
+.right-token-hover {
+    border-radius: 1px 8px 8px 8px;
+    text-align: left;
+}
+
+.left-token-hover {
+    border-radius: 8px 1px 8px 8px;
+    text-align: right;
+}
