@@ -66,6 +66,7 @@ export class AttentionHeadBox extends VComponent<AttentionHeadBoxI>{
         rowMouseOut: "AttentionHeadBox_RowMouseOut",
         boxMouseOver: "AttentionHeadBox_BoxMouseOver",
         boxMouseOut: "AttentionHeadBox_BoxMouseOut",
+        boxMouseMove: "AttentionHeadBox_BoxMouseMove",
         boxClick: "AttentionHeadBox_BoxClick",
     };
 
@@ -137,6 +138,9 @@ export class AttentionHeadBox extends VComponent<AttentionHeadBoxI>{
         const boxEvent = (i) => { return { ind: i, side: op.side, head: self._data.labels[i] } }
         const cur = this.updateCurrent()
 
+        const getBaseX = () => (<HTMLElement>self.base.node()).getBoundingClientRect().left
+        const getBaseY = () => (<HTMLElement>self.base.node()).getBoundingClientRect().top
+
         this.base.html('');
 
         this.parent
@@ -188,6 +192,13 @@ export class AttentionHeadBox extends VComponent<AttentionHeadBoxI>{
             })
             .on("click", (d, i) => {
                 self.eventHandler.trigger(AttentionHeadBox.events.boxClick, boxEvent(i))
+            })
+            .on("mousemove", function(d, i) {
+                const op = self.options
+                const mouse = d3.mouse(self.base.node())
+
+                self.eventHandler.trigger(AttentionHeadBox.events.boxMouseMove, { ind: i, side: op.side, baseX: getBaseX(), baseY: getBaseY(), mouse: mouse })
+
             })
             .append("svg:title")
             .text((d, i) => "Head " + (self._data.labels[i] + 1))

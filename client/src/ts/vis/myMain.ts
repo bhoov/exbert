@@ -101,6 +101,12 @@ export class MainGraphic {
             atnHeads: {
                 left: d3.select("#left-att-heads"),
                 right: d3.select("#right-att-heads"),
+                headInfo: d3.select("#head-info-box")
+                    .classed('mat-hover-display', true)
+                    .classed('text-center', true)
+                    .style('width', String(70) + 'px')
+                    .style('height', String(30) + 'px')
+                    .style('visibillity', 'hidden')
             },
             form: {
                 sentenceA: d3.select("#form-sentence-a"),
@@ -278,20 +284,22 @@ export class MainGraphic {
         })
 
         this.eventHandler.bind(TextTokens.events.tokenClick, (e: tp.TokenEvent) => {
-            this.uiConf.toggleToken(e)
-            this._toggleTokenSel()
-            showBySide(e)
-            if (this.uiConf.modelKind() == tp.ModelKind.Autoregressive) {
-                self.grayToggle(+e.ind)
+            const tokToggle = () => {
+                this.uiConf.toggleToken(e)
+                this._toggleTokenSel()
+                showBySide(e)
             }
+            tokToggle()
         })
 
 
         this.eventHandler.bind(AttentionHeadBox.events.rowMouseOver, (e: tp.HeadBoxEvent) => {
-            // Don't do anything special on row mouse over
+            self.sels.atnHeads.headInfo.style('visibility', 'visible')
         })
 
+
         this.eventHandler.bind(AttentionHeadBox.events.rowMouseOut, () => {
+            self.sels.atnHeads.headInfo.style('visibility', 'hidden')
             // Don't do anything special on row mouse out
         })
 
@@ -308,6 +316,33 @@ export class MainGraphic {
             this.vizs.attentionSvg.data(att)
             this.vizs.attentionSvg.update(att)
             showBySide(this.uiConf.token())
+        })
+
+        this.eventHandler.bind(AttentionHeadBox.events.boxMouseMove, (e) => {
+            const headInfo = self.sels.atnHeads.headInfo
+            let left, top, borderRadius
+
+            if (e.side == "left") {
+                const divOffset = [13, 3]
+                left = e.mouse[0] + e.baseX - (+headInfo.style('width').replace('px', '') + divOffset[0])
+                top = e.mouse[1] + e.baseY - (+headInfo.style('height').replace('px', '') + divOffset[1])
+                borderRadius = "8px 8px 1px 8px"
+            }
+            else {
+                const divOffset = [-4, 3]
+                left = e.mouse[0] + e.baseX + (divOffset[0])
+                top = e.mouse[1] + e.baseY - (+headInfo.style('height').replace('px', '') + divOffset[1])
+                borderRadius = "8px 8px 8px 1px"
+            }
+
+            headInfo
+                .style('visibility', 'visible')
+                .style('left', String(left) + 'px')
+                .style('top', String(top) + 'px')
+                .style('border-radius', borderRadius)
+                .text(`Head: ${e.ind + 1}`)
+
+            // Don't do anything special on row mouse over
         })
 
         this.eventHandler.bind(AttentionHeadBox.events.boxClick, (e: { head }) => {
@@ -373,7 +408,7 @@ export class MainGraphic {
         }
 
         if (this.uiConf.modelKind() == tp.ModelKind.Autoregressive) {
-                this.grayToggle(+e.ind)
+            this.grayToggle(+e.ind)
         }
 
         this._searchDisabler()
@@ -796,7 +831,7 @@ export class MainGraphic {
             .attr("class", "btn button layerCheckbox")
             .classed('active', (d, i) => {
                 // Assign to largest layer available if uiConf.layer() > new nLayers
-                if (d == self.uiConf.layer() - 1) { // Javascript is 0 indexed!
+                if (d == self.uiConf.layer()) { // Javascript is 0 indexed!
                     hasActive = true;
                     return true
                 }
