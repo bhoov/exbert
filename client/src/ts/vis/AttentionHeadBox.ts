@@ -4,6 +4,7 @@ import { SimpleEventHandler } from "../etc/SimpleEventHandler";
 import { D3Sel } from "../etc/Util";
 import { SVG } from "../etc/SVGplus"
 import * as tf from '@tensorflow/tfjs'
+import { Tensor3D } from "@tensorflow/tfjs";
 
 // The below two (interface and function) can become a class
 export type AttentionHeadBoxI = {
@@ -15,12 +16,13 @@ export type AttentionHeadBoxI = {
 /**
  * From an attention matrix selected by layer, show a summary of the attentions belonging to each head.
  * 
- * @param headMat The matrix representing all the attentions by head (layer already selected)
+ * @param headMat The matrix representing all the attentions by head (layer already selected) <head, from, to>
  * @param headList The heads that are selected
  * @param side Is this the right or the left display?
+ * @param tokenInd If not null, select just the information from a single token across heads
  * @returns Information needed to label the headbox
  */
-export function getAttentionInfo(headMat: number[][][], headList: number[], side: "right" | "left" = "left"): AttentionHeadBoxI {
+export function getAttentionInfo(headMat: number[][][], headList: number[], side: "right" | "left" = "left", token: null | {ind: number, side: "left" | "right"}=null): AttentionHeadBoxI {
     // Collect only from headlist, average each head, transpose to ease iteration
     if (headList.length == 0) {
         return {
@@ -30,17 +32,28 @@ export function getAttentionInfo(headMat: number[][][], headList: number[], side
         }
     }
 
+    let dim = null
+    // Only change the attention graph opposite selected token
+    if (token != null && (token.side != side)) {
+        dim = token.side == "left" ? -2 : -1 // Assign to "from" direction if "left" 
+    }
+
     let axis: number = side == "left" ? 2 : 1;
 
     // average across the axis representing the attentions.
-    let gatheredMat = tf.tensor3d(headMat).gather(headList, 0).mean([axis]).transpose();
+    let gatheredMat = tf.tensor3d(headMat)
+    if (dim != null) {
+        gatheredMat = gatheredMat.gather([token.ind], dim)
+    }
+    console.log("SHAPE: ", gatheredMat.gather(8, -2).shape);
+    let newMat = gatheredMat.gather(headList, 0).mean([axis]).transpose();
 
-    const rowInfo = <number[][]>gatheredMat.arraySync();
+    const rowInfo = <number[][]>newMat.arraySync();
 
     const out: AttentionHeadBoxI = {
         rows: rowInfo,
         labels: headList,
-        max: <number>gatheredMat.max().arraySync(),
+        max: <number>newMat.max().arraySync(),
     }
 
     return out

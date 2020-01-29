@@ -298,6 +298,7 @@ export class MainGraphic {
                 showBySide(e)
             }
             tokToggle()
+            this.renderAttHead()
         })
 
 
@@ -937,8 +938,11 @@ export class MainGraphic {
     renderAttHead() {
         const heads = _.range(0, this.uiConf._nHeads)
         const focusAtt = this.attCapsule.att
-        const leftAttInfo = getAttentionInfo(focusAtt, heads, "left");
-        const rightAttInfo = getAttentionInfo(focusAtt, heads, "right");
+        const token = this.uiConf.hasToken() ? this.uiConf.token() : null
+        //@ts-ignore
+        const leftAttInfo = getAttentionInfo(focusAtt, heads, "left", token);
+        //@ts-ignore
+        const rightAttInfo = getAttentionInfo(focusAtt, heads, "right", token);
         this.vizs.leftHeads.options.offset = this.uiConf.offset
         this.vizs.leftHeads.update(leftAttInfo)
         this.vizs.rightHeads.update(rightAttInfo)
