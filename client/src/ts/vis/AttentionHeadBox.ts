@@ -45,7 +45,6 @@ export function getAttentionInfo(headMat: number[][][], headList: number[], side
     if (dim != null) {
         gatheredMat = gatheredMat.gather([token.ind], dim)
     }
-    console.log("SHAPE: ", gatheredMat.gather(8, -2).shape);
     let newMat = gatheredMat.gather(headList, 0).mean([axis]).transpose();
 
     const rowInfo = <number[][]>newMat.arraySync();
