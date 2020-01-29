@@ -79,6 +79,13 @@ class TransformerBaseDetails(ABC):
     ) -> TransformerOutputFormatter:
         """Get formatted attention from a list of tokens, using the original sentence for getting Spacy Metadata"""
         ids = self.aligner.convert_tokens_to_ids(tokens)
+
+        # For GPT2, add the beginning of sentence token to the input. Note that this will work on all models but XLM
+        bost = self.aligner.bos_token_id
+        clst = self.aligner.cls_token_id
+        if (bost is not None) and (bost != clst) and add_special_tokens:
+            ids.insert(0, bost)
+
         inputs = self.aligner.prepare_for_model(ids, add_special_tokens=add_special_tokens, return_tensors="pt")
         parsed_input = self.format_model_input(inputs, mask_attentions=mask_attentions)
         output = self.model(parsed_input['input_ids'], attention_mask=parsed_input['attention_mask'])

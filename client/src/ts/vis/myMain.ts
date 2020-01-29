@@ -193,7 +193,15 @@ export class MainGraphic {
                     }
                 }
 
-                this.vizs.attentionSvg.normBy = this.uiConf.modelKind() == tp.ModelKind.Autoregressive ? tp.NormBy.Col : tp.NormBy.All
+                let normBy
+                if ((this.uiConf.modelKind() == tp.ModelKind.Autoregressive) && (!this.uiConf.hideClsSep())) {
+                    normBy = tp.NormBy.Col
+                }
+                else {
+                    normBy = tp.NormBy.All
+                }
+                this.vizs.attentionSvg.normBy = normBy
+
                 if (this.uiConf.maskInds().length > 0) {
                     this.tokCapsule.a.maskInds = this.uiConf.maskInds()
 

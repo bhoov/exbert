@@ -326,7 +326,7 @@ export class UIConfig {
                 return 0
             }
             case tp.ModelKind.Autoregressive: {
-                return 1
+                return 0
             }
             default: {
                 return 0
