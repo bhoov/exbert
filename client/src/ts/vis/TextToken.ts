@@ -91,11 +91,11 @@ export abstract class TextTokens extends VComponent<tp.FullSingleTokenInfo[]>{
             .style('width', String(this.options.divHover.width) + 'px')
             .style('height', String(this.options.divHover.height) + 'px')
 
-            this.divHover
-                .append('p')
-                .classed('p-info', true)
-                .style('font-weight', 'bold')
-                .text(op.divHover.textInfo)
+        this.divHover
+            .append('p')
+            .classed('p-info', true)
+            .style('font-weight', 'bold')
+            .text(op.divHover.textInfo)
 
 
         // Add blank divs
@@ -131,9 +131,9 @@ export abstract class TextTokens extends VComponent<tp.FullSingleTokenInfo[]>{
                 self.eventHandler.trigger(TextTokens.events.tokenMouseOut, self.eInfo(sel, i))
                 self.divHover.style('visibility', 'hidden')
             })
-            .on('mousemove', function(d, i) {
+            .on('mousemove', function (d, i) {
                 const s = d3.select(this)
-                    const [left, top] = self._divPlacement()
+                const [left, top] = self._divPlacement()
 
                 self.divHover
                     .style('left', String(left) + 'px')
@@ -148,12 +148,12 @@ export abstract class TextTokens extends VComponent<tp.FullSingleTokenInfo[]>{
                         const prob = w[1].toFixed(2)
                         return name + ": " + prob
                     })
-        })
+            })
 
         self.addClick(self.textBoxes)
     }
 
-    addClick(textboxes: D3Sel){
+    addClick(textboxes: D3Sel) {
         const self = this;
 
         self.textBoxes = textboxes
