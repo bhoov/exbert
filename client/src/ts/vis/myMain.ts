@@ -332,14 +332,14 @@ export class MainGraphic {
             let left, top, borderRadius
 
             if (e.side == "left") {
-                const divOffset = [13, 3]
+                const divOffset = [12, 3]
                 left = e.mouse[0] + e.baseX - (+headInfo.style('width').replace('px', '') + divOffset[0])
                 top = e.mouse[1] + e.baseY - (+headInfo.style('height').replace('px', '') + divOffset[1])
                 borderRadius = "8px 8px 1px 8px"
             }
             else {
-                const divOffset = [-4, 3]
-                left = e.mouse[0] + e.baseX + (divOffset[0])
+                const divOffset = [-13, 3]
+                left = e.mouse[0] + e.baseX - divOffset[0] 
                 top = e.mouse[1] + e.baseY - (+headInfo.style('height').replace('px', '') + divOffset[1])
                 borderRadius = "8px 8px 8px 1px"
             }
