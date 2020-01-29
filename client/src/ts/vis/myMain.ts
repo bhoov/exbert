@@ -339,7 +339,7 @@ export class MainGraphic {
             }
             else {
                 const divOffset = [-13, 3]
-                left = e.mouse[0] + e.baseX - divOffset[0] 
+                left = e.mouse[0] + e.baseX + divOffset[0] 
                 top = e.mouse[1] + e.baseY - (+headInfo.style('height').replace('px', '') + divOffset[1])
                 borderRadius = "8px 8px 8px 1px"
             }
