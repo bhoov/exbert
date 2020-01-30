@@ -31,9 +31,8 @@ def main(infile, outdir, force, model_name, mask_attentions):
 
     extractor = from_pretrained(model_name)
 
-    # WARN: GPT2 should not have attentions masked in the corpus. 
-    if "gpt" in model_name:
-        mask_attentions = False
+    # if "gpt" in model_name:
+    #     mask_attentions = False
 
     print_every = 50
     long_strings = extract_chars(infile, 10000)
