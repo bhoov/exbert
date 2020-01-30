@@ -60,8 +60,11 @@ interface MatchedAttentions {
 export interface FaissSearchResults {
     sentence: string
     index: number
+    next_index: number
     match: string
+    match_plus_1: string
     matched_att: MatchedAttentions
+    matched_att_plus_1: MatchedAttentions
     tokens: TokenFaissMatch[]
 }
 
@@ -71,6 +74,7 @@ export interface TokenFaissMatch {
     dep: string
     is_ent: string
     is_match: boolean
+    is_next_word: boolean
     inward: number[]
     outward: number[]
 }

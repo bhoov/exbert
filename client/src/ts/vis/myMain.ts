@@ -621,6 +621,7 @@ export class MainGraphic {
     }
 
     private _updateCorpusInspectorFromMeta(val: tp.SimpleMeta) {
+        this.vizs.corpusMatManager.showNext()
         this.vizs.corpusMatManager.pick(val)
         this.vizs.histograms.matchedWord.meta(val)
     }
@@ -695,6 +696,7 @@ export class MainGraphic {
         const layer = self.uiConf.layer()
         const heads = self.uiConf.heads()
         const k = 50
+        self.vizs.corpusInspector.showNext(self.uiConf.showNext)
 
         this.sels.body.style("cursor", "progress")
         self.api.getNearestEmbeddings(self.uiConf.model(), self.uiConf.corpus(), embed, layer, heads, k)
@@ -731,6 +733,7 @@ export class MainGraphic {
         const layer = self.uiConf.layer()
         const heads = self.uiConf.heads()
         const k = 50
+        self.vizs.corpusInspector.showNext(self.uiConf.showNext)
 
         this.sels.body.style("cursor", "progress")
 
@@ -825,7 +828,8 @@ export class MainGraphic {
         const newVals = returnedFaissResults.map((v, i) => {
             return R.assoc('height', heights[i], v)
         })
-        const wrappedVals = new FaissSearchResultWrapper(newVals)
+
+        const wrappedVals = new FaissSearchResultWrapper(newVals, this.uiConf.showNext)
 
         return wrappedVals
     }

@@ -29,7 +29,9 @@ export class CorpusInspector extends VComponent<tp.FaissSearchResults[]>{
         cellDblClick: "CorpusInspector_cellDblClick",
     }
 
-    options = {}
+    options = {
+        showNext: false
+    }
 
     // COMPONENTS
     inspectorRows: D3Sel
@@ -42,6 +44,14 @@ export class CorpusInspector extends VComponent<tp.FaissSearchResults[]>{
         this._init()
     }
 
+    get matchFlag() {
+        return this.showNext() ? "is_next_word" : "is_match"
+    }
+
+    get matchIdx() {
+        return this.showNext() ? "next_index" : "index"
+    }
+
     private createRows() {
         const data = this._data
 
@@ -50,7 +60,7 @@ export class CorpusInspector extends VComponent<tp.FaissSearchResults[]>{
             .join('div')
             .classed('inspector-row', true)
             .attrs({
-                matchIdx: d => d.index,
+                matchIdx: d => d[this.matchIdx],
                 rowNum: (d, i) => i,
             })
             .on("mouseover", (d, i) => {
@@ -89,7 +99,7 @@ export class CorpusInspector extends VComponent<tp.FaissSearchResults[]>{
                 is_ent: d => d.is_ent
             })
             .text(d => d.token.replace("\u0120", " "))
-            .classed('matched-cell', d => d.is_match)
+            .classed('matched-cell', d => d[self.matchFlag])
 
         // Highlight the cells appropriately
         this.inspectorCells.each((d,i,n) => {
@@ -128,5 +138,14 @@ export class CorpusInspector extends VComponent<tp.FaissSearchResults[]>{
         // Remember that this._data is defined in wrangle which should always be called before render
         // as is defined in the update function
         this.updateData()
+    }
+
+    showNext(): boolean
+    showNext(v:boolean): this
+    showNext(v?) {
+        if (v == null) return this.options.showNext
+
+        this.options.showNext = v
+        return this
     }
 }

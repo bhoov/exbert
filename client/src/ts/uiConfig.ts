@@ -334,6 +334,10 @@ export class UIConfig {
         }
     }
 
+    get showNext() {
+        return this.modelKind() == tp.ModelKind.Autoregressive ? true : false
+    }
+
     corpus(): string;
     corpus(val: string): this;
     corpus(val?) {

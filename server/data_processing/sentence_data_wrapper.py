@@ -200,6 +200,8 @@ class TokenH5Data(SentenceH5Data):
                 sentence: str
                 index: number
                 match: str
+                is_match: bool
+                is_next_word: bool
                 matched_att: {
                     in: { att: number[]
                         , offset_to_max: number
@@ -208,6 +210,14 @@ class TokenH5Data(SentenceH5Data):
                     out: { att: number[]
                         , offset_to_max: number
                         , loc_of_max: float 
+                        }
+                },
+                matched_att_plus_1: {
+                    in: { att: number[]
+                        , offset_to_max: number
+                        }
+                    out: { att: number[]
+                        , offset_to_max: number
                         }
                 }
                 tokens: List[
@@ -232,6 +242,7 @@ class TokenH5Data(SentenceH5Data):
 
         token_arr = []
         matched_attentions = {}
+        N =  len(self)
 
         # Iterate through the following
         tokens = self.tokens.tolist()
@@ -255,31 +266,54 @@ class TokenH5Data(SentenceH5Data):
 
             obj = {k: v for (k, v) in zip_len_check(keys, tok_info)}
 
-            if i == self.index:
-                obj['is_match'] = True
-                matched_attentions = {
+            IS_LAST_TOKEN = i == (N-1)
+
+            matched_att_plus_1 = None
+
+            if (i == self.index) or ((i - 1) == self.index):
+                interesting_attentions = {
                     "in": {
                         "att": att_in,
                         "offset_to_max": self._calc_offset_single(att_in).item(),
-                        # "loc_of_max": np.argmax(att_in),
+                        # "loc_of_max": np.argmax(att_in), # Broken
                     },
                     "out": {
                         "att": att_out,
                         "offset_to_max": self._calc_offset_single(att_out).item(),
-                        # "loc_of_max": np.argmax(att_out),
+                        # "loc_of_max": np.argmax(att_out), # Broken
                     }
                 }
 
+                if i == self.index:
+                    obj['is_match'] = True
+                    matched_attentions = interesting_attentions
+
+                elif (i-1) == self.index:
+                    matched_att_plus_1 = interesting_attentions
+                    obj['is_next_word'] = True
+
+                # Edge case for final iteration through sentence
+                elif (IS_LAST_TOKEN and matched_att_plus_1 is None):
+                    obj['is_next_word'] = True
+                    matched_att_plus_1 = interesting_attentions
+
             else:
                 obj['is_match'] = False
+                obj['is_next_word'] = False
             
             token_arr.append(obj) 
+
+        next_index = self.index if IS_LAST_TOKEN else self.index + 1
+        next_token = self.token if IS_LAST_TOKEN else self.tokens[match_index]
 
         obj = {
             "sentence": self.sentence,
             "index": self.index,
             "match": self.token,
+            "next_index": next_index,
+            "match_plus_1": next_token,
             "matched_att": matched_attentions,
+            "matched_att_plus_1": matched_att_plus_1,
             "tokens": token_arr,
         }
 
