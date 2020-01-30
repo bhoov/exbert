@@ -451,11 +451,11 @@ export class MainGraphic {
             { name: "bert-base-cased", kind: tp.ModelKind.Bidirectional },
             // { name: "bert-base-uncased", kind: tp.ModelKind.Bidirectional },
             // { name: "distilbert-base-uncased", kind: tp.ModelKind.Bidirectional },
-            // { name: "distilroberta-base", kind: tp.ModelKind.Bidirectional },
-            { name: "roberta-base", kind: tp.ModelKind.Bidirectional },
+            { name: "distilroberta-base", kind: tp.ModelKind.Bidirectional },
+            // { name: "roberta-base", kind: tp.ModelKind.Bidirectional },
             { name: "gpt2", kind: tp.ModelKind.Autoregressive },
             // { name: "gpt2-medium", kind: tp.ModelKind.Autoregressive },
-            { name: "distilgpt2", kind: tp.ModelKind.Autoregressive },
+            // { name: "distilgpt2", kind: tp.ModelKind.Autoregressive },
         ]
 
         const names = R.map(R.prop('name'))(data)
