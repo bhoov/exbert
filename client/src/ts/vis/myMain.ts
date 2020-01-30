@@ -449,7 +449,7 @@ export class MainGraphic {
         // Below are the available models. Will need to choose 3 to be available ONLY
         const data = [
             { name: "bert-base-cased", kind: tp.ModelKind.Bidirectional },
-            // { name: "bert-base-uncased", kind: tp.ModelKind.Bidirectional },
+            { name: "bert-base-uncased", kind: tp.ModelKind.Bidirectional },
             // { name: "distilbert-base-uncased", kind: tp.ModelKind.Bidirectional },
             { name: "distilroberta-base", kind: tp.ModelKind.Bidirectional },
             // { name: "roberta-base", kind: tp.ModelKind.Bidirectional },
