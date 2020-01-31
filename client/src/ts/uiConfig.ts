@@ -338,6 +338,10 @@ export class UIConfig {
         return this.modelKind() == tp.ModelKind.Autoregressive ? true : false
     }
 
+    get matchHistogramDescription() {
+        return this.modelKind() == tp.ModelKind.Autoregressive ? "Next" : "Matched"
+    }
+
     corpus(): string;
     corpus(val: string): this;
     corpus(val?) {

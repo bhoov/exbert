@@ -22,6 +22,7 @@
       }
 
       .mat-hover-display {
+        pointer-events: none;
         display: flex;
         position: absolute;
         visibility: hidden;
@@ -115,7 +116,7 @@
   }
 
   .gray-cell {
-    color: rgba(0, 0, 0, 0.5);
+    color: rgba(0, 0, 0, 0.35);
   }
   .next-cell {
     color: rgba(228, 1, 1, 0.8);

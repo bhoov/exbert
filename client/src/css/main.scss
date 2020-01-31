@@ -160,6 +160,7 @@ label {
 
 #connector-container {
   .mat-hover-display{
+    pointer-events: none;
     display: block;
     position: absolute;
     visibility: hidden;

@@ -62,7 +62,8 @@ export class FaissSearchResultWrapper {
             is_ent: initZero(SpacyInfo.TotalMetaOptions.is_ent),
         }
 
-        const getMaxToken = (d: tp.FaissSearchResults) => d.tokens[argMax(d[this.matchAtt].out.att)]
+        // Confusing: Show MATCHED WORD attentions, but NEXT WORD distribution
+        const getMaxToken = (d: tp.FaissSearchResults) => d.tokens[argMax(d.matched_att.out.att)]
 
         this.data.forEach((d, i) => {
             const maxMatch = getMaxToken(d)
@@ -86,6 +87,7 @@ export class FaissSearchResultWrapper {
         }
 
         this.data.forEach(d => {
+        // Confusing: Show MATCHED WORD attentions, but NEXT WORD distribution
             const match = d.tokens[d[this.matchIdx] + indexOffset]
 
             Object.keys(countObj).forEach(k => {

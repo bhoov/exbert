@@ -92,7 +92,7 @@ export class AttentionHeadBox extends VComponent<AttentionHeadBoxI>{
         xscale: 0.5, // Amount to scale boxwidth to get individual heads
         side: "left",
         maxWidth: 200, // Maximum width of SVG
-        offset: 0, // 1 if for autoregressive models
+        offset: 0, // Change to 1 if you desire the offset visualization for Autoregressive models
     };
 
     // D3 Components

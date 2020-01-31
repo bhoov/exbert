@@ -130,6 +130,7 @@ export class MainGraphic {
             corpusMatManager: d3.select("#corpus-mat-container"),
             corpusMsgBox: d3.select("#corpus-msg-box"),
             histograms: {
+                matchedWordDescription: d3.select("#match-kind"),
                 matchedWord: d3.select("#matched-histogram-container"),
                 maxAtt: d3.select("#max-att-histogram-container"),
             },
@@ -736,6 +737,8 @@ export class MainGraphic {
                     const offsetVals = wrappedVals.getMaxAttHistogram()
 
                     self.vizs.corpusMatManager.update(wrappedVals.data)
+                    self.sels.histograms.matchedWordDescription.text(this.uiConf.matchHistogramDescription)
+                    console.log("MATCHER: ", self.sels.histograms.matchedWord);
                     self.vizs.histograms.matchedWord.update(countedVals)
                     self.vizs.histograms.maxAtt.update(offsetVals)
                     self.uiConf.displayInspector('embeddings')
