@@ -2,12 +2,12 @@
 
 # WARNING: Do not call this as an absolute path
 
-SCRIPT_DIR=$( dirname "$0")
+SCRIPT_DIR="./"
 WOZ_NAME="woz"
 WIKI_NAME="wiki"
 CORPORA="$WOZ_NAME $WIKI_NAME"
 # MODELS="bert-base-uncased gpt2 roberta-base"
-MODELS="bert-base-cased distilbert distilgpt2 distilroberta-base"
+MODELS="gpt2 distilgpt2"
 OUT_DIR="./$SCRIPT_DIR/corpora"
 RAW_TEXT_DIR="./$SCRIPT_DIR/raw_data"
 PYTHON_SCRIPT="./$SCRIPT_DIR/data_processing/create_corpus.py"

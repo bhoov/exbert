@@ -339,7 +339,7 @@ export class MainGraphic {
             }
             else {
                 const divOffset = [-13, 3]
-                left = e.mouse[0] + e.baseX + divOffset[0] 
+                left = e.mouse[0] + e.baseX + divOffset[0]
                 top = e.mouse[1] + e.baseY - (+headInfo.style('height').replace('px', '') + divOffset[1])
                 borderRadius = "8px 8px 8px 1px"
             }
@@ -418,6 +418,7 @@ export class MainGraphic {
 
         if (this.uiConf.modelKind() == tp.ModelKind.Autoregressive) {
             this.grayToggle(+e.ind)
+            this.markNextToggle(+e.ind, this.tokCapsule.a.length())
         }
 
         this._searchDisabler()
@@ -435,11 +436,29 @@ export class MainGraphic {
         }
     }
 
+
     private grayToggle(ind: number) {
         if (this.uiConf.hasToken())
             this.grayBadToks(ind)
         else
             d3.selectAll('.token').classed('masked-token', false)
+
+    }
+
+    private markNextWordToks(ind: number, N: number) {
+        const markToks = function (d, i) {
+            const s = d3.select(this)
+            s.classed("next-token", i == Math.min(ind + 1, N))
+        }
+        d3.selectAll('.right-token').each(markToks)
+        d3.selectAll('.left-token').each(markToks)
+    }
+
+    private markNextToggle(ind: number, N: number) {
+        if (this.uiConf.hasToken())
+            this.markNextWordToks(ind, N)
+        else
+            d3.selectAll('.token').classed('next-token', false)
 
     }
 
@@ -621,7 +640,7 @@ export class MainGraphic {
     }
 
     private _updateCorpusInspectorFromMeta(val: tp.SimpleMeta) {
-        this.vizs.corpusMatManager.showNext()
+        this.vizs.corpusInspector.showNext(this.uiConf.showNext)
         this.vizs.corpusMatManager.pick(val)
         this.vizs.histograms.matchedWord.meta(val)
     }

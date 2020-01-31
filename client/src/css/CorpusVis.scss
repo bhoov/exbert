@@ -1,123 +1,126 @@
 #corpus-vis {
-    margin: 0 auto;
-  
-    #main-corpus-vis {
-      display: -webkit-flex;
-      display: flex;
-  
-      #corpus-mat-container {
-        -webkit-flex: initial;
-        flex: initial;
-        vertical-align: top;
-        float:left;
-  
-        .corpus-mat {
-          display: inline-block;
-          margin-right: 0.05em;
-          margin-left: 0.05em;
-        }
-  
-        .offset-0 {
-          border: 0.2em solid black;
-        }
+  margin: 0 auto;
 
-        .mat-hover-display {
-          display: flex;
-          position: absolute;
-          visibility: hidden;
-          background-color: rgba(200, 200, 200, 1);
-          border-radius: 8px 8px 1px 8px;
-          margin: auto;
-          p {
-            margin: auto;
-          }
-        }
-      }
-  
-      #corpus-similar-sentences-div {
-        -webkit-flex: 1;
-        flex: 1;
-        vertical-align: top;
-        float: left;
-        max-width: 80%;
-        max-height: 100%;
+  #main-corpus-vis {
+    display: -webkit-flex;
+    display: flex;
 
-        .hovered-col {
-          color: orange;
-        }
+    #corpus-mat-container {
+      -webkit-flex: initial;
+      flex: initial;
+      vertical-align: top;
+      float: left;
 
-      }
-    }
-  
-    .btn {
-      margin-left: 0.25em;
-    }
-
-    .inspector-row {
-        display: block;
-        margin-left: 10px;
-        padding-top: 0.5em;
-        padding-bottom: 0.5em;
-      }
-      
-      .inspector-cell {
+      .corpus-mat {
         display: inline-block;
-        margin-right: 3px;
-        text-align: left;
+        margin-right: 0.05em;
+        margin-left: 0.05em;
       }
-      
-      /* Tooltip container */
-      .celltooltip {
-        position: relative;
-        display: inline-block;
-        border-bottom: 1px dotted black; /* If you want dots under the hoverable text */
+
+      .offset-0 {
+        border: 0.2em solid black;
       }
-      
-      /* Tooltip text */
-      .celltooltip .tooltiptext {
+
+      .mat-hover-display {
+        display: flex;
+        position: absolute;
         visibility: hidden;
-        width: 120px;
-        background-color: black;
-        color: #fff;
-        text-align: center;
-        padding: 5px 0;
-        border-radius: 6px;
-       
-        /* Position the tooltip text - see examples below! */
-        position: absolute;
+        background-color: rgba(200, 200, 200, 1);
+        border-radius: 8px 8px 1px 8px;
+        margin: auto;
+        p {
+          margin: auto;
+        }
       }
-      
-      /* Show the tooltip text when you mouse over the tooltip container */
-      .celltooltip:hover .tooltiptext {
-        width: 120px;
-        bottom: 100%;
-        left: 50%; 
-        margin-left: -60px; /* Use half of the width (120/2 = 60), to center the tooltip */
-        visibility: visible;
-      }
-      
-      /* Add little arrow to box */
-      .celltooltip .tooltiptext::after {
-        content: " ";
-        position: absolute;
-        top: 100%; /* At the bottom of the tooltip */
-        left: 50%;
-        margin-left: -5px;
-        border-width: 5px;
-        border-style: solid;
-        border-color: black transparent transparent transparent;
-      }
-      
-      .matched-cell {
-        border-style: solid;
-        border-color: rgb(153, 196, 0);
-        border-width: 3px;
-        border-radius: 0.4em;
-      }
+    }
 
-    // .shadow-cell {
-    //   -moz-box-shadow: 0 0 3px #ccc;
-    //   -webkit-box-shadow: 0 0 3px #ccc;
-    //   box-shadow: 0 0 3px #ccc;
-    // }
+    #corpus-similar-sentences-div {
+      -webkit-flex: 1;
+      flex: 1;
+      vertical-align: top;
+      float: left;
+      max-width: 80%;
+      max-height: 100%;
+
+      .hovered-col {
+        color: orange;
+      }
+    }
   }
+
+  .btn {
+    margin-left: 0.25em;
+  }
+
+  .inspector-row {
+    display: block;
+    margin-left: 10px;
+    padding-top: 0.5em;
+    padding-bottom: 0.5em;
+  }
+
+  .inspector-cell {
+    display: inline-block;
+    margin-right: 3px;
+    text-align: left;
+  }
+
+  /* Tooltip container */
+  .celltooltip {
+    position: relative;
+    display: inline-block;
+    border-bottom: 1px dotted black; /* If you want dots under the hoverable text */
+  }
+
+  /* Tooltip text */
+  .celltooltip .tooltiptext {
+    visibility: hidden;
+    width: 120px;
+    background-color: black;
+    color: #fff;
+    text-align: center;
+    padding: 5px 0;
+    border-radius: 6px;
+
+    /* Position the tooltip text - see examples below! */
+    position: absolute;
+  }
+
+  /* Show the tooltip text when you mouse over the tooltip container */
+  .celltooltip:hover .tooltiptext {
+    width: 120px;
+    bottom: 100%;
+    left: 50%;
+    margin-left: -60px; /* Use half of the width (120/2 = 60), to center the tooltip */
+    visibility: visible;
+  }
+
+  /* Add little arrow to box */
+  .celltooltip .tooltiptext::after {
+    content: " ";
+    position: absolute;
+    top: 100%; /* At the bottom of the tooltip */
+    left: 50%;
+    margin-left: -5px;
+    border-width: 5px;
+    border-style: solid;
+    border-color: black transparent transparent transparent;
+  }
+
+  .matched-cell {
+    border-style: solid;
+    border-color: rgb(153, 196, 0);
+    border-width: 3px;
+    border-radius: 0.4em;
+  }
+
+  .gray-cell {
+    color: rgba(0, 0, 0, 0.5);
+  }
+  .next-cell {
+    color: rgba(228, 1, 1, 0.8);
+    -moz-box-shadow: 0 0 3px #ccc;
+    -webkit-box-shadow: 0 0 3px #ccc;
+    box-shadow: 0 0 3px #ccc;
+  }
+}

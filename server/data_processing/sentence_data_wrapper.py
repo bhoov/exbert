@@ -242,7 +242,7 @@ class TokenH5Data(SentenceH5Data):
 
         token_arr = []
         matched_attentions = {}
-        N =  len(self)
+        N = len(self)
 
         # Iterate through the following
         tokens = self.tokens.tolist()
@@ -250,6 +250,9 @@ class TokenH5Data(SentenceH5Data):
         deps = [d.lower() for d in self.deps.tolist()]
         ents = self.is_ents.tolist()
         attentions_out, attentions_in = self._select_from_attention(layer, heads)
+
+        matched_att_plus_1 = None
+        next_index = None
 
         for i, tok_info in enumerate(zip_len_check( 
             tokens
@@ -259,19 +262,8 @@ class TokenH5Data(SentenceH5Data):
             , attentions_out.tolist()
             , attentions_in.tolist())):
 
-            # Perform rounding of attentions
-            rounder = partial(round, ndigits=ndigits)
-            att_out = map_nlist(rounder, tok_info[-2])
-            att_in = map_nlist(rounder, tok_info[-1])
-
-            obj = {k: v for (k, v) in zip_len_check(keys, tok_info)}
-
-            IS_LAST_TOKEN = i == (N-1)
-
-            matched_att_plus_1 = None
-
-            if (i == self.index) or ((i - 1) == self.index):
-                interesting_attentions = {
+            def get_interesting_attentions():
+                return {
                     "in": {
                         "att": att_in,
                         "offset_to_max": self._calc_offset_single(att_in).item(),
@@ -284,6 +276,19 @@ class TokenH5Data(SentenceH5Data):
                     }
                 }
 
+
+            # Perform rounding of attentions
+            rounder = partial(round, ndigits=ndigits)
+            att_out = map_nlist(rounder, tok_info[-2])
+            att_in = map_nlist(rounder, tok_info[-1])
+
+            obj = {k: v for (k, v) in zip_len_check(keys, tok_info)}
+
+            IS_LAST_TOKEN = i == (N-1)
+
+            if (i == self.index) or ((i - 1) == self.index):
+                interesting_attentions = get_interesting_attentions()
+
                 if i == self.index:
                     obj['is_match'] = True
                     matched_attentions = interesting_attentions
@@ -291,20 +296,23 @@ class TokenH5Data(SentenceH5Data):
                 elif (i-1) == self.index:
                     matched_att_plus_1 = interesting_attentions
                     obj['is_next_word'] = True
+                    next_index = i
 
                 # Edge case for final iteration through sentence
-                elif (IS_LAST_TOKEN and matched_att_plus_1 is None):
-                    obj['is_next_word'] = True
-                    matched_att_plus_1 = interesting_attentions
 
             else:
                 obj['is_match'] = False
                 obj['is_next_word'] = False
+
+            if (IS_LAST_TOKEN and (matched_att_plus_1 is None)):
+                print("Saving matched_att_plus_1 to: ", interesting_attentions)
+                obj['is_next_word'] = True
+                matched_att_plus_1 = get_interesting_attentions()
+                next_index = i
             
             token_arr.append(obj) 
 
-        next_index = self.index if IS_LAST_TOKEN else self.index + 1
-        next_token = self.token if IS_LAST_TOKEN else self.tokens[match_index]
+        next_token = self.tokens[next_index]
 
         obj = {
             "sentence": self.sentence,
