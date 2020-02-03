@@ -97,7 +97,7 @@ export class CorpusInspector extends VComponent<tp.FaissSearchResults[]>{
             })
             .classed('gray-cell', function(d, i) {
                 const idx = +currMatchIdx(this)
-                return i > idx
+                return self.showNext() && i > idx
             })
 
         // Highlight the cells appropriately
