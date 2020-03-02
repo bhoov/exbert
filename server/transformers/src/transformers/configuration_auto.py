@@ -19,10 +19,12 @@ import logging
 from collections import OrderedDict
 
 from .configuration_albert import ALBERT_PRETRAINED_CONFIG_ARCHIVE_MAP, AlbertConfig
+from .configuration_bart import BART_PRETRAINED_CONFIG_ARCHIVE_MAP, BartConfig
 from .configuration_bert import BERT_PRETRAINED_CONFIG_ARCHIVE_MAP, BertConfig
 from .configuration_camembert import CAMEMBERT_PRETRAINED_CONFIG_ARCHIVE_MAP, CamembertConfig
 from .configuration_ctrl import CTRL_PRETRAINED_CONFIG_ARCHIVE_MAP, CTRLConfig
 from .configuration_distilbert import DISTILBERT_PRETRAINED_CONFIG_ARCHIVE_MAP, DistilBertConfig
+from .configuration_flaubert import FLAUBERT_PRETRAINED_CONFIG_ARCHIVE_MAP, FlaubertConfig
 from .configuration_gpt2 import GPT2_PRETRAINED_CONFIG_ARCHIVE_MAP, GPT2Config
 from .configuration_openai import OPENAI_GPT_PRETRAINED_CONFIG_ARCHIVE_MAP, OpenAIGPTConfig
 from .configuration_roberta import ROBERTA_PRETRAINED_CONFIG_ARCHIVE_MAP, RobertaConfig
@@ -41,6 +43,7 @@ ALL_PRETRAINED_CONFIG_ARCHIVE_MAP = dict(
     (key, value)
     for pretrained_map in [
         BERT_PRETRAINED_CONFIG_ARCHIVE_MAP,
+        BART_PRETRAINED_CONFIG_ARCHIVE_MAP,
         OPENAI_GPT_PRETRAINED_CONFIG_ARCHIVE_MAP,
         TRANSFO_XL_PRETRAINED_CONFIG_ARCHIVE_MAP,
         GPT2_PRETRAINED_CONFIG_ARCHIVE_MAP,
@@ -53,6 +56,7 @@ ALL_PRETRAINED_CONFIG_ARCHIVE_MAP = dict(
         CAMEMBERT_PRETRAINED_CONFIG_ARCHIVE_MAP,
         T5_PRETRAINED_CONFIG_ARCHIVE_MAP,
         XLM_ROBERTA_PRETRAINED_CONFIG_ARCHIVE_MAP,
+        FLAUBERT_PRETRAINED_CONFIG_ARCHIVE_MAP,
     ]
     for key, value, in pretrained_map.items()
 )
@@ -65,7 +69,9 @@ CONFIG_MAPPING = OrderedDict(
         ("albert", AlbertConfig,),
         ("camembert", CamembertConfig,),
         ("xlm-roberta", XLMRobertaConfig,),
+        ("bart", BartConfig,),
         ("roberta", RobertaConfig,),
+        ("flaubert", FlaubertConfig,),
         ("bert", BertConfig,),
         ("openai-gpt", OpenAIGPTConfig,),
         ("gpt2", GPT2Config,),
@@ -77,7 +83,7 @@ CONFIG_MAPPING = OrderedDict(
 )
 
 
-class AutoConfig(object):
+class AutoConfig:
     r"""
         :class:`~transformers.AutoConfig` is a generic configuration class
         that will be instantiated as one of the configuration classes of the library
@@ -126,6 +132,7 @@ class AutoConfig(object):
             - contains `xlnet`: :class:`~transformers.XLNetConfig` (XLNet model)
             - contains `xlm`: :class:`~transformers.XLMConfig` (XLM model)
             - contains `ctrl` : :class:`~transformers.CTRLConfig` (CTRL model)
+            - contains `flaubert` : :class:`~transformers.FlaubertConfig` (Flaubert model)
 
 
         Args:

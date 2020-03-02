@@ -13,7 +13,6 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-
 import copy
 import logging
 import os.path
@@ -53,6 +52,7 @@ class ModelTesterMixin:
 
     model_tester = None
     all_model_classes = ()
+    all_generative_model_classes = ()
     test_torchscript = True
     test_pruning = True
     test_resize_embeddings = True
@@ -68,7 +68,7 @@ class ModelTesterMixin:
             model.eval()
             with torch.no_grad():
                 outputs = model(**inputs_dict)
-            out_2 = outputs[0].numpy()
+            out_2 = outputs[0].cpu().numpy()
             out_2[np.isnan(out_2)] = 0
 
             with tempfile.TemporaryDirectory() as tmpdirname:
@@ -117,23 +117,11 @@ class ModelTesterMixin:
 
     def test_attention_outputs(self):
         config, inputs_dict = self.model_tester.prepare_config_and_inputs_for_common()
-
-        decoder_seq_length = (
-            self.model_tester.decoder_seq_length
-            if hasattr(self.model_tester, "decoder_seq_length")
-            else self.model_tester.seq_length
-        )
-        encoder_seq_length = (
-            self.model_tester.encoder_seq_length
-            if hasattr(self.model_tester, "encoder_seq_length")
-            else self.model_tester.seq_length
-        )
-        decoder_key_length = (
-            self.model_tester.key_length if hasattr(self.model_tester, "key_length") else decoder_seq_length
-        )
-        encoder_key_length = (
-            self.model_tester.key_length if hasattr(self.model_tester, "key_length") else encoder_seq_length
-        )
+        seq_len = getattr(self.model_tester, "seq_length", None)
+        decoder_seq_length = getattr(self.model_tester, "decoder_seq_length", seq_len)
+        encoder_seq_length = getattr(self.model_tester, "encoder_seq_length", seq_len)
+        decoder_key_length = getattr(self.model_tester, "key_length", decoder_seq_length)
+        encoder_key_length = getattr(self.model_tester, "key_length", encoder_seq_length)
 
         for model_class in self.all_model_classes:
             config.output_attentions = True
@@ -154,10 +142,17 @@ class ModelTesterMixin:
             out_len = len(outputs)
 
             if self.is_encoder_decoder:
-                self.assertEqual(out_len % 2, 0)
-                decoder_attentions = outputs[(out_len // 2) - 1]
-                self.assertEqual(model.config.output_attentions, True)
-                self.assertEqual(model.config.output_hidden_states, False)
+                correct_outlen = (
+                    4  # decoder_features_or_logits, decoder_attentions, encoder_features, encoder_attentions
+                )
+                decoder_attention_idx = 1
+                if "lm_labels" in inputs_dict or "decoder_lm_labels" in inputs_dict:  # loss will come first
+                    correct_outlen += 1  # compute loss
+                    decoder_attention_idx += 1
+                self.assertEqual(out_len, correct_outlen)
+
+                decoder_attentions = outputs[decoder_attention_idx]
+                self.assertIsInstance(decoder_attentions, (list, tuple))
                 self.assertEqual(len(decoder_attentions), self.model_tester.num_hidden_layers)
                 self.assertListEqual(
                     list(decoder_attentions[0].shape[-3:]),
@@ -477,6 +472,7 @@ class ModelTesterMixin:
         for model_class in self.all_model_classes:
             config = copy.deepcopy(original_config)
             model = model_class(config)
+            model.to(torch_device)
 
             model_vocab_size = config.vocab_size
             # Retrieve the embeddings and clone theme
@@ -574,15 +570,16 @@ class ModelTesterMixin:
             # self.assertTrue(check_same_values(model.transformer.wte, model.lm_head))
 
     def test_inputs_embeds(self):
+
         config, inputs_dict = self.model_tester.prepare_config_and_inputs_for_common()
         if not self.is_encoder_decoder:
             input_ids = inputs_dict["input_ids"]
             del inputs_dict["input_ids"]
         else:
             encoder_input_ids = inputs_dict["encoder_input_ids"]
-            decoder_input_ids = inputs_dict["decoder_input_ids"]
+            decoder_input_ids = inputs_dict.get("decoder_input_ids", encoder_input_ids)
             del inputs_dict["encoder_input_ids"]
-            del inputs_dict["decoder_input_ids"]
+            inputs_dict.pop("decoder_input_ids", None)
 
         for model_class in self.all_model_classes:
             model = model_class(config)
@@ -599,12 +596,62 @@ class ModelTesterMixin:
             with torch.no_grad():
                 model(**inputs_dict)
 
+    def test_lm_head_model_random_generate(self):
+
+        config, inputs_dict = self.model_tester.prepare_config_and_inputs_for_common()
+        input_ids = inputs_dict.get(
+            "input_ids", None
+        )  # TODO (PVP): ugly workaround to make code work for t5 for the moment - has to changed when t5 is fixed.
+
+        for model_class in self.all_generative_model_classes:
+            model = model_class(config)
+            model.to(torch_device)
+            model.eval()
+
+            if config.bos_token_id is None:
+                with self.assertRaises(AssertionError):
+                    model.generate(max_length=5)
+                # batch_size = 1
+                self._check_generated_tokens(model.generate(input_ids))
+                # batch_size = 1, num_beams > 1
+                self._check_generated_tokens(model.generate(input_ids, num_beams=3))
+            else:
+                # batch_size = 1
+                self._check_generated_tokens(model.generate(max_length=5))
+                # batch_size = 1, num_beams > 1
+                self._check_generated_tokens(model.generate(max_length=5, num_beams=3))
+
+            with self.assertRaises(AssertionError):
+                # generating multiple sequences when greedy no beam generation
+                # is not allowed as it would always generate the same sequences
+                model.generate(input_ids, do_sample=False, num_return_sequences=2)
+
+            with self.assertRaises(AssertionError):
+                # generating more sequences than having beams leads is not possible
+                model.generate(input_ids, do_sample=False, num_return_sequences=3, num_beams=2)
+
+            # batch_size > 1, sample
+            self._check_generated_tokens(model.generate(input_ids, num_return_sequences=3))
+            # batch_size > 1, greedy
+            self._check_generated_tokens(model.generate(input_ids, do_sample=False))
+            # batch_size > 1, num_beams > 1, sample
+            self._check_generated_tokens(model.generate(input_ids, num_beams=3, num_return_sequences=3,))
+            # batch_size > 1, num_beams > 1, greedy
+            self._check_generated_tokens(
+                model.generate(input_ids, do_sample=False, num_beams=3, num_return_sequences=3)
+            )
+
+    def _check_generated_tokens(self, output_ids):
+        for token_id in output_ids[0].tolist():
+            self.assertGreaterEqual(token_id, 0)
+            self.assertLess(token_id, self.model_tester.vocab_size)
+
 
 global_rng = random.Random()
 
 
 def ids_tensor(shape, vocab_size, rng=None, name=None):
-    """Creates a random int32 tensor of the shape within the vocab size."""
+    #  Creates a random int32 tensor of the shape within the vocab size
     if rng is None:
         rng = global_rng
 

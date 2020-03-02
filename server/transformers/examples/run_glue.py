@@ -41,6 +41,9 @@ from transformers import (
     DistilBertConfig,
     DistilBertForSequenceClassification,
     DistilBertTokenizer,
+    FlaubertConfig,
+    FlaubertForSequenceClassification,
+    FlaubertTokenizer,
     RobertaConfig,
     RobertaForSequenceClassification,
     RobertaTokenizer,
@@ -80,6 +83,7 @@ ALL_MODELS = sum(
             DistilBertConfig,
             AlbertConfig,
             XLMRobertaConfig,
+            FlaubertConfig,
         )
     ),
     (),
@@ -93,6 +97,7 @@ MODEL_CLASSES = {
     "distilbert": (DistilBertConfig, DistilBertForSequenceClassification, DistilBertTokenizer),
     "albert": (AlbertConfig, AlbertForSequenceClassification, AlbertTokenizer),
     "xlmroberta": (XLMRobertaConfig, XLMRobertaForSequenceClassification, XLMRobertaTokenizer),
+    "flaubert": (FlaubertConfig, FlaubertForSequenceClassification, FlaubertTokenizer),
 }
 
 
@@ -305,7 +310,7 @@ def evaluate(args, model, tokenizer, prefix=""):
         eval_dataloader = DataLoader(eval_dataset, sampler=eval_sampler, batch_size=args.eval_batch_size)
 
         # multi-gpu eval
-        if args.n_gpu > 1:
+        if args.n_gpu > 1 and not isinstance(model, torch.nn.DataParallel):
             model = torch.nn.DataParallel(model)
 
         # Eval!
@@ -480,7 +485,7 @@ def main():
     parser.add_argument("--do_train", action="store_true", help="Whether to run training.")
     parser.add_argument("--do_eval", action="store_true", help="Whether to run eval on the dev set.")
     parser.add_argument(
-        "--evaluate_during_training", action="store_true", help="Rul evaluation during training at each logging step.",
+        "--evaluate_during_training", action="store_true", help="Run evaluation during training at each logging step.",
     )
     parser.add_argument(
         "--do_lower_case", action="store_true", help="Set this flag if you are using an uncased model.",
@@ -513,8 +518,8 @@ def main():
     )
     parser.add_argument("--warmup_steps", default=0, type=int, help="Linear warmup over warmup_steps.")
 
-    parser.add_argument("--logging_steps", type=int, default=50, help="Log every X updates steps.")
-    parser.add_argument("--save_steps", type=int, default=50, help="Save checkpoint every X updates steps.")
+    parser.add_argument("--logging_steps", type=int, default=500, help="Log every X updates steps.")
+    parser.add_argument("--save_steps", type=int, default=500, help="Save checkpoint every X updates steps.")
     parser.add_argument(
         "--eval_all_checkpoints",
         action="store_true",
@@ -570,7 +575,7 @@ def main():
     # Setup CUDA, GPU & distributed training
     if args.local_rank == -1 or args.no_cuda:
         device = torch.device("cuda" if torch.cuda.is_available() and not args.no_cuda else "cpu")
-        args.n_gpu = torch.cuda.device_count()
+        args.n_gpu = 0 if args.no_cuda else torch.cuda.device_count()
     else:  # Initializes the distributed backend which will take care of sychronizing nodes/GPUs
         torch.cuda.set_device(args.local_rank)
         device = torch.device("cuda", args.local_rank)

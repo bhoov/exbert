@@ -91,7 +91,12 @@ class TFPreTrainedModel(tf.keras.Model, TFModelUtilsMixin):
         self.config = config
 
     def get_input_embeddings(self):
-        """ Get model's input embeddings
+        """
+        Returns the model's input embeddings.
+
+        Returns:
+            :obj:`tf.keras.layers.Layer`:
+                A torch module mapping vocabulary to hidden states.
         """
         base_model = getattr(self, self.base_model_prefix, self)
         if base_model is not self:
@@ -100,8 +105,12 @@ class TFPreTrainedModel(tf.keras.Model, TFModelUtilsMixin):
             raise NotImplementedError
 
     def get_output_embeddings(self):
-        """ Get model's output embeddings
-            Return None if the model doesn't have output embeddings
+        """
+        Returns the model's output embeddings.
+
+        Returns:
+            :obj:`tf.keras.layers.Layer`:
+                A torch module mapping hidden states to vocabulary.
         """
         return None  # Overwrite for models with output embeddings
 
@@ -183,9 +192,6 @@ class TFPreTrainedModel(tf.keras.Model, TFModelUtilsMixin):
     def from_pretrained(cls, pretrained_model_name_or_path, *model_args, **kwargs):
         r"""Instantiate a pretrained TF 2.0 model from a pre-trained model configuration.
 
-        The model is set in evaluation mode by default using ``model.eval()`` (Dropout modules are deactivated)
-        To train the model, you should first set it back in training mode with ``model.train()``
-
         The warning ``Weights from XXX not initialized from pretrained model`` means that the weights of XXX do not come pre-trained with the rest of the model.
         It is up to you to train those weights with a downstream fine-tuning task.
 
@@ -239,6 +245,7 @@ class TFPreTrainedModel(tf.keras.Model, TFModelUtilsMixin):
 
         Examples::
 
+            # For example purposes. Not runnable.
             model = BertModel.from_pretrained('bert-base-uncased')    # Download model and configuration from S3 and cache.
             model = BertModel.from_pretrained('./test/saved_model/')  # E.g. model was saved using `save_pretrained('./test/saved_model/')`
             model = BertModel.from_pretrained('bert-base-uncased', output_attention=True)  # Update configuration during loading
@@ -293,11 +300,9 @@ class TFPreTrainedModel(tf.keras.Model, TFModelUtilsMixin):
             elif os.path.isfile(pretrained_model_name_or_path + ".index"):
                 archive_file = pretrained_model_name_or_path + ".index"
             else:
-                archive_file = hf_bucket_url(pretrained_model_name_or_path, postfix=TF2_WEIGHTS_NAME)
-                if from_pt:
-                    raise EnvironmentError(
-                        "Loading a TF model from a PyTorch checkpoint is not supported when using a model identifier name."
-                    )
+                archive_file = hf_bucket_url(
+                    pretrained_model_name_or_path, postfix=(WEIGHTS_NAME if from_pt else TF2_WEIGHTS_NAME)
+                )
 
             # redirect to the cache, if necessary
             try:

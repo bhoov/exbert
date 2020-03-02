@@ -478,8 +478,8 @@ def main():
     )
     parser.add_argument("--warmup_steps", default=0, type=int, help="Linear warmup over warmup_steps.")
 
-    parser.add_argument("--logging_steps", type=int, default=50, help="Log every X updates steps.")
-    parser.add_argument("--save_steps", type=int, default=50, help="Save checkpoint every X updates steps.")
+    parser.add_argument("--logging_steps", type=int, default=500, help="Log every X updates steps.")
+    parser.add_argument("--save_steps", type=int, default=500, help="Save checkpoint every X updates steps.")
     parser.add_argument(
         "--eval_all_checkpoints",
         action="store_true",
@@ -535,7 +535,7 @@ def main():
     # Setup CUDA, GPU & distributed training
     if args.local_rank == -1 or args.no_cuda:
         device = torch.device("cuda" if torch.cuda.is_available() and not args.no_cuda else "cpu")
-        args.n_gpu = torch.cuda.device_count()
+        args.n_gpu = 0 if args.no_cuda else torch.cuda.device_count()
     else:  # Initializes the distributed backend which will take care of sychronizing nodes/GPUs
         torch.cuda.set_device(args.local_rank)
         device = torch.device("cuda", args.local_rank)

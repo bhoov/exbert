@@ -24,6 +24,7 @@ from .utils import CACHE_DIR, require_torch, slow, torch_device
 
 
 if is_torch_available():
+    import torch
     from transformers import (
         XLMConfig,
         XLMModel,
@@ -49,6 +50,9 @@ class XLMModelTest(ModelTesterMixin, unittest.TestCase):
         if is_torch_available()
         else ()
     )
+    all_generative_model_classes = (
+        (XLMWithLMHeadModel,) if is_torch_available() else ()
+    )  # TODO (PVP): Check other models whether language generation is also applicable
 
     class XLMModelTester(object):
         def __init__(
@@ -81,6 +85,7 @@ class XLMModelTest(ModelTesterMixin, unittest.TestCase):
             summary_type="last",
             use_proj=True,
             scope=None,
+            bos_token_id=0,
         ):
             self.parent = parent
             self.batch_size = batch_size
@@ -111,6 +116,7 @@ class XLMModelTest(ModelTesterMixin, unittest.TestCase):
             self.num_labels = num_labels
             self.num_choices = num_choices
             self.scope = scope
+            self.bos_token_id = bos_token_id
 
         def prepare_config_and_inputs(self):
             input_ids = ids_tensor([self.batch_size, self.seq_length], self.vocab_size)
@@ -151,6 +157,7 @@ class XLMModelTest(ModelTesterMixin, unittest.TestCase):
                 initializer_range=self.initializer_range,
                 summary_type=self.summary_type,
                 use_proj=self.use_proj,
+                bos_token_id=self.bos_token_id,
             )
 
             return (
@@ -390,3 +397,48 @@ class XLMModelTest(ModelTesterMixin, unittest.TestCase):
         for model_name in list(XLM_PRETRAINED_MODEL_ARCHIVE_MAP.keys())[:1]:
             model = XLMModel.from_pretrained(model_name, cache_dir=CACHE_DIR)
             self.assertIsNotNone(model)
+
+
+def prepare_generation_special_tokens():
+    return {"bos_token_id": 0, "pad_token_id": 2}
+
+
+class XLMModelLanguageGenerationTest(unittest.TestCase):
+
+    special_tokens = prepare_generation_special_tokens()
+
+    @slow
+    def test_lm_generate_xlm_mlm_en_2048(self):
+        model = XLMWithLMHeadModel.from_pretrained("xlm-mlm-en-2048")
+        input_ids = torch.Tensor([[1, 14, 2232, 26, 1]]).long()  # The dog is cute
+        expected_output_ids = [
+            1,
+            14,
+            2232,
+            26,
+            1,
+            567,
+            26,
+            32,
+            149,
+            149,
+            149,
+            149,
+            149,
+            149,
+            149,
+            149,
+            149,
+            149,
+            149,
+            149,
+        ]  # The dog is nothing is it!!!!!!!!!!!! TODO (PVP): this sentence (and others I tried) does not make much sense, there seems to be a problem with xlm language generation.
+        torch.manual_seed(0)
+
+        output_ids = model.generate(
+            input_ids,
+            bos_token_id=self.special_tokens["bos_token_id"],
+            pad_token_id=self.special_tokens["pad_token_id"],
+        )
+
+        self.assertListEqual(output_ids[0].tolist(), expected_output_ids)
