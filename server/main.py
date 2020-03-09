@@ -175,4 +175,4 @@ if __name__ != "__main__":
 else:
     args, _ = parser.parse_known_args()
     print("Initiating app")
-    app.run(port=args.port, use_reloader=False, debug=args.debug)
+    app.run(host="localhost", port=args.port, use_reloader=False, debug=args.debug)

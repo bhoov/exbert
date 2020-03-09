@@ -23,3 +23,4 @@ dependencies:
   - sacremoses
   - pip:
     - sentencepiece
+    - tokenizers==0.5.2
