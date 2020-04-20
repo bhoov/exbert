@@ -31,6 +31,7 @@
 }
 
 #corpus-vis #main-corpus-vis #corpus-mat-container .mat-hover-display {
+  pointer-events: none;
   display: -webkit-box;
   display: -ms-flexbox;
   display: flex;
@@ -118,8 +119,18 @@
 
 #corpus-vis .matched-cell {
   border-style: solid;
-  border-color: rgba(128, 0, 128, 0.7);
+  border-color: #99c400;
   border-width: 3px;
   border-radius: 0.4em;
+}
+
+#corpus-vis .gray-cell {
+  color: rgba(0, 0, 0, 0.35);
+}
+
+#corpus-vis .next-cell {
+  color: rgba(228, 1, 1, 0.8);
+  -webkit-box-shadow: 0 0 3px #ccc;
+  box-shadow: 0 0 3px #ccc;
 }
 /*# sourceMappingURL=CorpusVis.css.map */

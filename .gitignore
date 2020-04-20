@@ -8,9 +8,9 @@ __pycache__
 client_ref/
 _store/
 .cache/
-client_ref
 *.swp
 raw_data
+*.css.map
 
 # Icon must end with two \r
 Icon
