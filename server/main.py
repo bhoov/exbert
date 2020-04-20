@@ -1,43 +1,59 @@
+from typing import *
+from pathlib import Path
 import argparse
 import numpy as np
-import connexion
-from flask_cors import CORS
-from flask import render_template, redirect, send_from_directory
+
+from fastapi import FastAPI
+from fastapi.responses import FileResponse, RedirectResponse
+from fastapi.middleware.cors import CORSMiddleware
+from fastapi.staticfiles import StaticFiles
+from fastapi.encoders import jsonable_encoder
+import uvicorn
+from pydantic import BaseModel
 
 import utils.path_fixes as pf
 import config
+import api
+
 from utils.f import ifnone
 
 from data_processing import from_model
 from transformer_details import from_pretrained
 
-app = connexion.FlaskApp(__name__, static_folder="client/dist", specification_dir=".")
-flask_app = app.app
-CORS(flask_app)
+app = FastAPI()
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 
 parser = argparse.ArgumentParser(formatter_class=argparse.ArgumentDefaultsHelpFormatter)
 parser.add_argument("--debug", action="store_true", help=" Debug mode")
 parser.add_argument("--port", default=5050, help="Port to run the app. ")
 
 # Flask main routes
-@app.route("/")
+@app.get("/")
 def hello_world():
-    return redirect("client/exBERT.html")
+    return RedirectResponse(url="client/exBERT.html")
 
 # send everything from client as static content
-@app.route("/client/<path:path>")
-def send_static_client(path):
+@app.get("/client/{file_path:path}")
+def send_static_client(file_path):
     """ serves all files from ./client/ to ``/client/<path:path>``
 
     :param path: path from api call
     """
-    return send_from_directory(str(pf.CLIENT_DIST), path)
+    f = str(pf.CLIENT_DIST / file_path)
+    return FileResponse(f)
 
 # ======================================================================
 ## CONNEXION API ##
 # ======================================================================
-def get_model_details(**request):
-    model = request['model']
+@app.get("/api/get-model-details")
+async def get_model_details(model: str, request_hash=None):# -> api.ModelDetailResponse:
+    print("Received: ", model)
     deets = from_pretrained(model)
 
     info = deets.model.config
@@ -54,12 +70,11 @@ def get_model_details(**request):
         "payload": payload_out,
     }
 
-def get_attention_and_meta(**request):
-    model = request["model"]
+@app.get("/api/attend-with-meta")
+async def get_attentions_and_preds(
+    model: str, sentence: str, layer: int, request_hash=None
+):# -> api.AttentionResponse:
     details = from_pretrained(model)
-
-    sentence = request["sentence"]
-    layer = int(request["layer"])
 
     deets = details.att_from_sentence(sentence)
 
@@ -71,21 +86,22 @@ def get_attention_and_meta(**request):
     }
 
 
-def update_masked_attention(**request):
+@app.post("/api/update-mask")
+async def update_masked_attention(
+    payload: api.MaskUpdatePayload,
+):# -> api.AttentionResponse:
     """
     Return attention information from tokens and mask indices.
 
     Object: {"a" : {"sentence":__, "mask_inds"}, "b" : {...}}
     """
-    payload = request["payload"]
-
-    model = payload['model']
+    model = payload.model
     details = from_pretrained(model)
 
-    tokens = payload["tokens"]
-    sentence = payload["sentence"]
-    mask = payload["mask"]
-    layer = int(payload["layer"])
+    tokens = payload.tokens
+    sentence = payload.sentence
+    mask = payload.mask
+    layer = payload.layer
 
     MASK = details.aligner.mask_token
     mask_tokens = lambda toks, maskinds: [
@@ -103,10 +119,19 @@ def update_masked_attention(**request):
     }
 
 
-def nearest_embedding_search(**request):
+# def nearest_embedding_search(**request):
+@app.post("/api/k-nearest-embeddings")
+async def nearest_embedding_search(payload:api.QueryNearestPayload):
     """Return the token text and the metadata in JSON"""
-    model = request["model"]
-    corpus = request["corpus"]
+    model = payload.model
+    corpus = payload.corpus
+    embedding = payload.embedding
+    layer = payload.layer
+    heads = payload.heads
+    k = payload.k
+
+    # model = request["model"]
+    # corpus = request["corpus"]
 
     try:
         details = from_pretrained(model)
@@ -121,10 +146,11 @@ def nearest_embedding_search(**request):
             "payload": None
         }
 
-    q = np.array(request["embedding"]).reshape((1, -1)).astype(np.float32)
-    layer = int(request["layer"])
-    heads = list(map(int, list(set(request["heads"]))))
-    k = int(request["k"])
+    q = np.array(embedding).reshape((1, -1)).astype(np.float32)
+    # q = np.array(request["embedding"]).reshape((1, -1)).astype(np.float32)
+    # layer = int(request["layer"])
+    # heads = list(map(int, list(set(request["heads"]))))
+    heads = list(set(heads))
 
     out = cc.search_embeddings(layer, q, k)
 
@@ -136,11 +162,18 @@ def nearest_embedding_search(**request):
     }
 
 
-def nearest_context_search(**request):
+# def nearest_context_search(**request):
+@app.post("/api/k-nearest-contexts")
+async def nearest_context_search(payload:api.QueryNearestPayload):
     """Return the token text and the metadata in JSON"""
-    model = request["model"]
-    corpus = request["corpus"]
-    print("CORPUS: ", corpus)
+    model = payload.model
+    corpus = payload.corpus
+    context = payload.embedding
+    layer = payload.layer
+    heads = payload.heads
+    k = payload.k
+    # model = request["model"]
+    # corpus = request["corpus"]
 
     try:
         details = from_pretrained(model)
@@ -152,10 +185,13 @@ def nearest_context_search(**request):
     except FileNotFoundError as e:
         return {'status': 406, "payload": None}
 
-    q = np.array(request["context"]).reshape((1, -1)).astype(np.float32)
-    layer = int(request["layer"])
-    heads = list(map(int, list(set(request["heads"]))))
-    k = int(request["k"])
+    q = np.array(context).reshape((1, -1)).astype(np.float32)
+    heads = list(set(heads))
+
+    # q = np.array(request["context"]).reshape((1, -1)).astype(np.float32)
+    # layer = int(request["layer"])
+    # heads = list(map(int, list(set(request["heads"]))))
+    # k = int(request["k"])
 
     out = cc.search_contexts(layer, heads, q, k)
     payload_out = [o.to_json(layer, heads) for o in out]
@@ -165,14 +201,15 @@ def nearest_context_search(**request):
         "payload": payload_out,
     }
 
-app.add_api("swagger.yaml")
+# app.add_api("swagger.yaml")
 
 # Setup code
-if __name__ != "__main__":
-    print("SETTING UP ENDPOINTS")
-
-# Then deploy app
-else:
+if __name__ == "__main__":
+    print("Initializing as the main script")  # Is never printed
     args, _ = parser.parse_known_args()
-    print("Initiating app")
-    app.run(host="localhost", port=args.port, use_reloader=False, debug=args.debug)
+    uvicorn.run("fastapi_main:app", host="127.0.0.1", port=args.port)
+
+else:
+    print("Not running from expected script")
+    # args, _ = parser.parse_known_args()
+    # app.run(host="localhost", port=args.port, use_reloader=False, debug=args.debug)

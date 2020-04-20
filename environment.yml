@@ -5,15 +5,13 @@ channels:
   - defaults
   - anaconda
 dependencies:
+  - pip>=19.0.3
   - python=3.7
-  - connexion=1.5.3
   - h5py
   - spacy
   - boto3
   - regex
-  - flask-cors
   - faiss-cpu
-  - jinja2=2.10
   - numpy=1.16.2
   - olefile=0.46
   - pickleshare=0.7.5
@@ -21,6 +19,10 @@ dependencies:
   - pip=19.0.3
   - pytorch=1.0.1
   - sacremoses
+  - mypy
+  - pytest
   - pip:
+    - fastapi[all]
+    - async-lru
     - sentencepiece
-    - tokenizers==0.5.2
+    - tokenizers>=0.5.1

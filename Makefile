@@ -6,3 +6,4 @@ env:
 	pip install -e server/spacyface; \
 	pip install -e server/transformers; \
 	pip install -e server; \
+	python -m spacy download en_core_web_sm; \

@@ -85,7 +85,7 @@ export class API {
             layer: layer
         };
 
-        const url = makeUrl(this.baseURL + "/attend+meta", toSend)
+        const url = makeUrl(this.baseURL + "/attend-with-meta", toSend)
         console.log("--- GET " + url);
 
         // Add hash and value to hashObj
@@ -151,7 +151,8 @@ export class API {
             k: k,
         }
 
-        const url = makeUrl(this.baseURL + '/k-nearest-embeddings', toSend);
+        const url = makeUrl(this.baseURL + '/k-nearest-embeddings');
+        const payload = toPayload(toSend)
         console.log("--- GET " + url);
 
         if (hashObj != null) {
@@ -161,20 +162,21 @@ export class API {
             })
         }
 
-        return checkDemoAPI(toSend, url)
+        return checkDemoAPI(toSend, url, payload)
     }
 
     getNearestContexts(model: string, corpus: string, context: number[], layer: number, heads: number[], k = 10, hashObj: {} | null = null): Promise<rsp.NearestNeighborResponse> {
         const toSend = {
             model: model,
             corpus: corpus,
-            context: context,
+            embedding: context,
             layer: layer,
             heads: heads,
             k: k,
         }
 
-        const url = makeUrl(this.baseURL + '/k-nearest-contexts', toSend);
+        const url = makeUrl(this.baseURL + '/k-nearest-contexts');
+        const payload = toPayload(toSend)
         console.log("--- GET " + url);
 
         if (hashObj != null) {
@@ -184,6 +186,6 @@ export class API {
             })
         }
 
-        return checkDemoAPI(toSend, url)
+        return checkDemoAPI(toSend, url, payload)
     }
 };
