@@ -69,39 +69,24 @@
         </div>
 
         <p>
-            Large language models can produce powerful contextual representations that lead to improvements across many
-            NLP tasks.
-            Since these models are typically guided by a sequence of learned self attention mechanisms and may comprise
-            undesired inductive biases, it is paramount to be able to explore what the attention has learned.
-            While static analyses of these models lead to targeted insights, interactive tools are more dynamic and can
-            help humans better gain an intuition for the model-internal reasoning process.
+            Large Transformer-based language models can route and reshape complex information via their multi-headed
+            attention mechanism. Although the attention never receives explicit supervision, it can exhibit
+            understandable patterns following linguistic or positional information. To further our understanding of the
+            inner workings of these models, we need to analyze both the learned representations and the
+            attentions.
         </p>
 
         <p>
-            We present <b>exBERT</b> , an interactive tool named after the popular BERT language model, that provides
-            insights into the meaning of the contextual representations by matching a human-specified input to similar
-            contexts in a large annotated dataset.
-            By aggregating the annotations of the matching similar contexts, <b>exBERT</b> helps intuitively explain
-            what each attention-head has learned.
+            To support analysis for a wide variety of Transformer models, we introduce <b>exBERT</b>, a tool to help humans conduct
+            flexible, interactive investigations and formulate hypotheses for the model-internal reasoning process.
+            <b>exBERT</b> provides insights into the meaning of the contextual representations and attention by matching
+            a human-specified input to similar contexts in large annotated datasets.
         </p>
 
-        <p> Large language models can produce powerful contextual representations that lead to improvements across many
-            NLP tasks. Though these models can comprise undesired inductive biases, it is challenging to identify what
-            information they encode in their learned representations. </p>
-
-        <p> Since the model-internal reasoning process is often guided by a sequence of learned self-attention
-            mechanisms, it is paramount to be able to explore what the attention has learned. While static analyses for
-            this can lead to targeted insights, interactive tools can be more dynamic and help humans gain an intuition
-            for the model-internal reasoning process. We present exBERT, a tool that helps to gain insights into the
-            meaning of the contextual representations. exBERT matches a human-specified input to similar contexts in a
-            large annotated dataset. By aggregating these annotations across all similar contexts, exBERT can help to
-            explain what each attention-head has learned. </p>
-
-        <p> Thanks to
-            <a target="_blank" href="https://www.parc.com/about-parc/our-people/jesse-vig/">Jesse Vig</a>
-            for feedback. Please let us know what you think by commenting below! </p>
-
-        <div style="height: 20px"></div>
+        <p>
+            The fully-featured demo shows select Transformer models with the Wizard of Oz and a subset of Wikipedia pre-annotated for the hidden
+            representations for each model. Please let us know what you think by commenting below!
+        </p>
 
 
         <div class="row">
@@ -111,8 +96,6 @@
                         <h3><i class="fa fa-rocket" aria-hidden="true" style="font-size: 80%; "></i> Live Server </h3>
                     </a>
                 </div>
-
-
             </div>
             <div class="col-md-4">
                 <div class="text-center" style="background-color: rgb(203,122,130);padding: inherit">
@@ -124,7 +107,7 @@
             <div class="col-md-4">
                 <div class="text-center" style="background-color: rgb(152,152,152);padding: inherit">
                     <a href="">
-                        <h3><i class="fa fa-book" aria-hidden="true" style="font-size: 80%;"></i> Pre-Publication </h3>
+                        <h3><i class="fa fa-book" aria-hidden="true" style="font-size: 80%;"></i> Paper </h3>
                     </a>
                 </div>
             </div>
@@ -161,7 +144,7 @@
             <div class="col-md-4">
                 <div class="text-center" style="background-color: rgb(152,152,152);padding: inherit">
                     <a href="">
-                        <h3><i class="fa fa-book" aria-hidden="true" style="font-size: 80%;"></i> Pre-Publication </h3>
+                        <h3><i class="fa fa-book" aria-hidden="true" style="font-size: 80%;"></i> Paper </h3>
                     </a>
                 </div>
             </div>
