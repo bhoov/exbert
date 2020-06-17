@@ -26,9 +26,6 @@ Link to pre-paper and demo: [exbert.net](http://exbert.net)
 - [Development](#development)
 
 
-
-
-
 ## Overview
 
 exBERT is a tool that enables users to explore what and how transformers learn to model languages. The tool comes equipped with a pretrained base version of BERT, a state of the art architecture based on transformers. To explore what this architecture has learned, you can input any sentence to the model and the tool will parse the sentence into tokens suitable for BERT (using the BPE tokenizer) and pass these tokens through the model. The attentions and ensuing word embeddings of each encoder are then extracted and displayed for interaction.
