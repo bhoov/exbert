@@ -103,8 +103,11 @@ You can run a client server that automatically recompiles the frontend with `npm
 
 Because the backend has to load in a lot of data for inference, we do not allow auto-backend refresh on every saved change in flask even though the framework supports it.
 
-### Uploading your own model locally
-Uploading your own model consists of the following steps:
+### Running your own model locally
+
+Limitations:
+- The model architecture must be supported by the `AutoModelWithLMHead`
+- Corpus searching support is only available for English
 
 1. *Save your pretrained huggingface model* according to the naming conventions specified in the `modeling_auto.py` of the original Transformers repo (as of v2.8):
 
@@ -125,8 +128,6 @@ The model class to instantiate is selected as the first pattern matching
             - contains `xlm`: XLMModel (XLM model)
             - contains `ctrl`: CTRLModel (Salesforce CTRL model)
 ```
-
-The deployed server supports only BERT, RoBERTa, GPT2, and DistilBERT for context searching.
 
 2. *Create the reference corpus*. **Warning**: Depending on the number of layers and size of the hidden dimension in the model, this step could take many gigabytes on your computer to store the hidden representations and attentions at every layer.
 
