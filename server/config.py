@@ -18,3 +18,15 @@ MODEL_VERSION = "gpt2"
 CORPUS = RESOURCE_DIR / "data.hdf5"
 EMBEDDING_FAISS = RESOURCE_DIR / "embedding_faiss"
 CONTEXT_FAISS = RESOURCE_DIR / "context_faiss"
+
+SUPPORTED_MODELS = [
+    {"name": "bert-base-cased", "kind": "bidirectional"},
+    # {"name": "albert-base-v1", "kind": "bidirectional"},
+    {"name": "distilbert-base-uncased", "kind": "bidirectional"},
+    {"name": "distilroberta-base", "kind": "bidirectional"},
+    {"name": "gpt2", "kind": "autoregressive"},
+    {"name": "distilgpt2", "kind": "autoregressive"},
+    #{"name": "bert-base-uncased", "kind": "bidirectional"},
+    #{"name": "roberta-base", "kind": "bidirectional"},
+    #{"name": "gpt2-medium", "kind": "bidirectional"},
+]

@@ -256,6 +256,6 @@ T5Aligner= MakeAligner(T5Tokenizer, english)
 XLMRobertaAligner= MakeAligner(XLMRobertaTokenizer, english)
 
 @memoize
-def auto_aligner(pretrained_name_or_path):
+def auto_aligner(pretrained_name_or_path, config=None):
     tok_class = AutoTokenizer.from_pretrained(pretrained_name_or_path).__class__
-    return MakeAligner(tok_class, english).from_pretrained(pretrained_name_or_path)
+    return MakeAligner(tok_class, english).from_pretrained(pretrained_name_or_path, config=config)

@@ -78,6 +78,12 @@ export class API {
         return checkDemoAPI(toSend, url)
     }
 
+    getSupportedModels(): Promise<tp.ModelDescription[]> {
+        const toSend = {}
+        const url = makeUrl(this.baseURL + "/supported-models", toSend)
+        return d3.json(url)
+    }
+
     getMetaAttentions(model: string, sentence: string, layer: number, hashObj: {} | null = null): Promise<rsp.AttentionDetailsResponse> {
         const toSend = {
             model: model,

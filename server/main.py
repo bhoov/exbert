@@ -12,10 +12,10 @@ import uvicorn
 from pydantic import BaseModel
 
 import utils.path_fixes as pf
-import config
 import api
 
 from utils.f import ifnone
+import config
 
 from data_processing import from_model
 from transformer_details import from_pretrained
@@ -32,6 +32,31 @@ app.add_middleware(
 parser = argparse.ArgumentParser(formatter_class=argparse.ArgumentDefaultsHelpFormatter)
 parser.add_argument("--debug", action="store_true", help=" Debug mode")
 parser.add_argument("--port", default=5050, help="Port to run the app. ")
+parser.add_argument("--model", default=None, help="If given, override the backend to use a particular model from local storage. Corpus searching results will only be availbale if annotated. Also requires specifying 'kind'")
+parser.add_argument("--kind", default=None, help="One of {'bidirectional', 'autoregressive'}. Required if model provided.")
+args, _ = parser.parse_known_args()
+
+has_model = args.model is not None and args.kind is not None
+use_defaults = args.model is None and args.kind is None
+
+def arg_mode():
+    if not (has_model or use_defaults):
+        raise ValueError("Either specify both `model` and `kind` or neither to use the defaults")
+
+    if has_model:
+        return "custom"
+    if use_defaults:
+        return "defaults"
+    
+    raise ValueError("invalid combo")
+
+arg_mode()
+
+def get_details(model_name):
+    if arg_mode() == "custom":
+        return from_pretrained
+    elif arg_mode() == "defaults":
+        return from_pretrained(model_name)
 
 # Flask main routes
 @app.get("/")
@@ -51,9 +76,20 @@ def send_static_client(file_path):
 # ======================================================================
 ## CONNEXION API ##
 # ======================================================================
+@app.get("/api/supported-models")
+async def get_supported_models():
+    if has_model:
+        return [
+            {
+                "name": Path(args.model).stem,
+                "kind": args.kind
+            }
+        ]
+
+    return config.SUPPORTED_MODELS
+
 @app.get("/api/get-model-details")
 async def get_model_details(model: str, request_hash=None):# -> api.ModelDetailResponse:
-    print("Received: ", model)
     deets = from_pretrained(model)
 
     info = deets.model.config
@@ -130,9 +166,6 @@ async def nearest_embedding_search(payload:api.QueryNearestPayload):
     heads = payload.heads
     k = payload.k
 
-    # model = request["model"]
-    # corpus = request["corpus"]
-
     try:
         details = from_pretrained(model)
     except KeyError as e:
@@ -147,9 +180,6 @@ async def nearest_embedding_search(payload:api.QueryNearestPayload):
         }
 
     q = np.array(embedding).reshape((1, -1)).astype(np.float32)
-    # q = np.array(request["embedding"]).reshape((1, -1)).astype(np.float32)
-    # layer = int(request["layer"])
-    # heads = list(map(int, list(set(request["heads"]))))
     heads = list(set(heads))
 
     out = cc.search_embeddings(layer, q, k)
@@ -172,8 +202,6 @@ async def nearest_context_search(payload:api.QueryNearestPayload):
     layer = payload.layer
     heads = payload.heads
     k = payload.k
-    # model = request["model"]
-    # corpus = request["corpus"]
 
     try:
         details = from_pretrained(model)
@@ -188,11 +216,6 @@ async def nearest_context_search(payload:api.QueryNearestPayload):
     q = np.array(context).reshape((1, -1)).astype(np.float32)
     heads = list(set(heads))
 
-    # q = np.array(request["context"]).reshape((1, -1)).astype(np.float32)
-    # layer = int(request["layer"])
-    # heads = list(map(int, list(set(request["heads"]))))
-    # k = int(request["k"])
-
     out = cc.search_contexts(layer, heads, q, k)
     payload_out = [o.to_json(layer, heads) for o in out]
 
@@ -201,15 +224,8 @@ async def nearest_context_search(payload:api.QueryNearestPayload):
         "payload": payload_out,
     }
 
-# app.add_api("swagger.yaml")
-
 # Setup code
 if __name__ == "__main__":
     print("Initializing as the main script")  # Is never printed
     args, _ = parser.parse_known_args()
     uvicorn.run("main:app", host="127.0.0.1", port=args.port)
-
-else:
-    print("Not running from expected script")
-    # args, _ = parser.parse_known_args()
-    # app.run(host="localhost", port=args.port, use_reloader=False, debug=args.debug)

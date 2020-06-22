@@ -145,3 +145,8 @@ export enum ModelKind {
     Bidirectional = "bidirectional",
     Autoregressive = "autoregressive"
 }
+
+export interface ModelDescription { 
+    name: string
+    kind: ModelKind
+}

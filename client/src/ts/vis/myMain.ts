@@ -466,43 +466,48 @@ export class MainGraphic {
     private _initModelSelection() {
         const self = this
 
-        const data = [
-            { name: "bert-base-cased", kind: tp.ModelKind.Bidirectional },
-            // { name: "albert-base-v1", kind: tp.ModelKind.Bidirectional },
-            { name: "gpt2", kind: tp.ModelKind.Autoregressive },
-            { name: "distilbert-base-uncased", kind: tp.ModelKind.Bidirectional },
-            { name: "distilroberta-base", kind: tp.ModelKind.Bidirectional },
-            { name: "distilgpt2", kind: tp.ModelKind.Autoregressive },
-            // { name: "bert-base-uncased", kind: tp.ModelKind.Bidirectional },
-            // { name: "roberta-base", kind: tp.ModelKind.Bidirectional },
-            // { name: "gpt2-medium", kind: tp.ModelKind.Autoregressive },
-        ]
+        console.log("INITIALIZING MODEL SElECTION");
+        this.api.getSupportedModels().then(data => {
+            console.log("RESPONSE FROM SUPPORTED MODELS: ", data);
+            const names = R.map(R.prop('name'))(data)
+            const kinds = R.map(R.prop('kind'))(data)
+            const kindmap = R.zipObj(names, kinds)
 
-        const names = R.map(R.prop('name'))(data)
-        const kinds = R.map(R.prop('kind'))(data)
-        const kindmap = R.zipObj(names, kinds)
+            this.sels.modelSelector.selectAll('.model-option')
+                .data(data)
+                .join('option')
+                .classed('model-option', true)
+                .property('value', d => d.name)
+                .attr("modelkind", d => d.kind)
+                .text(d => d.name)
 
-        this.sels.modelSelector.selectAll('.model-option')
-            .data(data)
-            .join('option')
-            .classed('model-option', true)
-            .property('value', d => d.name)
-            .attr("modelkind", d => d.kind)
-            .text(d => d.name)
+            this.sels.modelSelector.property('value', this.uiConf.model());
 
-        this.sels.modelSelector.property('value', this.uiConf.model());
+            this.sels.modelSelector.on('change', function () {
+                const me = d3.select(this)
+                const mname = me.property('value')
+                self.uiConf.model(mname);
+                self.uiConf.modelKind(kindmap[mname]);
+                if (kindmap[mname] == tp.ModelKind.Autoregressive) {
+                    console.log("RESETTING MASK INDS");
+                    self.uiConf.maskInds([])
+                }
+                self.mainInit();
+            })
 
-        this.sels.modelSelector.on('change', function () {
-            const me = d3.select(this)
-            const mname = me.property('value')
-            self.uiConf.model(mname);
-            self.uiConf.modelKind(kindmap[mname]);
-            if (kindmap[mname] == tp.ModelKind.Autoregressive) {
-                console.log("RESETTING MASK INDS");
-                self.uiConf.maskInds([])
-            }
-            self.mainInit();
         })
+
+        // const data = [
+        //     { name: "bert-base-cased", kind: tp.ModelKind.Bidirectional },
+        //     // { name: "albert-base-v1", kind: tp.ModelKind.Bidirectional },
+        //     { name: "gpt2", kind: tp.ModelKind.Autoregressive },
+        //     { name: "distilbert-base-uncased", kind: tp.ModelKind.Bidirectional },
+        //     { name: "distilroberta-base", kind: tp.ModelKind.Bidirectional },
+        //     { name: "distilgpt2", kind: tp.ModelKind.Autoregressive },
+        //     // { name: "bert-base-uncased", kind: tp.ModelKind.Bidirectional },
+        //     // { name: "roberta-base", kind: tp.ModelKind.Bidirectional },
+        //     // { name: "gpt2-medium", kind: tp.ModelKind.Autoregressive },
+        // ]
     }
 
     private _initCorpusSelection() {

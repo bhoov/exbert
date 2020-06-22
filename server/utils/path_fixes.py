@@ -1,10 +1,14 @@
 from pathlib import Path
 import os
 
+ROOT_DIR = Path(os.path.abspath(__file__)).parent.parent.parent
+
 FAISS_LAYER_PATTERN = 'layer_*.faiss'
 LAYER_TEMPLATE = 'layer_{:02d}.faiss' 
 
-ROOT_DIR = Path(os.path.abspath(__file__)).parent.parent.parent
+SERVER = ROOT_DIR / "server"
+CONFIG = SERVER / "config.py"
+
 DATA_DIR = ROOT_DIR / 'server' / 'data'
 DATASET_DIR = Path.home() / 'Datasets'
 ROOT_DIR = Path(os.path.abspath(__file__)).parent.parent.parent
