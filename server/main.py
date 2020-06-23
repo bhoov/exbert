@@ -36,29 +36,39 @@ parser.add_argument("--model", default=None, help="If given, override the backen
 parser.add_argument("--kind", default=None, help="One of {'bidirectional', 'autoregressive'}. Required if model provided.")
 args, _ = parser.parse_known_args()
 
-has_model = args.model is not None and args.kind is not None
-use_defaults = args.model is None and args.kind is None
+class ArgConfig():
+    def __init__(self, args):
+        self.args = args
+        self.model = args.model
+        self.kind = args.kind
 
-def arg_mode():
-    if not (has_model or use_defaults):
-        raise ValueError("Either specify both `model` and `kind` or neither to use the defaults")
+        if not (self.has_model or self.use_defaults):
+            raise ValueError("Either specify both `model` and `kind` or neither to use the defaults")
 
-    if has_model:
-        return "custom"
-    if use_defaults:
-        return "defaults"
+    @property
+    def has_model(self):
+        return self.model is not None and self.kind is not None
     
-    raise ValueError("invalid combo")
+    @property
+    def model_name(self):
+        if self.has_model:
+            return Path(self.model).stem
 
-arg_mode()
+        return None
 
-def get_details(model_name):
-    if arg_mode() == "custom":
-        return from_pretrained
-    elif arg_mode() == "defaults":
+    @property
+    def use_defaults(self):
+        return self.model is None and self.kind is None
+
+    def from_pretrained(self, model_name:str):
+        if self.has_model:
+            return from_pretrained(self.model)
+
         return from_pretrained(model_name)
 
-# Flask main routes
+aconf = ArgConfig(args)
+
+# Default routing
 @app.get("/")
 def hello_world():
     return RedirectResponse(url="client/exBERT.html")
@@ -74,15 +84,15 @@ def send_static_client(file_path):
     return FileResponse(f)
 
 # ======================================================================
-## CONNEXION API ##
+## MAIN API ##
 # ======================================================================
 @app.get("/api/supported-models")
 async def get_supported_models():
-    if has_model:
+    if aconf.has_model:
         return [
             {
-                "name": Path(args.model).stem,
-                "kind": args.kind
+                "name": aconf.model_name,
+                "kind": aconf.kind
             }
         ]
 
@@ -90,7 +100,7 @@ async def get_supported_models():
 
 @app.get("/api/get-model-details")
 async def get_model_details(model: str, request_hash=None):# -> api.ModelDetailResponse:
-    deets = from_pretrained(model)
+    deets = aconf.from_pretrained(model)
 
     info = deets.model.config
     nlayers = info.num_hidden_layers
@@ -110,7 +120,7 @@ async def get_model_details(model: str, request_hash=None):# -> api.ModelDetailR
 async def get_attentions_and_preds(
     model: str, sentence: str, layer: int, request_hash=None
 ):# -> api.AttentionResponse:
-    details = from_pretrained(model)
+    details = aconf.from_pretrained(model)
 
     deets = details.att_from_sentence(sentence)
 
@@ -132,7 +142,7 @@ async def update_masked_attention(
     Object: {"a" : {"sentence":__, "mask_inds"}, "b" : {...}}
     """
     model = payload.model
-    details = from_pretrained(model)
+    details = aconf.from_pretrained(model)
 
     tokens = payload.tokens
     sentence = payload.sentence
@@ -167,7 +177,7 @@ async def nearest_embedding_search(payload:api.QueryNearestPayload):
     k = payload.k
 
     try:
-        details = from_pretrained(model)
+        details = aconf.from_pretrained(model)
     except KeyError as e:
         return {'status': 405, "payload": None}
 
@@ -204,7 +214,7 @@ async def nearest_context_search(payload:api.QueryNearestPayload):
     k = payload.k
 
     try:
-        details = from_pretrained(model)
+        details = aconf.from_pretrained(model)
     except KeyError as e:
         return {'status': 405, "payload": None}
 
