@@ -4,6 +4,7 @@ from spacy.tokens.token import Token as SpacyToken
 from spacy.tokens.doc import Doc as SpacyDoc
 import torch
 import regex as re
+from cachetools import cached
 
 from transformers import (
     AutoTokenizer,
@@ -255,7 +256,8 @@ OpenAIGPTAligner= MakeAligner(OpenAIGPTTokenizer, english)
 T5Aligner= MakeAligner(T5Tokenizer, english)
 XLMRobertaAligner= MakeAligner(XLMRobertaTokenizer, english)
 
-@memoize
+# @memoize
+# @cached({}) # TODO fix cached for BertConfig object
 def auto_aligner(pretrained_name_or_path, config=None):
     tok_class = AutoTokenizer.from_pretrained(pretrained_name_or_path).__class__
     return MakeAligner(tok_class, english).from_pretrained(pretrained_name_or_path, config=config)

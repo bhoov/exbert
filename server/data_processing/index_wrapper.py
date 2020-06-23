@@ -76,7 +76,7 @@ class ContextIndexes(Indexes):
     # Int -> [Int] -> np.Array -> Int -> (np.Array(),  )
     def search(self, layer:int, heads:list, query:np.ndarray, k:int):
         """Search the embeddings for the context layer, masking by selected heads"""
-        assert max(heads) < self.nheads, "max of selected heads must be lest than nheads. Are you indexing by 1 instead of 0?"
+        assert max(heads) < self.nheads, "max of selected heads must be less than nheads. Are you indexing by 1 instead of 0?"
         assert min(heads) >= 0, "What is a negative head?"
         
         unique_heads = list(set(heads))

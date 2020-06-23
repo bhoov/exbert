@@ -2,7 +2,7 @@
 Utilities for interfacing with the attentions from the front end.
 """
 import torch
-from typing import List, Union
+from typing import *
 from abc import ABC, abstractmethod
 
 from transformer_formatter import TransformerOutputFormatter
@@ -20,54 +20,30 @@ from transformers import (
     GPT2LMHeadModel,
     RobertaForMaskedLM,
     DistilBertForMaskedLM,
+    AutoConfig,
+    AutoModelWithLMHead,
+    AutoTokenizer,
 )
 
 from utils.f import delegates, pick, memoize
 
-def get_cls(class_name):
-    cls_type = {
-        'bert-base-uncased': BertDetails,
-        'bert-base-cased': BertDetails,
-        'bert-large-uncased': BertDetails,
-        'bert-large-cased': BertDetails,
-        'gpt2': GPT2Details,
-        'gpt2-medium': GPT2Details,
-        'gpt2-large': GPT2Details,
-        'roberta-base': RobertaDetails,
-        'roberta-large': RobertaDetails,
-        'roberta-large-mnli': RobertaDetails,
-        'roberta-base-openai-detector': RobertaDetails,
-        'roberta-large-openai-detector': RobertaDetails,
-        'distilbert-base-uncased': DistilBertDetails,
-        'distilbert-base-uncased-distilled-squad': DistilBertDetails,
-        'distilgpt2': GPT2Details,
-        'distilroberta-base': RobertaDetails,
-    }
-    return cls_type[class_name]
+def get_details(mname):
+    return ModelDetails(mname)
 
 @memoize
-def from_pretrained(model_name):
-    """Convert model name into appropriate transformer details"""
-    try: out = get_cls(model_name).from_pretrained(model_name)
-    except KeyError: raise KeyError(f"The model name of '{model_name}' either does not exist or is currently not supported")
+def get_model_tok(mname):
+    conf = AutoConfig.from_pretrained(mname, output_attentions=True, output_past=False, output_additional_info=True, output_hidden_states=True)
+    tok = auto_aligner(mname, config=conf)
+    model = AutoModelWithLMHead.from_pretrained(mname, config=conf)
+    return model, tok
 
-    return out
-
-
-class TransformerBaseDetails(ABC):
-    """ All API calls will interact with this class to get the hidden states and attentions for any input sentence."""
-
-    def __init__(self, model, aligner):
-        self.model = model
-        self.aligner = aligner
+class ModelDetails:
+    """Wraps a transformer model and tokenizer to prepare inputs to the frontend visualization"""
+    def __init__(self, mname):
+        self.mname = mname
+        self.model, self.aligner = get_model_tok(self.mname)
         self.model.eval()
-        self.forward_inputs = ['input_ids', 'attention_mask']
-
-    @classmethod
-    def from_pretrained(cls, model_name: str):
-        raise NotImplementedError(
-            """Inherit from this class and specify the Model and Aligner to use"""
-        )
+        self.config = self.model.config
 
     def att_from_sentence(self, s: str, mask_attentions=False) -> TransformerOutputFormatter:
         """Get formatted attention from a single sentence input"""
@@ -75,30 +51,37 @@ class TransformerBaseDetails(ABC):
         return self.att_from_tokens(tokens, s, add_special_tokens=True, mask_attentions=mask_attentions)
 
     def att_from_tokens(
-        self, tokens: List[str], orig_sentence, add_special_tokens=False, mask_attentions=False
+        self, tokens: List[str], orig_sentence:str, add_special_tokens=False, mask_attentions=False, topk=5
     ) -> TransformerOutputFormatter:
         """Get formatted attention from a list of tokens, using the original sentence for getting Spacy Metadata"""
         ids = self.aligner.convert_tokens_to_ids(tokens)
 
-        # For GPT2, add the beginning of sentence token to the input. Note that this will work on all models but XLM
-        bost = self.aligner.bos_token_id
-        clst = self.aligner.cls_token_id
-        if (bost is not None) and (bost != clst) and add_special_tokens:
+        # For GPT2 models, add the beginning of sentence token to the input. Note that this will work on all models but XLM
+        if 'gpt' in self.mname and add_special_tokens:
+            bost = self.aligner.bos_token_id
             ids.insert(0, bost)
 
         inputs = self.aligner.prepare_for_model(ids, add_special_tokens=add_special_tokens, return_tensors="pt")
-        parsed_input = self.format_model_input(inputs, mask_attentions=mask_attentions)
-        output = self.model(parsed_input['input_ids'], attention_mask=parsed_input['attention_mask'])
-        return self.format_model_output(inputs, orig_sentence, output)
+        parsed_input = self.parse_inputs(inputs, mask_attentions=mask_attentions)
+        in_ids = parsed_input['input_ids']
+
+        if 't5' in self.mname:
+            output = self.model(input_ids=in_ids, decoder_input_ids=in_ids, attention_mask=parsed_input['attention_mask'])
+        else:
+            output = self.model(input_ids=in_ids, attention_mask=parsed_input['attention_mask'])
+
+        tokens = self.view_ids(inputs["input_ids"])
+
+        return self.format_model_output(inputs, orig_sentence, output, topk=topk)
 
     def format_model_output(self, inputs, sentence:str, output, topk=5):
         """Convert model output to the desired format.
 
         Formatter additionally needs access to the tokens and the original sentence
         """
-        hidden_state, attentions, contexts, logits = self.select_outputs(output)
+        record = self.select_outputs(output)
 
-        words, probs = self.logits2words(logits, topk)
+        words, probs = self.logits2words(record['logits'], topk)
 
         tokens = self.view_ids(inputs["input_ids"])
         toks = self.aligner.meta_from_tokens(sentence, tokens, perform_check=False)
@@ -107,36 +90,13 @@ class TransformerBaseDetails(ABC):
             sentence,
             toks,
             inputs["special_tokens_mask"],
-            attentions,
-            hidden_state,
-            contexts,
+            record['attentions'],
+            record['hidden_state'],
+            record['contexts'],
             words,
             probs.tolist()
         )
-        return formatted_output
-
-    def select_outputs(self, output):
-        """Extract the desired hidden states as passed by a particular model through the output
-
-        In all cases, we care for:
-            - hidden state embeddings (tuple of n_layers + 1)
-            - attentions (tuple of n_layers)
-            - contexts (tuple of n_layers)
-            - Top predicted words
-            - Probabilities of top predicted words
-        """
-        logits, hidden_state, attentions, contexts = output
-
-        return hidden_state, attentions, contexts, logits
-
-    def format_model_input(self, inputs, mask_attentions=False):
-        """Parse the input for the model according to what is expected in the forward pass.
-
-        If not otherwise defined, outputs a dict containing the keys:
-
-        {'input_ids', 'attention_mask'}
-        """
-        return pick(self.forward_inputs, self.parse_inputs(inputs, mask_attentions=mask_attentions))
+        return formatted_output 
 
     def logits2words(self, logits, topk=5):
         probs, idxs = torch.topk(torch.softmax(logits.squeeze(0), 1), topk)
@@ -151,6 +111,25 @@ class TransformerBaseDetails(ABC):
 
         out = self.aligner.convert_ids_to_tokens(ids)
         return out
+
+    def select_outputs(self, output):
+        """Extract the desired hidden states as passed by a particular model through the output
+
+        In all cases, we care for:
+            - hidden state embeddings (tuple of n_layers + 1)
+            - attentions (tuple of n_layers)
+            - contexts (tuple of n_layers)
+            - Top predicted words
+            - Probabilities of top predicted words
+        """
+        logits, hidden_state, attentions, contexts = output
+
+        return {
+            "logits": logits,
+            "hidden_state": hidden_state,
+            "attentions": attentions,
+            "contexts": contexts
+        }
 
     def parse_inputs(self, inputs, mask_attentions=False):
         """Parse the output from `tokenizer.prepare_for_model` to the desired attention mask from special tokens
@@ -205,79 +184,3 @@ class TransformerBaseDetails(ABC):
             ).unsqueeze(0)
 
         return out
-
-
-class BertDetails(TransformerBaseDetails):
-    @classmethod
-    def from_pretrained(cls, model_name: str):
-        return cls(
-            BertForMaskedLM.from_pretrained(
-                model_name,
-                output_attentions=True,
-                output_hidden_states=True,
-                output_additional_info=True,
-            ),
-            BertAligner.from_pretrained(model_name),
-        )
-
-
-class GPT2Details(TransformerBaseDetails):
-    @classmethod
-    def from_pretrained(cls, model_name: str):
-        return cls(
-            GPT2LMHeadModel.from_pretrained(
-                model_name,
-                output_attentions=True,
-                output_hidden_states=True,
-                output_additional_info=True,
-            ),
-            GPT2Aligner.from_pretrained(model_name),
-        )
-
-    def select_outputs(self, output):
-        logits, _ , hidden_states, att, contexts = output
-        return hidden_states, att, contexts, logits
-
-class RobertaDetails(TransformerBaseDetails):
-
-    @classmethod
-    def from_pretrained(cls, model_name: str):
-        return cls(
-            RobertaForMaskedLM.from_pretrained(
-                model_name,
-                output_attentions=True,
-                output_hidden_states=True,
-                output_additional_info=True,
-            ),
-            RobertaAligner.from_pretrained(model_name),
-        )
-
-class DistilBertDetails(TransformerBaseDetails):
-    def __init__(self, model, aligner):
-        super().__init__(model, aligner)
-        self.forward_inputs = ['input_ids', 'attention_mask']
-
-    @classmethod
-    def from_pretrained(cls, model_name: str):
-        return cls(
-            DistilBertForMaskedLM.from_pretrained(
-                model_name,
-                output_attentions=True,
-                output_hidden_states=True,
-                output_additional_info=True,
-            ),
-            DistilBertAligner.from_pretrained(model_name),
-        )
-
-    def select_outputs(self, output):
-        """Extract the desired hidden states as passed by a particular model through the output
-
-        In all cases, we care for:
-            - hidden state embeddings (tuple of n_layers + 1)
-            - attentions (tuple of n_layers)
-            - contexts (tuple of n_layers)
-        """
-        logits, hidden_states, attentions, contexts = output
-
-        contexts = tuple([c.permute(0, 2, 1, 3).contiguous() for c in contexts])
-        return hidden_states, attentions, contexts, logits

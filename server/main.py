@@ -18,7 +18,7 @@ from utils.f import ifnone
 import config
 
 from data_processing import from_model
-from transformer_details import from_pretrained
+from transformer_details import get_details
 
 app = FastAPI()
 app.add_middleware(
@@ -62,9 +62,9 @@ class ArgConfig():
 
     def from_pretrained(self, model_name:str):
         if self.has_model:
-            return from_pretrained(self.model)
+            return get_details(self.model)
 
-        return from_pretrained(model_name)
+        return get_details(model_name)
 
 aconf = ArgConfig(args)
 
@@ -181,8 +181,10 @@ async def nearest_embedding_search(payload:api.QueryNearestPayload):
     except KeyError as e:
         return {'status': 405, "payload": None}
 
+    model_name = ifnone(aconf.model_name, model)
+
     try:
-        cc = from_model(model, corpus)
+        cc = from_model(model_name, corpus)
     except FileNotFoundError as e:
         return {
             "status": 406,
@@ -218,8 +220,10 @@ async def nearest_context_search(payload:api.QueryNearestPayload):
     except KeyError as e:
         return {'status': 405, "payload": None}
 
+    model_name = ifnone(aconf.model_name, model)
+
     try:
-        cc = from_model(model, corpus)
+        cc = from_model(model_name, corpus)
     except FileNotFoundError as e:
         return {'status': 406, "payload": None}
 

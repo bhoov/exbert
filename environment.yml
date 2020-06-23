@@ -21,6 +21,7 @@ dependencies:
   - sacremoses
   - mypy
   - pytest
+  - cachetools
   - pip:
     - fastapi[all]
     - async-lru
