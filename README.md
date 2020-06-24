@@ -129,7 +129,7 @@ The model class to instantiate is selected as the first pattern matching
             - contains `ctrl`: CTRLModel (Salesforce CTRL model)
 ```
 
-2. *Create the reference corpus*. **Warning**: Depending on the number of layers and size of the hidden dimension in the model, this step could take many gigabytes on your computer to store the hidden representations and attentions at every layer.
+2. *Create the reference corpus*. Instructions [here](./server/data_processing/README.md). **Warning**: Depending on the number of layers and size of the hidden dimension in the model, this step could take many gigabytes on your computer to store the hidden representations and attentions at every layer. 
 
 3. Run `python server/main.py --model PATH_TO_MODEL --kind {bidirectional | autoregressive} --corpus PATH_TO_CORPUS`, selecting bidirectional if your model was trained with masking (e.g., BERT) and autoregressive otherwise (e.g., GPT2). `PATH_TO_CORPUS` should be the name of the directory containing `data.hdf5`, `embedding_faiss/` and `context_faiss`.
 
