@@ -17,7 +17,7 @@ import api
 from utils.f import ifnone
 import config
 
-from data_processing import from_model
+from data_processing import from_model, from_base_dir
 from transformer_details import get_details
 
 app = FastAPI()
@@ -34,6 +34,7 @@ parser.add_argument("--debug", action="store_true", help=" Debug mode")
 parser.add_argument("--port", default=5050, help="Port to run the app. ")
 parser.add_argument("--model", default=None, help="If given, override the backend to use a particular model from local storage. Corpus searching results will only be availbale if annotated. Also requires specifying 'kind'")
 parser.add_argument("--kind", default=None, help="One of {'bidirectional', 'autoregressive'}. Required if model provided.")
+parser.add_argument("--corpus", default=None, help="Folder containing corpus information as output by `create_corpus.py` (data.hdf5, context_faiss/, embedding_faiss/ subfolders). ")
 args, _ = parser.parse_known_args()
 
 class ArgConfig():
@@ -41,13 +42,23 @@ class ArgConfig():
         self.args = args
         self.model = args.model
         self.kind = args.kind
+        self.corpus = args.corpus
 
         if not (self.has_model or self.use_defaults):
             raise ValueError("Either specify both `model` and `kind` or neither to use the defaults")
 
+        if self.has_corpus:
+            self.corpus = Path(self.corpus)
+            if not self.corpus.exists() or len(list(self.corpus.glob("*"))) == 0:
+                raise FileNotFoundError(f"Desired corpus '{self.corpus}' not available")
+
     @property
     def has_model(self):
         return self.model is not None and self.kind is not None
+
+    @property
+    def has_corpus(self):
+        return self.corpus is not None
     
     @property
     def model_name(self):
@@ -178,13 +189,16 @@ async def nearest_embedding_search(payload:api.QueryNearestPayload):
 
     try:
         details = aconf.from_pretrained(model)
-    except KeyError as e:
+    except:
         return {'status': 405, "payload": None}
 
-    model_name = ifnone(aconf.model_name, model)
 
     try:
-        cc = from_model(model_name, corpus)
+        if aconf.has_corpus:
+            cc = from_base_dir(aconf.corpus)
+        else:
+            model_name = ifnone(aconf.model_name, model)
+            cc = from_model(model_name, corpus)
     except FileNotFoundError as e:
         return {
             "status": 406,
@@ -220,10 +234,12 @@ async def nearest_context_search(payload:api.QueryNearestPayload):
     except KeyError as e:
         return {'status': 405, "payload": None}
 
-    model_name = ifnone(aconf.model_name, model)
-
     try:
-        cc = from_model(model_name, corpus)
+        if aconf.has_corpus:
+            cc = from_base_dir(aconf.corpus)
+        else:
+            model_name = ifnone(aconf.model_name, model)
+            cc = from_model(model_name, corpus)
     except FileNotFoundError as e:
         return {'status': 406, "payload": None}
 
