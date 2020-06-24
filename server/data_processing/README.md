@@ -10,7 +10,7 @@ This module contains the code necessary for extracting and labeling a corpus wit
 The raw Wizard of Oz text used to create the annotated corpus can be found [here](http://www.gutenberg.org/ebooks/55). A small version of Wikipedia (WikiText-2) can be found [here](https://blog.einstein.ai/the-wikitext-long-term-dependency-language-modeling-dataset/).
 
 ### Environment 
-Because this module depends on code written in other parts of this repo, we will need to make those files available to the PYTHONPATH. Follow the instructions in the [main README](../README.md), or specifically:
+Because this module depends on code written in other parts of this repo, we will need to make those files available to the PYTHONPATH. Follow the instructions in the [main README](../../README.md), or specifically:
 
 1. `conda activate exbert`
 2. `pip install -e server`

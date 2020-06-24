@@ -2,7 +2,6 @@
 
 [![License](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](https://opensource.org/licenses/Apache-2.0)
 
-
 ### A Visual Analysis Tool to Explore Learned Representations in Transformers Models
 by Ben Hoover, Hendrik Strobelt, Sebastian Gehrmann <br/>
 from IBM Research and Harvard NLP
@@ -21,9 +20,8 @@ Link to pre-paper and demo: [exbert.net](http://exbert.net)
 ### Version 0.9
 
 - [Overview](#overview)
-- [Components](#components)
 - [Install and Getting Started](#install-and-getting-started)
-- [Development](#development)
+- [Running locally](#running-locally)
 
 
 ## Overview
@@ -46,11 +44,14 @@ Limitations:
 
 ## Install and Getting Started
 
-### Setting up the Environment
-#### Makefile (recommended)
+Support for visualizing the attentions only is available out of the box. This minimal visualization is available with select deployed models on Huggingface's model page [here](https://huggingface.co/exbert). 
+
+Significant preprocessing needs to be performed to allow corpus searching. Please see the [instructions here](https://github.com/bhoov/exbert/tree/master/server/data_processing)
+
+### Makefile (recommended)
 Simply run `make env` from the root directory
 
-#### Manually
+### Manually
 1. From the root of this project, create a new conda directory with `conda env create -f environment.yml`. This will create an environment named `exbert`. 
 2. (optional) Intstall development dependencies with `conda env update -f environment-dev.yml`
 3. Activate this environment with `conda activate exbert`
@@ -59,51 +60,16 @@ Simply run `make env` from the root directory
 6. `pip install -e server`
 7. Install English support for spaCy `python -m spacy download en_core_web_sm`
 
-### Attention Only Vis
+## Running Locally
 
-Support for visualizing the attentions only is available out of the box. This minimal visualization is available with select deployed models on Huggingface's model page [here](https://huggingface.co/exbert). 
-
-### Attention + Corpus
-Significant preprocessing needs to be performed to allow corpus searching. Please see the [instructions here](https://github.com/bhoov/exbert/tree/master/server/data_processing)
-
-### Running Locally
-Starting the backend:
+Out of the box configuration is the same as the demo at [www.exbert.net].
 
 ```bash
 conda activate exbert
 python server/main.py
 ```
 
-Because exBERT lazy-loads the large annotated corpus and models, the first call to search across the corpus will be slow.
-
-## Development
-
-If you want to make custom changes to the code, these are some hints to get you started. 
-
-### Use as package
-Some find it useful to expose the code inside `server` for development in an environment like Jupyter Notebooks. From the root folder with the `exbert` environment active:
-
-```bash
-conda env update -f environment-dev.yml
-pip install -e ./server
-```
-
-Now the `exbert` environment should allow the server code to be accessible in any folder so long as there are no additional module name clashes in the environment.
-
-### Compiling the frontend
-
-```bash
-cd client/src
-npm install #installs all necessary node packages
-npm run build #This will create the static files living in `client/dist`. 
-```
-
-## Running a development environment
-You can run a client server that automatically recompiles the frontend with `npm run watch`. After making a change, you should be able to refresh the browser window to see your most recent changes.
-
-Because the backend has to load in a lot of data for inference, we do not allow auto-backend refresh on every saved change in flask even though the framework supports it.
-
-### Running your own model locally
+### Setting up your own model
 
 Limitations:
 - The model architecture must be supported by the `AutoModelWithLMHead`
@@ -133,14 +99,28 @@ The model class to instantiate is selected as the first pattern matching
 
 3. Run `python server/main.py --model PATH_TO_MODEL --kind {bidirectional | autoregressive} --corpus PATH_TO_CORPUS`, selecting bidirectional if your model was trained with masking (e.g., BERT) and autoregressive otherwise (e.g., GPT2). `PATH_TO_CORPUS` should be the name of the directory containing `data.hdf5`, `embedding_faiss/` and `context_faiss`.
 
+Because exBERT lazy-loads the large annotated corpus and models, the first call to search across the corpus will be slow.
+
+### Compiling the frontend
+
+```bash
+cd client/src
+npm install #installs all necessary node packages
+npm run build #This will create the static files living in `client/dist`. 
+```
+
+You can run a client server that automatically recompiles the frontend with `npm run watch` rather than `npm run build`. After making a change, you should be able to refresh the browser window to see your most recent changes.
+
+Because the backend has to load in a lot of data for inference, we do not allow auto-backend refresh on every saved change.
+
+## Acknowledgements
+This project was inspired in part by the original [BertViz by Jesse Vig](https://github.com/jessevig/bertviz).
+
 ## Notes on SubRepo Usage
 This project makes use of two public pip repositories (`transformers` and `spacyface`), both of which needed modification as this project was being developed. The `git-subrepo` tool was used to achieve this workflow with a forked repository of both transformers and spacyface. However, this introduces the following steps when setting up the environment:
 
 1. From the `transformers/` directory, run `pip install -e .`
 2. Repeat for the `spacyface/` directory.
-
-## Acknowledgements
-This project was inspired in part by the original [BertViz by Jesse Vig](https://github.com/jessevig/bertviz).
 
 ## Debugging
 - If you get a `No module named '_swigfaiss'` error, check that `libomp` is installed on your system. If you are on a mac, this is as simple as `brew install libomp`.
