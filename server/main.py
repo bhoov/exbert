@@ -187,11 +187,11 @@ async def update_masked_attention(
         "payload": payload_out,
     }
 
+def search_nearest(payload: api.QueryNearestPayload, kind:str):
+    """Search annotated corpus by `kind` (either 'embeddings' or 'contexts')"""
 
-# def nearest_embedding_search(**request):
-@app.post("/api/k-nearest-embeddings")
-async def nearest_embedding_search(payload:api.QueryNearestPayload):
-    """Return the token text and the metadata in JSON"""
+    assert kind == "embeddings" or kind == "contexts", f"Expected `kind` to be 'embeddings' or 'contexts'. Received {kind}"
+
     model = payload.model
     corpus = payload.corpus
     embedding = payload.embedding
@@ -203,7 +203,6 @@ async def nearest_embedding_search(payload:api.QueryNearestPayload):
         details = aconf.from_pretrained(model)
     except:
         return {'status': 405, "payload": None}
-
 
     try:
         if aconf.has_corpus:
@@ -220,7 +219,12 @@ async def nearest_embedding_search(payload:api.QueryNearestPayload):
     q = np.array(embedding).reshape((1, -1)).astype(np.float32)
     heads = list(set(heads))
 
-    out = cc.search_embeddings(layer, q, k)
+    if kind == "embeddings":
+        print("\n\nSEARCHING EMBEDDINGS\n\n")
+        out = cc.search_embeddings(layer, q, k)
+    elif kind == "contexts":
+        print("\n\nSEARCHING CONTEXTS\n\n")
+        out = cc.search_contexts(layer, heads, q, k)
 
     payload_out = [o.to_json(layer, heads) for o in out]
 
@@ -229,42 +233,15 @@ async def nearest_embedding_search(payload:api.QueryNearestPayload):
         "payload": payload_out
     }
 
+@app.post("/api/k-nearest-embeddings")
+async def nearest_embedding_search(payload:api.QueryNearestPayload):
+    """Return the token text and the metadata in JSON"""
+    return search_nearest(payload, "embeddings")
 
-# def nearest_context_search(**request):
 @app.post("/api/k-nearest-contexts")
 async def nearest_context_search(payload:api.QueryNearestPayload):
     """Return the token text and the metadata in JSON"""
-    model = payload.model
-    corpus = payload.corpus
-    context = payload.embedding
-    layer = payload.layer
-    heads = payload.heads
-    k = payload.k
-
-    try:
-        details = aconf.from_pretrained(model)
-    except KeyError as e:
-        return {'status': 405, "payload": None}
-
-    try:
-        if aconf.has_corpus:
-            cc = from_base_dir(aconf.corpus)
-        else:
-            model_name = ifnone(aconf.model_name, model)
-            cc = from_model(model_name, corpus)
-    except FileNotFoundError as e:
-        return {'status': 406, "payload": None}
-
-    q = np.array(context).reshape((1, -1)).astype(np.float32)
-    heads = list(set(heads))
-
-    out = cc.search_contexts(layer, heads, q, k)
-    payload_out = [o.to_json(layer, heads) for o in out]
-
-    return {
-        "status": 200,
-        "payload": payload_out,
-    }
+    return search_nearest(payload, "contexts")
 
 # Setup code
 if __name__ == "__main__":
