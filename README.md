@@ -74,6 +74,7 @@ python server/main.py
 Limitations:
 - The model architecture must be supported by the `AutoModelWithLMHead`
 - Corpus searching support is only available for English
+- Searching by context requires tweaking of the actual architecture code to extract this information. If your architecture has not been modified to support this extraction, it will not run.
 
 1. *Save your pretrained huggingface model* according to the naming conventions specified in the `modeling_auto.py` of the original Transformers repo (as of v2.8):
 
