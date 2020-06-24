@@ -31,3 +31,8 @@ SUPPORTED_MODELS = [
     #{"name": "roberta-base", "kind": "bidirectional"},
     #{"name": "gpt2-medium", "kind": "bidirectional"},
 ]
+
+SUPPORTED_CORPORA = [
+    { "code": "woz", "display": "Wizard of Oz" },
+    { "code": "wiki", "display": "Wikipedia" },
+]

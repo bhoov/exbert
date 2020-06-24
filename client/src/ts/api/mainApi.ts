@@ -84,6 +84,12 @@ export class API {
         return d3.json(url)
     }
 
+    getSupportedCorpora(): Promise<tp.CorporaDescription[]> {
+        const toSend = {}
+        const url = makeUrl(this.baseURL + "/supported-corpora", toSend)
+        return d3.json(url)
+    }
+
     getMetaAttentions(model: string, sentence: string, layer: number, hashObj: {} | null = null): Promise<rsp.AttentionDetailsResponse> {
         const toSend = {
             model: model,

@@ -150,3 +150,8 @@ export interface ModelDescription {
     name: string
     kind: ModelKind
 }
+
+export interface CorporaDescription { 
+    code: string
+    display: ModelKind
+}

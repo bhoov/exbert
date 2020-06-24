@@ -468,7 +468,9 @@ export class MainGraphic {
 
         console.log("INITIALIZING MODEL SElECTION");
         this.api.getSupportedModels().then(data => {
-            console.log("RESPONSE FROM SUPPORTED MODELS: ", data);
+            this.uiConf.model(data[0].name)
+            this.uiConf.modelKind(data[0].kind)
+
             const names = R.map(R.prop('name'))(data)
             const kinds = R.map(R.prop('kind'))(data)
             const kindmap = R.zipObj(names, kinds)
@@ -496,40 +498,24 @@ export class MainGraphic {
             })
 
         })
-
-        // const data = [
-        //     { name: "bert-base-cased", kind: tp.ModelKind.Bidirectional },
-        //     // { name: "albert-base-v1", kind: tp.ModelKind.Bidirectional },
-        //     { name: "gpt2", kind: tp.ModelKind.Autoregressive },
-        //     { name: "distilbert-base-uncased", kind: tp.ModelKind.Bidirectional },
-        //     { name: "distilroberta-base", kind: tp.ModelKind.Bidirectional },
-        //     { name: "distilgpt2", kind: tp.ModelKind.Autoregressive },
-        //     // { name: "bert-base-uncased", kind: tp.ModelKind.Bidirectional },
-        //     // { name: "roberta-base", kind: tp.ModelKind.Bidirectional },
-        //     // { name: "gpt2-medium", kind: tp.ModelKind.Autoregressive },
-        // ]
     }
 
     private _initCorpusSelection() {
-        const data = [
-            { code: "woz", display: "Wizard of Oz" },
-            { code: "wiki", display: "Wikipedia" },
-        ]
-
         const self = this
-        self.sels.corpusSelector.selectAll('option')
-            .data(data)
-            .join('option')
-            .property('value', d => d.code)
-            .text(d => d.display)
+        this.api.getSupportedCorpora().then(data => {
+            self.uiConf.corpus(data[0].code)
+            self.sels.corpusSelector.selectAll('option')
+                .data(data)
+                .join('option')
+                .property('value', d => d.code)
+                .text(d => d.display)
 
-        this.sels.corpusSelector.on('change', function () {
-            const me = d3.select(this)
-            self.uiConf.corpus(me.property('value'))
-            console.log(self.uiConf.corpus());
+            this.sels.corpusSelector.on('change', function () {
+                const me = d3.select(this)
+                self.uiConf.corpus(me.property('value'))
+                console.log(self.uiConf.corpus());
+            })
         })
-
-
     }
 
     private _staticInits() {

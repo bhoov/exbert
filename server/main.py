@@ -109,6 +109,18 @@ async def get_supported_models():
 
     return config.SUPPORTED_MODELS
 
+@app.get("/api/supported-corpora")
+async def get_supported_corpora():
+    if aconf.has_corpus:
+        return [
+            {
+                "code": aconf.corpus.stem,
+                "display": aconf.corpus.stem
+            }
+        ]
+
+    return config.SUPPORTED_CORPORA
+
 @app.get("/api/get-model-details")
 async def get_model_details(model: str, request_hash=None):# -> api.ModelDetailResponse:
     deets = aconf.from_pretrained(model)
