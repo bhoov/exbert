@@ -195,7 +195,7 @@ class MultiHeadSelfAttention(nn.Module):
             output += (weights,)
 
             if self.output_additional_info:
-                output += (context,)
+                output += (context.permute(0, 2, 1, 3).contiguous(),)
 
                 return output
 
