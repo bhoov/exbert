@@ -78,7 +78,7 @@ export class API {
         return checkDemoAPI(toSend, url)
     }
 
-    getSupportedModels(): Promise<tp.ModelDescription[]> {
+    getSupportedModels(): Promise<tp.SupportedModelResponse> {
         const toSend = {}
         const url = makeUrl(this.baseURL + "/supported-models", toSend)
         return d3.json(url)

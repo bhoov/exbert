@@ -83,7 +83,7 @@ class TransformerOutputFormatter:
         self.topk_words = topk_words
         self.topk_probs = topk_probs
 
-        self.n_layers = len(contexts) # With +1 for buffer layer at the beginning
+        self.n_layers = len(modified_embeddings)
         _, self.__len, self.n_heads, self.hidden_dim = contexts[0].shape
 
     @property

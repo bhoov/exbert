@@ -166,6 +166,8 @@ export class MainGraphic {
         }
 
         this._bindEventHandler()
+        this._initModelSelection();
+        this._initCorpusSelection();
     }
 
     private mainInit() {
@@ -466,17 +468,19 @@ export class MainGraphic {
     private _initModelSelection() {
         const self = this
 
-        console.log("INITIALIZING MODEL SElECTION");
         this.api.getSupportedModels().then(data => {
-            this.uiConf.model(data[0].name)
-            this.uiConf.modelKind(data[0].kind)
+            const desc = data.descriptions
+            if (data.force) {
+                this.uiConf.model(desc[0].name)
+                this.uiConf.modelKind(desc[0].kind)
+            }
 
-            const names = R.map(R.prop('name'))(data)
-            const kinds = R.map(R.prop('kind'))(data)
+            const names = R.map(R.prop('name'))(desc)
+            const kinds = R.map(R.prop('kind'))(desc)
             const kindmap = R.zipObj(names, kinds)
 
             this.sels.modelSelector.selectAll('.model-option')
-                .data(data)
+                .data(desc)
                 .join('option')
                 .classed('model-option', true)
                 .property('value', d => d.name)
@@ -520,8 +524,6 @@ export class MainGraphic {
 
     private _staticInits() {
         this._initSentenceForm();
-        this._initModelSelection();
-        this._initCorpusSelection();
         this._initQueryForm();
         this._initAdder();
         this._renderHeadSummary();

@@ -151,6 +151,11 @@ export interface ModelDescription {
     kind: ModelKind
 }
 
+export interface SupportedModelResponse {
+    force: boolean // Whether or not this was specified from the backend
+    descriptions: ModelDescription[]
+}
+
 export interface CorporaDescription { 
     code: string
     display: ModelKind

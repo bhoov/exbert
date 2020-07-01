@@ -32,12 +32,25 @@ app.add_middleware(
 parser = argparse.ArgumentParser(formatter_class=argparse.ArgumentDefaultsHelpFormatter)
 parser.add_argument("--debug", action="store_true", help=" Debug mode")
 parser.add_argument("--port", default=5050, help="Port to run the app. ")
-parser.add_argument("--model", default=None, help="If given, override the backend to use a particular model from local storage. Corpus searching results will only be availbale if annotated. Also requires specifying 'kind'")
-parser.add_argument("--kind", default=None, help="One of {'bidirectional', 'autoregressive'}. Required if model provided.")
-parser.add_argument("--corpus", default=None, help="Folder containing corpus information as output by `create_corpus.py` (data.hdf5, context_faiss/, embedding_faiss/ subfolders). ")
+parser.add_argument(
+    "--model",
+    default=None,
+    help="If given, override the backend to use a particular model from local storage. Corpus searching results will only be availbale if annotated. Also requires specifying 'kind'",
+)
+parser.add_argument(
+    "--kind",
+    default=None,
+    help="One of {'bidirectional', 'autoregressive'}. Required if model provided.",
+)
+parser.add_argument(
+    "--corpus",
+    default=None,
+    help="Folder containing corpus information as output by `create_corpus.py` (data.hdf5, context_faiss/, embedding_faiss/ subfolders). ",
+)
 args, _ = parser.parse_known_args()
 
-class ArgConfig():
+
+class ArgConfig:
     def __init__(self, args):
         self.args = args
         self.model = args.model
@@ -45,7 +58,9 @@ class ArgConfig():
         self.corpus = args.corpus
 
         if not (self.has_model or self.use_defaults):
-            raise ValueError("Either specify both `model` and `kind` or neither to use the defaults")
+            raise ValueError(
+                "Either specify both `model` and `kind` or neither to use the defaults"
+            )
 
         if self.has_corpus:
             self.corpus = Path(self.corpus)
@@ -59,7 +74,7 @@ class ArgConfig():
     @property
     def has_corpus(self):
         return self.corpus is not None
-    
+
     @property
     def model_name(self):
         if self.has_model:
@@ -71,11 +86,12 @@ class ArgConfig():
     def use_defaults(self):
         return self.model is None and self.kind is None
 
-    def from_pretrained(self, model_name:str):
+    def from_pretrained(self, model_name: str):
         if self.has_model:
             return get_details(self.model)
 
         return get_details(model_name)
+
 
 aconf = ArgConfig(args)
 
@@ -83,6 +99,7 @@ aconf = ArgConfig(args)
 @app.get("/")
 def hello_world():
     return RedirectResponse(url="client/exBERT.html")
+
 
 # send everything from client as static content
 @app.get("/client/{file_path:path}")
@@ -94,35 +111,32 @@ def send_static_client(file_path):
     f = str(pf.CLIENT_DIST / file_path)
     return FileResponse(f)
 
+
 # ======================================================================
 ## MAIN API ##
 # ======================================================================
 @app.get("/api/supported-models")
 async def get_supported_models():
     if aconf.has_model:
-        return [
-            {
-                "name": aconf.model_name,
-                "kind": aconf.kind
-            }
-        ]
+        return {
+            "force": True,
+            "descriptions": [{"name": aconf.model_name, "kind": aconf.kind}],
+        }
+    return {"force": False, "descriptions": config.SUPPORTED_MODELS}
 
-    return config.SUPPORTED_MODELS
 
 @app.get("/api/supported-corpora")
 async def get_supported_corpora():
     if aconf.has_corpus:
-        return [
-            {
-                "code": aconf.corpus.stem,
-                "display": aconf.corpus.stem
-            }
-        ]
+        return [{"code": aconf.corpus.stem, "display": aconf.corpus.stem}]
 
     return config.SUPPORTED_CORPORA
 
+
 @app.get("/api/get-model-details")
-async def get_model_details(model: str, request_hash=None):# -> api.ModelDetailResponse:
+async def get_model_details(
+    model: str, request_hash=None
+):  # -> api.ModelDetailResponse:
     deets = aconf.from_pretrained(model)
 
     info = deets.model.config
@@ -139,26 +153,26 @@ async def get_model_details(model: str, request_hash=None):# -> api.ModelDetailR
         "payload": payload_out,
     }
 
+
 @app.get("/api/attend-with-meta")
 async def get_attentions_and_preds(
     model: str, sentence: str, layer: int, request_hash=None
-):# -> api.AttentionResponse:
+):  # -> api.AttentionResponse:
     details = aconf.from_pretrained(model)
 
     deets = details.att_from_sentence(sentence)
 
     payload_out = deets.to_json(layer)
 
-    return {
-        "status": 200,
-        "payload": payload_out
-    }
+    print(f"{model} -- Payload Out: ", len(payload_out['aa']['right']))
+
+    return {"status": 200, "payload": payload_out}
 
 
 @app.post("/api/update-mask")
 async def update_masked_attention(
     payload: api.MaskUpdatePayload,
-):# -> api.AttentionResponse:
+):  # -> api.AttentionResponse:
     """
     Return attention information from tokens and mask indices.
 
@@ -187,10 +201,13 @@ async def update_masked_attention(
         "payload": payload_out,
     }
 
-def search_nearest(payload: api.QueryNearestPayload, kind:str):
+
+def search_nearest(payload: api.QueryNearestPayload, kind: str):
     """Search annotated corpus by `kind` (either 'embeddings' or 'contexts')"""
 
-    assert kind == "embeddings" or kind == "contexts", f"Expected `kind` to be 'embeddings' or 'contexts'. Received {kind}"
+    assert (
+        kind == "embeddings" or kind == "contexts"
+    ), f"Expected `kind` to be 'embeddings' or 'contexts'. Received {kind}"
 
     model = payload.model
     corpus = payload.corpus
@@ -202,7 +219,7 @@ def search_nearest(payload: api.QueryNearestPayload, kind:str):
     try:
         details = aconf.from_pretrained(model)
     except:
-        return {'status': 405, "payload": None}
+        return {"status": 405, "payload": None}
 
     try:
         if aconf.has_corpus:
@@ -211,10 +228,7 @@ def search_nearest(payload: api.QueryNearestPayload, kind:str):
             model_name = ifnone(aconf.model_name, model)
             cc = from_model(model_name, corpus)
     except FileNotFoundError as e:
-        return {
-            "status": 406,
-            "payload": None
-        }
+        return {"status": 406, "payload": None}
 
     q = np.array(embedding).reshape((1, -1)).astype(np.float32)
     heads = list(set(heads))
@@ -228,20 +242,20 @@ def search_nearest(payload: api.QueryNearestPayload, kind:str):
 
     payload_out = [o.to_json(layer, heads) for o in out]
 
-    return {
-        "status": 200,
-        "payload": payload_out
-    }
+    return {"status": 200, "payload": payload_out}
+
 
 @app.post("/api/k-nearest-embeddings")
-async def nearest_embedding_search(payload:api.QueryNearestPayload):
+async def nearest_embedding_search(payload: api.QueryNearestPayload):
     """Return the token text and the metadata in JSON"""
     return search_nearest(payload, "embeddings")
 
+
 @app.post("/api/k-nearest-contexts")
-async def nearest_context_search(payload:api.QueryNearestPayload):
+async def nearest_context_search(payload: api.QueryNearestPayload):
     """Return the token text and the metadata in JSON"""
     return search_nearest(payload, "contexts")
+
 
 # Setup code
 if __name__ == "__main__":
