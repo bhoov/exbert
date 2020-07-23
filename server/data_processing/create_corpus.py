@@ -7,7 +7,7 @@ def parse_args():
     parser.add_argument("-o", "--outdir", help="Path of output directory inside of which to place <model>/<corpus>/ directory containing hdf5 and faiss files")
     parser.add_argument("-n", "--name", default=None, help="Name the corpus with a code name. If not given, default to the name of the provided .txt file")
     parser.add_argument("--force", action="store_true", help="If given, overwrite existing hdf5 and faiss files.")
-    parser.add_argument("-m", "--model", help="Specify the huggingface model to use for attentions")
+    parser.add_argument("-m", "--model", default="bert-base-cased", help="Specify the huggingface model to use for attentions")
     parser.add_argument("--nomask", action='store_false', help="INCLUDE attentions from special tokens like [CLS] and [SEP]. By default, ignore these attentions")
 
     return parser.parse_args()
