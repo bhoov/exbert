@@ -122,7 +122,10 @@ class ModelDetails:
             - Top predicted words
             - Probabilities of top predicted words
         """
-        logits, hidden_state, attentions, contexts = output
+        if len(output) == 4:
+            logits, hidden_state, attentions, contexts = output
+        elif len(output) == 5:
+            logits, past, hidden_state, attentions, contexts = output
 
         return {
             "logits": logits,
