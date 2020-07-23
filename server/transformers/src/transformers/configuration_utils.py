@@ -52,8 +52,8 @@ class PretrainedConfig(object):
             torchscript (:obj:`bool`, `optional`, defaults to :obj:`False`):
                 Is the model used with Torchscript (for PyTorch models).
     """
-    pretrained_config_archive_map = {}  # type: Dict[str, str]
-    model_type = ""  # type: str
+    pretrained_config_archive_map: Dict[str, str] = {}
+    model_type: str = ""
 
     def __init__(self, **kwargs):
         # Attributes with defaults
@@ -61,35 +61,51 @@ class PretrainedConfig(object):
         self.output_hidden_states = kwargs.pop("output_hidden_states", False)
         self.output_additional_info = kwargs.pop("output_additional_info", False)
         self.output_past = kwargs.pop("output_past", True)  # Not used by all models
+        self.use_cache = kwargs.pop("use_cache", True)  # Not used by all models
         self.torchscript = kwargs.pop("torchscript", False)  # Only used by PyTorch models
         self.use_bfloat16 = kwargs.pop("use_bfloat16", False)
         self.pruned_heads = kwargs.pop("pruned_heads", {})
 
         # Is decoder is used in encoder-decoder models to differentiate encoder from decoder
+        self.is_encoder_decoder = kwargs.pop("is_encoder_decoder", False)
         self.is_decoder = kwargs.pop("is_decoder", False)
 
         # Parameters for sequence generation
         self.max_length = kwargs.pop("max_length", 20)
+        self.min_length = kwargs.pop("min_length", 0)
         self.do_sample = kwargs.pop("do_sample", False)
+        self.early_stopping = kwargs.pop("early_stopping", False)
         self.num_beams = kwargs.pop("num_beams", 1)
         self.temperature = kwargs.pop("temperature", 1.0)
         self.top_k = kwargs.pop("top_k", 50)
         self.top_p = kwargs.pop("top_p", 1.0)
         self.repetition_penalty = kwargs.pop("repetition_penalty", 1.0)
-        self.bos_token_id = kwargs.pop("bos_token_id", None)
-        self.pad_token_id = kwargs.pop("pad_token_id", None)
-        self.eos_token_ids = kwargs.pop("eos_token_ids", None)
         self.length_penalty = kwargs.pop("length_penalty", 1.0)
+        self.no_repeat_ngram_size = kwargs.pop("no_repeat_ngram_size", 0)
+        self.bad_words_ids = kwargs.pop("bad_words_ids", None)
         self.num_return_sequences = kwargs.pop("num_return_sequences", 1)
 
         # Fine-tuning task arguments
         self.architectures = kwargs.pop("architectures", None)
         self.finetuning_task = kwargs.pop("finetuning_task", None)
         self.num_labels = kwargs.pop("num_labels", 2)
-        self.id2label = kwargs.pop("id2label", {i: "LABEL_{}".format(i) for i in range(self.num_labels)})
+        self.id2label = kwargs.pop("id2label", {i: f"LABEL_{i}" for i in range(self.num_labels)})
         self.id2label = dict((int(key), value) for key, value in self.id2label.items())
         self.label2id = kwargs.pop("label2id", dict(zip(self.id2label.values(), self.id2label.keys())))
         self.label2id = dict((key, int(value)) for key, value in self.label2id.items())
+
+        # Tokenizer arguments TODO: eventually tokenizer and models should share the same config
+        self.prefix = kwargs.pop("prefix", None)
+        self.bos_token_id = kwargs.pop("bos_token_id", None)
+        self.pad_token_id = kwargs.pop("pad_token_id", None)
+        self.eos_token_id = kwargs.pop("eos_token_id", None)
+        self.decoder_start_token_id = kwargs.pop("decoder_start_token_id", None)
+
+        # task specific arguments
+        self.task_specific_params = kwargs.pop("task_specific_params", None)
+
+        # TPU arguments
+        self.xla_device = kwargs.pop("xla_device", None)
 
         # Additional attributes without default values
         for key, value in kwargs.items():
@@ -98,6 +114,18 @@ class PretrainedConfig(object):
             except AttributeError as err:
                 logger.error("Can't set {} with value {} for {}".format(key, value, self))
                 raise err
+
+    @property
+    def num_labels(self):
+        return self._num_labels
+
+    @num_labels.setter
+    def num_labels(self, num_labels):
+        self._num_labels = num_labels
+        self.id2label = {i: "LABEL_{}".format(i) for i in range(self.num_labels)}
+        self.id2label = dict((int(key), value) for key, value in self.id2label.items())
+        self.label2id = dict(zip(self.id2label.values(), self.id2label.keys()))
+        self.label2id = dict((key, int(value)) for key, value in self.label2id.items())
 
     def save_pretrained(self, save_directory):
         """
@@ -115,7 +143,7 @@ class PretrainedConfig(object):
         # If we save using the predefined names, we can load using `from_pretrained`
         output_config_file = os.path.join(save_directory, CONFIG_NAME)
 
-        self.to_json_file(output_config_file)
+        self.to_json_file(output_config_file, use_diff=True)
         logger.info("Configuration saved in {}".format(output_config_file))
 
     @classmethod
@@ -211,7 +239,7 @@ class PretrainedConfig(object):
         elif os.path.isfile(pretrained_model_name_or_path) or is_remote_url(pretrained_model_name_or_path):
             config_file = pretrained_model_name_or_path
         else:
-            config_file = hf_bucket_url(pretrained_model_name_or_path, postfix=CONFIG_NAME)
+            config_file = hf_bucket_url(pretrained_model_name_or_path, filename=CONFIG_NAME, use_cdn=False)
 
         try:
             # Load from URL or cache if already cached
@@ -235,10 +263,13 @@ class PretrainedConfig(object):
                 )
             else:
                 msg = (
-                    "Model name '{}' was not found in model name list. "
-                    "We assumed '{}' was a path, a model identifier, or url to a configuration file named {} or "
-                    "a directory containing such a file but couldn't find any such file at this path or url.".format(
-                        pretrained_model_name_or_path, config_file, CONFIG_NAME,
+                    "Can't load '{}'. Make sure that:\n\n"
+                    "- '{}' is a correct model identifier listed on 'https://huggingface.co/models'\n\n"
+                    "- or '{}' is the correct path to a directory containing a '{}' file\n\n".format(
+                        pretrained_model_name_or_path,
+                        pretrained_model_name_or_path,
+                        pretrained_model_name_or_path,
+                        CONFIG_NAME,
                     )
                 )
             raise EnvironmentError(msg)
@@ -324,6 +355,29 @@ class PretrainedConfig(object):
     def __repr__(self):
         return "{} {}".format(self.__class__.__name__, self.to_json_string())
 
+    def to_diff_dict(self):
+        """
+        Removes all attributes from config which correspond to the default
+        config attributes for better readability and serializes to a Python
+        dictionary.
+
+        Returns:
+            :obj:`Dict[str, any]`: Dictionary of all the attributes that make up this configuration instance,
+        """
+        config_dict = self.to_dict()
+
+        # get the default config dict
+        default_config_dict = PretrainedConfig().to_dict()
+
+        serializable_config_dict = {}
+
+        # only serialize values that differ from the default config
+        for key, value in config_dict.items():
+            if key not in default_config_dict or value != default_config_dict[key]:
+                serializable_config_dict[key] = value
+
+        return serializable_config_dict
+
     def to_dict(self):
         """
         Serializes this instance to a Python dictionary.
@@ -336,22 +390,43 @@ class PretrainedConfig(object):
             output["model_type"] = self.__class__.model_type
         return output
 
-    def to_json_string(self):
+    def to_json_string(self, use_diff=True):
         """
         Serializes this instance to a JSON string.
+
+        Args:
+            use_diff (:obj:`bool`):
+                If set to True, only the difference between the config instance and the default PretrainedConfig() is serialized to JSON string.
 
         Returns:
             :obj:`string`: String containing all the attributes that make up this configuration instance in JSON format.
         """
-        return json.dumps(self.to_dict(), indent=2, sort_keys=True) + "\n"
+        if use_diff is True:
+            config_dict = self.to_diff_dict()
+        else:
+            config_dict = self.to_dict()
+        return json.dumps(config_dict, indent=2, sort_keys=True) + "\n"
 
-    def to_json_file(self, json_file_path):
+    def to_json_file(self, json_file_path, use_diff=True):
         """
         Save this instance to a json file.
 
         Args:
             json_file_path (:obj:`string`):
                 Path to the JSON file in which this configuration instance's parameters will be saved.
+            use_diff (:obj:`bool`):
+                If set to True, only the difference between the config instance and the default PretrainedConfig() is serialized to JSON file.
         """
         with open(json_file_path, "w", encoding="utf-8") as writer:
-            writer.write(self.to_json_string())
+            writer.write(self.to_json_string(use_diff=use_diff))
+
+    def update(self, config_dict: Dict):
+        """
+        Updates attributes of this class
+        with attributes from `config_dict`.
+
+        Args:
+            :obj:`Dict[str, any]`: Dictionary of attributes that shall be updated for this class.
+        """
+        for key, value in config_dict.items():
+            setattr(self, key, value)

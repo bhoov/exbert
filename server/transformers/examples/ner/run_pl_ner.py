@@ -21,11 +21,13 @@ class NERTransformer(BaseTransformer):
     A training module for NER. See BaseTransformer for the core options.
     """
 
+    mode = "token-classification"
+
     def __init__(self, hparams):
         self.labels = get_labels(hparams.labels)
         num_labels = len(self.labels)
         self.pad_token_label_id = CrossEntropyLoss().ignore_index
-        super(NERTransformer, self).__init__(hparams, num_labels)
+        super().__init__(hparams, num_labels, self.mode)
 
     def forward(self, **inputs):
         return self.model(**inputs)
@@ -33,25 +35,15 @@ class NERTransformer(BaseTransformer):
     def training_step(self, batch, batch_num):
         "Compute loss and log."
         inputs = {"input_ids": batch[0], "attention_mask": batch[1], "labels": batch[3]}
-        if self.hparams.model_type != "distilbert":
+        if self.config.model_type != "distilbert":
             inputs["token_type_ids"] = (
-                batch[2] if self.hparams.model_type in ["bert", "xlnet"] else None
-            )  # XLM and RoBERTa don"t use segment_ids
+                batch[2] if self.config.model_type in ["bert", "xlnet"] else None
+            )  # XLM and RoBERTa don"t use token_type_ids
 
-        outputs = self.forward(**inputs)
+        outputs = self(**inputs)
         loss = outputs[0]
         tensorboard_logs = {"loss": loss, "rate": self.lr_scheduler.get_last_lr()[-1]}
         return {"loss": loss, "log": tensorboard_logs}
-
-    def _feature_file(self, mode):
-        return os.path.join(
-            self.hparams.data_dir,
-            "cached_{}_{}_{}".format(
-                mode,
-                list(filter(None, self.hparams.model_name_or_path.split("/"))).pop(),
-                str(self.hparams.max_seq_length),
-            ),
-        )
 
     def prepare_data(self):
         "Called to initialize data. Use the call to construct features"
@@ -66,14 +58,14 @@ class NERTransformer(BaseTransformer):
                     self.labels,
                     args.max_seq_length,
                     self.tokenizer,
-                    cls_token_at_end=bool(args.model_type in ["xlnet"]),
+                    cls_token_at_end=bool(self.config.model_type in ["xlnet"]),
                     cls_token=self.tokenizer.cls_token,
-                    cls_token_segment_id=2 if args.model_type in ["xlnet"] else 0,
+                    cls_token_segment_id=2 if self.config.model_type in ["xlnet"] else 0,
                     sep_token=self.tokenizer.sep_token,
-                    sep_token_extra=bool(args.model_type in ["roberta"]),
-                    pad_on_left=bool(args.model_type in ["xlnet"]),
-                    pad_token=self.tokenizer.convert_tokens_to_ids([self.tokenizer.pad_token])[0],
-                    pad_token_segment_id=4 if args.model_type in ["xlnet"] else 0,
+                    sep_token_extra=bool(self.config.model_type in ["roberta"]),
+                    pad_on_left=bool(self.config.model_type in ["xlnet"]),
+                    pad_token=self.tokenizer.pad_token_id,
+                    pad_token_segment_id=self.tokenizer.pad_token_type_id,
                     pad_token_label_id=self.pad_token_label_id,
                 )
                 logger.info("Saving features into cached file %s", cached_features_file)
@@ -85,22 +77,26 @@ class NERTransformer(BaseTransformer):
         logger.info("Loading features from cached file %s", cached_features_file)
         features = torch.load(cached_features_file)
         all_input_ids = torch.tensor([f.input_ids for f in features], dtype=torch.long)
-        all_input_mask = torch.tensor([f.input_mask for f in features], dtype=torch.long)
-        all_segment_ids = torch.tensor([f.segment_ids for f in features], dtype=torch.long)
+        all_attention_mask = torch.tensor([f.attention_mask for f in features], dtype=torch.long)
+        if features[0].token_type_ids is not None:
+            all_token_type_ids = torch.tensor([f.token_type_ids for f in features], dtype=torch.long)
+        else:
+            all_token_type_ids = torch.tensor([0 for f in features], dtype=torch.long)
+            # HACK(we will not use this anymore soon)
         all_label_ids = torch.tensor([f.label_ids for f in features], dtype=torch.long)
         return DataLoader(
-            TensorDataset(all_input_ids, all_input_mask, all_segment_ids, all_label_ids), batch_size=batch_size
+            TensorDataset(all_input_ids, all_attention_mask, all_token_type_ids, all_label_ids), batch_size=batch_size
         )
 
     def validation_step(self, batch, batch_nb):
         "Compute validation"
 
         inputs = {"input_ids": batch[0], "attention_mask": batch[1], "labels": batch[3]}
-        if self.hparams.model_type != "distilbert":
+        if self.config.model_type != "distilbert":
             inputs["token_type_ids"] = (
-                batch[2] if self.hparams.model_type in ["bert", "xlnet"] else None
-            )  # XLM and RoBERTa don"t use segment_ids
-        outputs = self.forward(**inputs)
+                batch[2] if self.config.model_type in ["bert", "xlnet"] else None
+            )  # XLM and RoBERTa don"t use token_type_ids
+        outputs = self(**inputs)
         tmp_eval_loss, logits = outputs[:2]
         preds = logits.detach().cpu().numpy()
         out_label_ids = inputs["labels"].detach().cpu().numpy()
@@ -130,49 +126,27 @@ class NERTransformer(BaseTransformer):
             "f1": f1_score(out_label_list, preds_list),
         }
 
-        if self.is_logger():
-            logger.info("***** Eval results *****")
-            for key in sorted(results.keys()):
-                logger.info("  %s = %s", key, str(results[key]))
-
-        tensorboard_logs = results
         ret = {k: v for k, v in results.items()}
-        ret["log"] = tensorboard_logs
+        ret["log"] = results
         return ret, preds_list, out_label_list
 
     def validation_end(self, outputs):
+        # todo: update to validation_epoch_end instead of deprecated validation_end
+        # when stable
         ret, preds, targets = self._eval_end(outputs)
-        return ret
+        logs = ret["log"]
+        return {"val_loss": logs["val_loss"], "log": logs, "progress_bar": logs}
 
-    def test_end(self, outputs):
+    def test_epoch_end(self, outputs):
+        # updating to test_epoch_end instead of deprecated test_end
         ret, predictions, targets = self._eval_end(outputs)
 
-        if self.is_logger():
-            # Write output to a file:
-            # Save results
-            output_test_results_file = os.path.join(self.hparams.output_dir, "test_results.txt")
-            with open(output_test_results_file, "w") as writer:
-                for key in sorted(ret.keys()):
-                    if key != "log":
-                        writer.write("{} = {}\n".format(key, str(ret[key])))
-            # Save predictions
-            output_test_predictions_file = os.path.join(self.hparams.output_dir, "test_predictions.txt")
-            with open(output_test_predictions_file, "w") as writer:
-                with open(os.path.join(self.hparams.data_dir, "test.txt"), "r") as f:
-                    example_id = 0
-                    for line in f:
-                        if line.startswith("-DOCSTART-") or line == "" or line == "\n":
-                            writer.write(line)
-                            if not predictions[example_id]:
-                                example_id += 1
-                        elif predictions[example_id]:
-                            output_line = line.split()[0] + " " + predictions[example_id].pop(0) + "\n"
-                            writer.write(output_line)
-                        else:
-                            logger.warning(
-                                "Maximum sequence length exceeded: No prediction for '%s'.", line.split()[0]
-                            )
-        return ret
+        # Converting to the dict required by pl
+        # https://github.com/PyTorchLightning/pytorch-lightning/blob/master/\
+        # pytorch_lightning/trainer/logging.py#L139
+        logs = ret["log"]
+        # `val_loss` is the key returned by `self._eval_end()` but actually refers to `test_loss`
+        return {"avg_test_loss": logs["val_loss"], "log": logs, "progress_bar": logs}
 
     @staticmethod
     def add_model_specific_args(parser, root_dir):
@@ -217,6 +191,10 @@ if __name__ == "__main__":
     trainer = generic_train(model, args)
 
     if args.do_predict:
-        checkpoints = list(sorted(glob.glob(args.output_dir + "/checkpoint_*.ckpt", recursive=True)))
-        NERTransformer.load_from_checkpoint(checkpoints[-1])
+        # See https://github.com/huggingface/transformers/issues/3159
+        # pl use this format to create a checkpoint:
+        # https://github.com/PyTorchLightning/pytorch-lightning/blob/master\
+        # /pytorch_lightning/callbacks/model_checkpoint.py#L169
+        checkpoints = list(sorted(glob.glob(os.path.join(args.output_dir, "checkpointepoch=*.ckpt"), recursive=True)))
+        model = model.load_from_checkpoint(checkpoints[-1])
         trainer.test(model)

@@ -61,3 +61,14 @@ QuestionAnsweringPipeline
 
 .. autoclass:: transformers.QuestionAnsweringPipeline
 
+
+SummarizationPipeline
+==========================================
+
+.. autoclass:: transformers.SummarizationPipeline
+
+
+TextGenerationPipeline
+==========================================
+
+.. autoclass:: transformers.TextGenerationPipeline

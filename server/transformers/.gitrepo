@@ -4,9 +4,9 @@
 ; git-subrepo command. See https://github.com/git-commands/git-subrepo#readme
 ;
 [subrepo]
-	remote = git@github.com:bhoov/transformers.git
+	remote = https://github.com/bhoov/transformers.git
 	branch = exbert-mods
-	commit = aeb41e6a4b0869ec96a80d3a20a68fdb4cc0be46
-	parent = 6f61d13085e44ecd29e33c71d6cb8f6ce8b2686b
+	commit = a05419e2293ed60722b132f9363cd9d7e4bc2893
+	parent = aa3d6e7593a6dd1e36d2abed23a9450ce3d6a017
 	method = merge
 	cmdver = 0.4.1

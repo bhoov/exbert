@@ -7,7 +7,7 @@ from pathlib import Path
 
 from data_processing.sentence_extracting import extract_chars, extract_lines
 from data_processing.corpus_data_wrapper import CorpusDataWrapper, to_idx
-from transformer_details import from_pretrained
+from transformer_details import get_details
 
 MIN_SENTENCE_CHARLEN = 24
 
@@ -29,7 +29,7 @@ def main(infile, outdir, force, model_name, mask_attentions):
     f = h5py.File(data_outfile, 'a')
     if force: f.clear()
 
-    extractor = from_pretrained(model_name)
+    extractor = get_details(model_name)
 
     # if "gpt" in model_name:
     #     mask_attentions = False
