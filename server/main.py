@@ -223,7 +223,12 @@ def search_nearest(payload: api.QueryNearestPayload, kind: str):
 
     try:
         if aconf.has_corpus:
-            cc = from_base_dir(aconf.corpus)
+            if '/' in aconf.model:
+                # If transformer model is in format `user/model`
+                cc = from_base_dir(aconf.corpus,aconf.model)
+            else:
+                cc = from_base_dir(aconf.corpus)
+            
         else:
             model_name = ifnone(aconf.model_name, model)
             cc = from_model(model_name, corpus)
