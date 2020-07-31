@@ -10,8 +10,8 @@ def get_dir_names(path: Path) -> List[str]:
     return available
 
 @memoize
-def from_base_dir(base_dir:str):
-    return ConvenienceCorpus.from_base_dir(base_dir)
+def from_base_dir(base_dir:str, name:Optional[str]=None):
+    return ConvenienceCorpus.from_base_dir(base_dir,name=name)
 
 @memoize
 def from_model(model_name, corpus_name):
@@ -38,10 +38,9 @@ class ConvenienceCorpus():
 
         self.embeddings_available = files_available(self.embedding_dir)
         self.contexts_available = files_available(self.context_dir)
-
         self.corpus = CorpusDataWrapper(self.corpus_f, self.name)
-        self.embedding_faiss = Indexes(self.embedding_dir)
-        self.context_faiss = ContextIndexes(self.context_dir)
+        self.embedding_faiss = Indexes(self.embedding_dir,self.name)
+        self.context_faiss = ContextIndexes(self.context_dir,self.name)
 
     @classmethod
     def from_base_dir(cls, base_dir:Union[str, Path], name:Optional[str]=None):

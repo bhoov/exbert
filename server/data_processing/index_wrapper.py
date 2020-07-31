@@ -2,7 +2,7 @@ from functools import partial
 import faiss
 import numpy as np
 from pathlib import Path
-from typing import Iterable
+from typing import Iterable, Optional
 from utils.f import memoize
 from transformers import AutoConfig
 
@@ -34,7 +34,7 @@ class Indexes:
     
     Assumes there are files in the folder matching the pattern input
     """
-    def __init__(self, folder, pattern=FAISS_LAYER_PATTERN):
+    def __init__(self, folder, model_name:Optional[str]=None, pattern=FAISS_LAYER_PATTERN):
         self.base_dir = Path(folder)
         self.n_layers = len(list(self.base_dir.glob(pattern))) - 1 # Subtract final output
         self.indexes = [None] * (self.n_layers + 1) # Initialize empty list, adding 1 for input
@@ -42,7 +42,12 @@ class Indexes:
         self.__init_indexes()
 
         # Extract model name from folder hierarchy
-        self.model_name = self.base_dir.parent.parent.stem
+        if model_name is None:
+            self.model_name = self.base_dir.parent.parent.stem
+        # Use passed in model name
+        else:
+            self.model_name = model_name
+
         self.config = get_config(self.model_name)
         self.nheads = self.config.num_attention_heads
         self.hidden_size = self.config.hidden_size
