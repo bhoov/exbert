@@ -73,8 +73,8 @@ class Indexes:
 class ContextIndexes(Indexes):
     """Special index enabling masking of particular heads before searching"""
 
-    def __init__(self, folder, pattern=FAISS_LAYER_PATTERN):
-        super().__init__(folder, pattern)
+    def __init__(self, folder, model_name=None, pattern=FAISS_LAYER_PATTERN):
+        super().__init__(folder, model_name, pattern)
 
         self.head_mask = partial(create_mask, self.head_size, self.nheads)
 

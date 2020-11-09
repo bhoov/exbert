@@ -39,8 +39,8 @@ class ConvenienceCorpus():
         self.embeddings_available = files_available(self.embedding_dir)
         self.contexts_available = files_available(self.context_dir)
         self.corpus = CorpusDataWrapper(self.corpus_f, self.name)
-        self.embedding_faiss = Indexes(self.embedding_dir,self.name)
-        self.context_faiss = ContextIndexes(self.context_dir,self.name)
+        self.embedding_faiss = Indexes(self.embedding_dir)
+        self.context_faiss = ContextIndexes(self.context_dir)
 
     @classmethod
     def from_base_dir(cls, base_dir:Union[str, Path], name:Optional[str]=None):
@@ -54,7 +54,7 @@ class ConvenienceCorpus():
         if name is None:
             model_name = model_dir.name
             corpus_name = bd.name
-            name = f"{model_name}_{corpus_name}"
+            name = f"{model_name}_{corpus_name}" # User sugar, should have no function
 
         return cls(corpus_f, embedding_dir, context_dir, name)
 
