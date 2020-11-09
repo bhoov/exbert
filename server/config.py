@@ -26,7 +26,7 @@ SUPPORTED_MODELS = [
     {"name": "distilroberta-base", "kind": "bidirectional"},
     {"name": "gpt2", "kind": "autoregressive"},
     {"name": "distilgpt2", "kind": "autoregressive"},
-    {"name": "t5-small", "kind": "bidirectional"},
+    # {"name": "t5-small", "kind": "bidirectional"},
     #{"name": "bert-base-uncased", "kind": "bidirectional"},
     #{"name": "roberta-base", "kind": "bidirectional"},
     #{"name": "gpt2-medium", "kind": "bidirectional"},
