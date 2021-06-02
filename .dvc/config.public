@@ -1,0 +1,8 @@
+[core]
+    remote = ibmremote
+['remote "ibmremote"']
+    url = s3://hoo-exbert
+    endpointurl = https://s3.us-east.cloud-object-storage.appdomain.cloud
+    access_key_id = 1e8af97a46bb4188bd989aed365524e7
+    secret_access_key = b712c73c85f9382b68ec883b450b55cb648d663403e33225
+    region = us-east

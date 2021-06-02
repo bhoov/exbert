@@ -1,0 +1,5 @@
+outs:
+- md5: 40d856342f723c566451e2f9cf206c29.dir
+  size: 49631463114
+  nfiles: 167
+  path: corpora
