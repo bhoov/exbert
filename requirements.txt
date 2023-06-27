@@ -6,10 +6,15 @@ faiss-cpu==1.6.3
 numpy==1.21.6
 pillow==5.4.1
 torch==1.0.1
-sacremoses==0.0.43
+# sacremoses==0.0.43
 cachetools==4.1.1
-# dvc-s3
-# fastapi[all]
-async-lru==1.0.2
+aiofiles==0.5.0
+uvicorn==0.11.3
+# dvc[s3]==1.11.16
+funcy==1.16
+pathspec==0.9.0
+async-lru #==1.0.2
 sentencepiece==0.1.92
 tokenizers==0.8.0
+--only-binary :all:
+fastapi==0.58.1

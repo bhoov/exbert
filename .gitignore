@@ -1,4 +1,7 @@
 # General
+server/data
+_pvc.yaml
+_*.sh
 .pytest_cache
 .DS_Store
 .AppleDouble

@@ -23,14 +23,24 @@ spec:
           imagePullPolicy: Always
           ports:
             - containerPort: 8000
+          volumeMounts:
+            - mountPath: "/app/server/data"
+              name: cos-data
           resources:
             requests:
-              cpu: 1
-              memory: 10G
+              cpu: 3
+              memory: 30G
               nvidia.com/gpu: 0
             limits:
-              cpu: 2
-              memory: 20G
+              cpu: 3
+              memory: 30G
               nvidia.com/gpu: 0
+          env:
+            - name: PYTORCH_PRETRAINED_BERT_CACHE
+              value: /app/server/data/models/
       imagePullSecrets:
         - name: all-icr-io
+      volumes:
+        - name: cos-data
+          persistentVolumeClaim:
+            claimName: cos-exbert-osc

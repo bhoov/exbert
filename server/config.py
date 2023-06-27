@@ -6,7 +6,10 @@ import utils.path_fixes as pf
 import os
 
 ROOT = Path(os.path.abspath(__file__)).parent
-CORPORA = ROOT / "corpora"
+
+BASEDATA = ROOT / "data"
+CORPORA = BASEDATA / "corpora"
+os.environ["PYTORCH_PRETRAINED_BERT_CACHE"] = str(BASEDATA / "hf")
 
 # Change this to indicate what data is loaded for searching
 RESOURCE_DIR = CORPORA / "gpt2" / "woz"

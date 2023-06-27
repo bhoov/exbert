@@ -33,5 +33,5 @@ COPY client/dist client/dist
 #ENTRYPOINT ["/usr/local/bin/entrypoint.sh"]
 #CMD ["sleep", "604800"]
 # CMD ["jupyter", "lab", "--port", "14242"]]
-CMD ["uvicorn",  "--host=0.0.0.0", "--log-level=debug", "--app-dir=backend", "server:app"]
+CMD ["uvicorn",  "--host=0.0.0.0", "--port=5050", "--log-level=debug", "server.main:app"]
 # CMD ["uvicorn",  "--host=0.0.0.0", "--log-level=debug", "--app-dir=src", "test-app:app"]
