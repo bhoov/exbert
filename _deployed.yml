@@ -1,0 +1,36 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: rxnmapper
+  namespace: visdemos
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      run: rxnmapper
+  strategy:
+    type: Recreate
+  template:
+    metadata:
+      name: rxnmapper
+      namespace: visdemos
+      labels:
+        run: rxnmapper
+    spec:
+      containers:
+        - name: rxnmapper
+          image: us.icr.io/research3/visdemos/hoo/rxnmapper:v0.2
+          imagePullPolicy: Always
+          ports:
+            - containerPort: 8000
+          resources:
+            requests:
+              cpu: 1
+              memory: 10G
+              nvidia.com/gpu: 0
+            limits:
+              cpu: 2
+              memory: 20G
+              nvidia.com/gpu: 0
+      imagePullSecrets:
+        - name: all-icr-io

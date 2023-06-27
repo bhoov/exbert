@@ -1,0 +1,46 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: rxnmapper
+  namespace: visdemos
+  labels:
+    run: rxnmapper
+  # annotations:
+  #   kubectl.kubernetes.io/last-applied-configuration: >
+  #     {"apiVersion":"v1","kind":"Service","metadata":{"annotations":{},"labels":{"run":"molsplorer-backend"},"name":"molsplorer-backend","namespace":"visdemos"},"spec":{"ports":[{"port":80,"protocol":"TCP","targetPort":8000}],"selector":{"run":"molsplorer-backend"},"type":"NodePort"}}
+spec:
+  type: NodePort
+  selector:
+    run: rxnmapper
+  ports:
+   - protocol: TCP
+     port: 80
+     targetPort: 8000
+
+---
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  annotations:
+    ingress.kubernetes.io/allow-http: "false"
+    ingress.kubernetes.io/ssl-redirect: "true"
+    # kubernetes.io/ingress.class: public-iks-k8s-nginx ## <--- This line is for K8S ingress ONLY (REMOVE it from OCP ingress)
+  name: rxnmapper
+  namespace: visdemos
+spec:
+  rules:
+  - host: rxnmapper.draco.res.ibm.com
+    http:
+      paths:
+      - backend:
+          service:
+            name: rxnmapper  # <--- Name of service you want to expose with ingress host; it should be of "type: NodePort"
+            port:
+              number: 80 # <---- This is your service port ... NOT THE NODEPORT
+        path: "/"
+        pathType: ImplementationSpecific
+  tls:
+  - secretName: tls-secret
+    hosts:
+    - '*.draco.res.ibm.com' ## <--- this wildcard host name is required
+    - rxnmapper.draco.res.ibm.com

@@ -1,0 +1,15 @@
+h5py==2.10.0
+spacy==2.2.4
+boto3==1.14.14
+regex==2020.6.8
+faiss-cpu==1.6.3
+numpy==1.21.6
+pillow==5.4.1
+torch==1.0.1
+sacremoses==0.0.43
+cachetools==4.1.1
+# dvc-s3
+# fastapi[all]
+async-lru==1.0.2
+sentencepiece==0.1.92
+tokenizers==0.8.0

@@ -266,4 +266,4 @@ async def nearest_context_search(payload: api.QueryNearestPayload):
 if __name__ == "__main__":
     print("Initializing as the main script")  # Is never printed
     args, _ = parser.parse_known_args()
-    uvicorn.run("main:app", host="127.0.0.1", port=args.port)
+    uvicorn.run("main:app", host="127.0.0.1", port=int(args.port))

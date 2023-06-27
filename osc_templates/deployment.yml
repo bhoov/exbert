@@ -1,0 +1,36 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: <APPNAME_PLACEHOLDER>
+  namespace: visdemos
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      run: <APPNAME_PLACEHOLDER>
+  strategy:
+    type: Recreate
+  template:
+    metadata:
+      name: <APPNAME_PLACEHOLDER>
+      namespace: visdemos
+      labels:
+        run: <APPNAME_PLACEHOLDER>
+    spec:
+      containers:
+        - name: <APPNAME_PLACEHOLDER>
+          image: <IMAGE_PLACEHOLDER>
+          imagePullPolicy: Always
+          ports:
+            - containerPort: 8000
+          resources:
+            requests:
+              cpu: 1
+              memory: 10G
+              nvidia.com/gpu: 0
+            limits:
+              cpu: 2
+              memory: 20G
+              nvidia.com/gpu: 0
+      imagePullSecrets:
+        - name: all-icr-io

@@ -1,0 +1,8 @@
+name: exbert-docker
+channels:
+  - conda-forge
+  - defaults
+  - anaconda
+dependencies:
+  - pip>=20.0.0
+  - python=3.7
