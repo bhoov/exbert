@@ -30,3 +30,6 @@ deploy-service: pre-deploy
 
 pre-deploy: 
 	sed -e "s|<IMAGE_PLACEHOLDER>|$(REGISTRY)/$(BASETAG):$(VERSION)|" -e "s|<APPNAME_PLACEHOLDER>|$(APPNAME)|" osc_templates/deployment.yml > _deployed.yml && sed -e "s|<APPNAME_PLACEHOLDER>|$(APPNAME)|" osc_templates/deployment_routes.yml > _deployed_routes.yml
+
+deploy-pvc:
+	oc apply -f osc_templates/_pvc.yaml
