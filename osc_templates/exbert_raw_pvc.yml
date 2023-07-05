@@ -1,0 +1,28 @@
+kind: PersistentVolumeClaim
+apiVersion: v1
+metadata:
+  name: cos-exbert-osc
+  namespace: visdemos
+  annotations:
+    pv.kubernetes.io/bind-completed: 'yes'
+    ibm.io/endpoint: 'https://s3.us-south.cloud-object-storage.appdomain.cloud'
+    volume.beta.kubernetes.io/storage-provisioner: ibm.io/ibmc-s3fs
+    ibm.io/auto-create-bucket: 'false'
+    kubectl.kubernetes.io/last-applied-configuration: >
+      {"apiVersion":"v1","kind":"PersistentVolumeClaim","metadata":{"annotations":{"ibm.io/auto-create-bucket":"false","ibm.io/auto-delete-bucket":"false","ibm.io/bucket":"visdemos-exbert-osc","ibm.io/endpoint":"https://s3.us-south.cloud-object-storage.appdomain.cloud","ibm.io/secret-name":"exbert-cred","ibm.io/tls-cipher-suite":"default"},"name":"cos-exbert-osc","namespace":"visdemos"},"spec":{"accessModes":["ReadWriteMany"],"resources":{"requests":{"storage":"200Gi"}},"storageClassName":"ibmc-s3fs-smart-regional"}}
+    ibm.io/tls-cipher-suite: default
+    ibm.io/secret-name: exbert-cred
+    ibm.io/bucket: visdemos-exbert-osc
+    pv.kubernetes.io/bound-by-controller: 'yes'
+    volume.kubernetes.io/storage-provisioner: ibm.io/ibmc-s3fs
+    ibm.io/auto-delete-bucket: 'false'
+  finalizers:
+    - kubernetes.io/pvc-protection
+spec:
+  accessModes:
+    - ReadWriteMany
+  resources:
+    requests:
+      storage: 200Gi
+  storageClassName: ibmc-s3fs-smart-regional
+  volumeMode: Filesystem

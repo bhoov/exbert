@@ -1,36 +1,46 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: rxnmapper
+  name: exbert
   namespace: visdemos
 spec:
   replicas: 1
   selector:
     matchLabels:
-      run: rxnmapper
+      run: exbert
   strategy:
     type: Recreate
   template:
     metadata:
-      name: rxnmapper
+      name: exbert
       namespace: visdemos
       labels:
-        run: rxnmapper
+        run: exbert
     spec:
       containers:
-        - name: rxnmapper
-          image: us.icr.io/research3/visdemos/hoo/rxnmapper:v0.2
+        - name: exbert
+          image: us.icr.io/research3/visdemos/hoo/exbert:v0.1
           imagePullPolicy: Always
           ports:
             - containerPort: 8000
+          volumeMounts:
+            - mountPath: "/app/server/data"
+              name: cos-data
           resources:
             requests:
-              cpu: 1
-              memory: 10G
+              cpu: 4
+              memory: 30G
               nvidia.com/gpu: 0
             limits:
-              cpu: 2
-              memory: 20G
+              cpu: 4
+              memory: 30G
               nvidia.com/gpu: 0
+          env:
+            - name: PYTORCH_PRETRAINED_BERT_CACHE
+              value: /app/server/data/models/
       imagePullSecrets:
         - name: all-icr-io
+      volumes:
+        - name: cos-data
+          persistentVolumeClaim:
+            claimName: cos-exbert-osc

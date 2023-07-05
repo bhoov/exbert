@@ -22,7 +22,7 @@ spec:
           image: <IMAGE_PLACEHOLDER>
           imagePullPolicy: Always
           ports:
-            - containerPort: 8000
+            - containerPort: 5050
           volumeMounts:
             - mountPath: "/app/server/data"
               name: cos-data
