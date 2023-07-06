@@ -169,10 +169,15 @@ async def get_attentions_and_preds(
 
     start = time()
     details = aconf.from_pretrained(model)
+    print(f"Loading details took: {time() - start} seconds")
+    s1 = time()
 
     deets = details.att_from_sentence(sentence)
+    print(f"Computing attentions took: {time() - s1} seconds")
+    s2 = time()
 
     payload_out = deets.to_json(layer)
+    print(f"Converting to json took {time() - s2} seconds")
 
     print(f"{model} -- Payload Out: ", len(payload_out['aa']['right']))
 

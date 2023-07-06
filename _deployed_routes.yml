@@ -5,9 +5,6 @@ metadata:
   namespace: visdemos
   labels:
     run: exbert
-  # annotations:
-  #   kubectl.kubernetes.io/last-applied-configuration: >
-  #     {"apiVersion":"v1","kind":"Service","metadata":{"annotations":{},"labels":{"run":"molsplorer-backend"},"name":"molsplorer-backend","namespace":"visdemos"},"spec":{"ports":[{"port":80,"protocol":"TCP","targetPort":8000}],"selector":{"run":"molsplorer-backend"},"type":"NodePort"}}
 spec:
   type: NodePort
   selector:
@@ -15,7 +12,7 @@ spec:
   ports:
    - protocol: TCP
      port: 80
-     targetPort: 8000
+     targetPort: 5050
 
 ---
 apiVersion: networking.k8s.io/v1

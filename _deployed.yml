@@ -19,10 +19,10 @@ spec:
     spec:
       containers:
         - name: exbert
-          image: us.icr.io/research3/visdemos/hoo/exbert:v0.1
+          image: us.icr.io/research3/visdemos/hoo/exbert:v0.2
           imagePullPolicy: Always
           ports:
-            - containerPort: 8000
+            - containerPort: 5050
           volumeMounts:
             - mountPath: "/app/server/data"
               name: cos-data

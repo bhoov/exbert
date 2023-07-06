@@ -1,2 +1,2 @@
-corpora
-data
+**/server/corpora/
+**/server/data/
