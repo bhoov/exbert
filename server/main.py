@@ -20,6 +20,8 @@ import config
 from data_processing import from_model, from_base_dir
 from transformer_details import get_details
 
+from time import time
+
 app = FastAPI()
 app.add_middleware(
     CORSMiddleware,
@@ -48,7 +50,6 @@ parser.add_argument(
     help="Folder containing corpus information as output by `create_corpus.py` (data.hdf5, context_faiss/, embedding_faiss/ subfolders). ",
 )
 args, _ = parser.parse_known_args()
-
 
 class ArgConfig:
     def __init__(self, args):
@@ -117,19 +118,24 @@ def send_static_client(file_path):
 # ======================================================================
 @app.get("/api/supported-models")
 async def get_supported_models():
+    start = time()
     if aconf.has_model:
         return {
             "force": True,
             "descriptions": [{"name": aconf.model_name, "kind": aconf.kind}],
         }
+
+    print(f"Backend took `{time() - start}` seconds")
     return {"force": False, "descriptions": config.SUPPORTED_MODELS}
 
 
 @app.get("/api/supported-corpora")
 async def get_supported_corpora():
+    start = time()
     if aconf.has_corpus:
         return [{"code": aconf.corpus.stem, "display": aconf.corpus.stem}]
 
+    print(f"Backend took `{time() - start}` seconds")
     return config.SUPPORTED_CORPORA
 
 
@@ -137,6 +143,7 @@ async def get_supported_corpora():
 async def get_model_details(
     model: str, request_hash=None
 ):  # -> api.ModelDetailResponse:
+    start = time()
     deets = aconf.from_pretrained(model)
 
     info = deets.model.config
@@ -148,6 +155,7 @@ async def get_model_details(
         "nheads": nheads,
     }
 
+    print(f"Backend took `{time() - start}` seconds")
     return {
         "status": 200,
         "payload": payload_out,
@@ -158,6 +166,8 @@ async def get_model_details(
 async def get_attentions_and_preds(
     model: str, sentence: str, layer: int, request_hash=None
 ):  # -> api.AttentionResponse:
+
+    start = time()
     details = aconf.from_pretrained(model)
 
     deets = details.att_from_sentence(sentence)
@@ -166,6 +176,7 @@ async def get_attentions_and_preds(
 
     print(f"{model} -- Payload Out: ", len(payload_out['aa']['right']))
 
+    print(f"Backend took `{time() - start}` seconds")
     return {"status": 200, "payload": payload_out}
 
 
@@ -178,6 +189,7 @@ async def update_masked_attention(
 
     Object: {"a" : {"sentence":__, "mask_inds"}, "b" : {...}}
     """
+    start = time()
     model = payload.model
     details = aconf.from_pretrained(model)
 
@@ -195,6 +207,7 @@ async def update_masked_attention(
 
     deets = details.att_from_tokens(token_inputs, sentence)
     payload_out = deets.to_json(layer)
+    print(f"Backend took `{time() - start}` seconds")
 
     return {
         "status": 200,
@@ -253,13 +266,19 @@ def search_nearest(payload: api.QueryNearestPayload, kind: str):
 @app.post("/api/k-nearest-embeddings")
 async def nearest_embedding_search(payload: api.QueryNearestPayload):
     """Return the token text and the metadata in JSON"""
-    return search_nearest(payload, "embeddings")
+    start = time()
+    out = search_nearest(payload, "embeddings")
+    print(f"Backend took `{time() - start}` seconds")
+    return out
 
 
 @app.post("/api/k-nearest-contexts")
 async def nearest_context_search(payload: api.QueryNearestPayload):
     """Return the token text and the metadata in JSON"""
-    return search_nearest(payload, "contexts")
+    start = time()
+    out = search_nearest(payload, "contexts")
+    print(f"Backend took `{time() - start}` seconds")
+    return out
 
 
 # Setup code
