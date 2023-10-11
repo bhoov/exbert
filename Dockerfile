@@ -20,7 +20,7 @@ RUN pip install -e server
 RUN pip install --only-binary :all: fastapi==0.58.1
 RUN python -m spacy download en_core_web_sm
 
-# Frontend
+# Frontend. Don't rebuild in the dockerfile?
 RUN mkdir -p /client
 COPY client/dist client/dist
 
@@ -33,5 +33,6 @@ COPY client/dist client/dist
 #ENTRYPOINT ["/usr/local/bin/entrypoint.sh"]
 #CMD ["sleep", "604800"]
 # CMD ["jupyter", "lab", "--port", "14242"]]
-CMD ["uvicorn",  "--host=0.0.0.0", "--port=5050", "--log-level=debug", "server.main:app"]
+# CMD ["uvicorn",  "--help"]
+CMD ["uvicorn",  "--host=0.0.0.0", "--port=5050", "--log-level=debug", "server.main:app", "--no-server-header"]
 # CMD ["uvicorn",  "--host=0.0.0.0", "--log-level=debug", "--app-dir=src", "test-app:app"]

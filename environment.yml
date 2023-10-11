@@ -7,6 +7,7 @@ channels:
 dependencies:
   - pip>=19.0.3
   - python=3.7
+  - nodejs=20.8.0
   - h5py
   - spacy
   - boto3
@@ -26,5 +27,6 @@ dependencies:
   - pip:
     - fastapi[all]
     - async-lru
+    - secure
     - sentencepiece
     - tokenizers>=0.5.1
