@@ -28,11 +28,11 @@ spec:
               name: cos-data
           resources:
             requests:
-              cpu: 4
+              cpu: 8
               memory: 30G
               nvidia.com/gpu: 0
             limits:
-              cpu: 4
+              cpu: 8
               memory: 30G
               nvidia.com/gpu: 0
           env:

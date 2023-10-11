@@ -195,12 +195,20 @@ async def update_masked_attention(
     """
     start = time()
     model = payload.model
+    try:
+        details = aconf.from_pretrained(model)
+    except:
+        return {"status": 405, "payload": None}
     details = aconf.from_pretrained(model)
 
     tokens = payload.tokens
     sentence = payload.sentence
     mask = payload.mask
     layer = payload.layer
+
+    # Clip to valid layer
+    nlayers = details.config.num_hidden_layers
+    layer = min(nlayers - 1, layer)
 
     MASK = details.aligner.mask_token
     mask_tokens = lambda toks, maskinds: [
@@ -237,6 +245,9 @@ def search_nearest(payload: api.QueryNearestPayload, kind: str):
         details = aconf.from_pretrained(model)
     except:
         return {"status": 405, "payload": None}
+
+    nlayers = details.config.num_hidden_layers
+    layer = min(nlayers - 1, layer)
 
     try:
         if aconf.has_corpus:
