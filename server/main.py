@@ -2,6 +2,7 @@ from typing import *
 from pathlib import Path
 import argparse
 import numpy as np
+import regex as re
 
 from fastapi import FastAPI
 from fastapi.responses import FileResponse, RedirectResponse
@@ -22,9 +23,16 @@ from transformer_details import get_details
 
 from time import time
 
-import secure
-
 app = FastAPI()
+
+import secure
+secure_headers = secure.Secure()
+@app.middleware("http")
+async def set_secure_headers(request, call_next):
+    response = await call_next(request)
+    secure_headers.framework.fastapi(response)
+    return response
+
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"],
@@ -33,12 +41,9 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-secure_headers = secure.Secure()
-@app.middleware("http")
-async def set_secure_headers(request, call_next):
-    response = await call_next(request)
-    secure_headers.framework.fastapi(response)
-    return response
+url_detector = re.compile("^https?:\\/\\/(?:www\\.)?[-a-zA-Z0-9@:%._\\+~#=]{1,256}\\.[a-zA-Z0-9()]{1,6}\\b(?:[-a-zA-Z0-9()@:%_\\+.~#?&\\/=]*)$")
+def is_url(s):
+    return url_detector.match(s)
 
 parser = argparse.ArgumentParser(formatter_class=argparse.ArgumentDefaultsHelpFormatter)
 parser.add_argument("--debug", action="store_true", help=" Debug mode")
@@ -144,6 +149,12 @@ async def get_model_details(
     model: str, request_hash=None
 ):  # -> api.ModelDetailResponse:
     start = time()
+
+    if is_url(model):
+        msg = "Invalid model -- cannot pass URL as model"
+        print(msg)
+        raise ValueError(msg)
+
     deets = aconf.from_pretrained(model)
 
     info = deets.model.config
@@ -166,6 +177,11 @@ async def get_model_details(
 async def get_attentions_and_preds(
     model: str, sentence: str, layer: int, request_hash=None
 ):  # -> api.AttentionResponse:
+    if is_url(model):
+        msg = "Invalid model -- cannot pass URL as model"
+        print(msg)
+        raise ValueError(msg)
+
     start = time()
     details = aconf.from_pretrained(model)
     print(f"Loading details took: {time() - start} seconds")
