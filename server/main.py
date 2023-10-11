@@ -96,21 +96,12 @@ class ArgConfig:
 
 aconf = ArgConfig(args)
 
-# Default routing
-@app.get("/")
-def hello_world():
-    return RedirectResponse(url="client/exBERT.html")
+#  # Default routing
+#  @app.get("/")
+#  def hello_world():
+#      return RedirectResponse(url="client/exBERT.html")
 
 
-# send everything from client as static content
-@app.get("/client/{file_path:path}")
-def send_static_client(file_path):
-    """ serves all files from ./client/ to ``/client/<path:path>``
-
-    :param path: path from api call
-    """
-    f = str(pf.CLIENT_DIST / file_path)
-    return FileResponse(f)
 
 
 # ======================================================================
@@ -280,6 +271,18 @@ async def nearest_context_search(payload: api.QueryNearestPayload):
     print(f"Backend took `{time() - start}` seconds")
     return out
 
+# send everything from client as static content
+@app.get("/{file_path:path}")
+def send_static_client(file_path):
+    """ serves all files from ./client/ to ``/client/<path:path>``
+
+    :param path: path from api call
+    """
+    if file_path == "" or file_path == "index.html":
+        f = str(pf.CLIENT_DIST / "exBERT.html")
+        return FileResponse(f)
+    f = str(pf.CLIENT_DIST / file_path)
+    return FileResponse(f)
 
 # Setup code
 if __name__ == "__main__":
