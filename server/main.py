@@ -318,8 +318,8 @@ def send_static_client(file_path):
 
     :param path: path from api call
     """
-    if "img" in file_path:
-        raise ValueError("Not serving img directory")
+    # if "img" in file_path:
+    #     raise ValueError("Not serving img directory")
     if file_path == "" or file_path == "index.html":
         f = str(pf.CLIENT_DIST / "exBERT.html")
         return FileResponse(f)
