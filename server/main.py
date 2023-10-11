@@ -26,7 +26,20 @@ from time import time
 app = FastAPI()
 
 import secure
-secure_headers = secure.Secure()
+csp = (
+        secure.ContentSecurityPolicy()
+        .default_src("www.googletagmanager.com", "maxcdn.bootstrapcdn.com", "'self'", "'unsafe-inline'", "localhost:*", "www.google-analytics.com")
+        # .script_src("'unsafe-inline'")
+        .base_uri("'self'")
+        # .frame_ancestors("'self")
+        # .frame_ancestors("'self")
+        # .connect_src("'self'", "api.spam.com")
+        .frame_src("'none'")
+        # .img_src("'self'")
+        # .style_src("'self'", "'unsafe-inline'")
+    )
+secure_headers = secure.Secure(csp=csp)
+# secure_headers = secure.Secure()
 @app.middleware("http")
 async def set_secure_headers(request, call_next):
     response = await call_next(request)
@@ -310,6 +323,8 @@ async def nearest_context_search(payload: api.QueryNearestPayload):
     out = search_nearest(payload, "contexts")
     print(f"Backend took `{time() - start}` seconds")
     return out
+
+# app.mount("/client", StaticFiles(directory="client"), name="client")
 
 # send everything from client as static content
 @app.get("/{file_path:path}")
