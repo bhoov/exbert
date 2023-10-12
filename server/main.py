@@ -28,16 +28,12 @@ app = FastAPI()
 import secure
 csp = (
         secure.ContentSecurityPolicy()
-        .default_src("www.googletagmanager.com", "maxcdn.bootstrapcdn.com", "'self'", "'unsafe-inline'", "localhost:*", "www.google-analytics.com")
-        # .script_src("'unsafe-inline'")
+        .default_src("www.googletagmanager.com", "maxcdn.bootstrapcdn.com", "'self'", "localhost:*", "www.google-analytics.com")
         .base_uri("'self'")
-        # .frame_ancestors("'self")
-        # .frame_ancestors("'self")
-        # .connect_src("'self'", "api.spam.com")
         .frame_src("'none'")
-        # .img_src("'self'")
-        # .style_src("'self'", "'unsafe-inline'")
+        .style_src("'unsafe-inline'", "localhost:*", "maxcdn.bootstrapcdn.com")
     )
+# csp = None
 secure_headers = secure.Secure(csp=csp)
 # secure_headers = secure.Secure()
 @app.middleware("http")
@@ -324,7 +320,6 @@ async def nearest_context_search(payload: api.QueryNearestPayload):
     print(f"Backend took `{time() - start}` seconds")
     return out
 
-# app.mount("/client", StaticFiles(directory="client"), name="client")
 
 # send everything from client as static content
 @app.get("/{file_path:path}")
@@ -341,7 +336,13 @@ def send_static_client(file_path):
     f = str(pf.CLIENT_DIST / file_path)
     return FileResponse(f)
 
-# Setup code
+@app.get("/")
+def redirect_index():
+    """"""
+    return RedirectResponse("/client/exBERT.html")
+
+app.mount("/client", StaticFiles(directory="client"), name="client")
+
 if __name__ == "__main__":
     print("Initializing as the main script")  # Is never printed
     args, _ = parser.parse_known_args()
