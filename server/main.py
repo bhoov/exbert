@@ -28,10 +28,10 @@ app = FastAPI()
 import secure
 csp = (
         secure.ContentSecurityPolicy()
-        .default_src("www.googletagmanager.com", "maxcdn.bootstrapcdn.com", "'self'", "localhost:*", "www.google-analytics.com")
+        .default_src("www.googletagmanager.com", "maxcdn.bootstrapcdn.com", "'unsafe-inline'", "'self'", "localhost:*", "www.google-analytics.com")
         .base_uri("'self'")
         .frame_src("'none'")
-        .style_src("'unsafe-inline'", "localhost:*", "maxcdn.bootstrapcdn.com")
+        # .style_src("'self'", "'unsafe-inline'", "localhost:*", "maxcdn.bootstrapcdn.com")
     )
 # csp = None
 secure_headers = secure.Secure(csp=csp)
@@ -320,28 +320,27 @@ async def nearest_context_search(payload: api.QueryNearestPayload):
     print(f"Backend took `{time() - start}` seconds")
     return out
 
+app.mount("/client", StaticFiles(directory="client/dist"), name="client")
 
 # send everything from client as static content
 @app.get("/{file_path:path}")
 def send_static_client(file_path):
-    """ serves all files from ./client/ to ``/client/<path:path>``
+    """serves all files from ./client/ to ``/client/<path:path>``
 
     :param path: path from api call
     """
     # if "img" in file_path:
     #     raise ValueError("Not serving img directory")
     if file_path == "" or file_path == "index.html":
-        f = str(pf.CLIENT_DIST / "exBERT.html")
-        return FileResponse(f)
-    f = str(pf.CLIENT_DIST / file_path)
-    return FileResponse(f)
+        file_path = f"/client/exBERT.html"
 
-@app.get("/")
-def redirect_index():
-    """"""
-    return RedirectResponse("/client/exBERT.html")
+    if "client" in file_path:
+        fpath = file_path
+    else:
+        fpath = f"/client/{file_path}"
 
-app.mount("/client", StaticFiles(directory="client"), name="client")
+    return RedirectResponse(fpath)
+
 
 if __name__ == "__main__":
     print("Initializing as the main script")  # Is never printed
