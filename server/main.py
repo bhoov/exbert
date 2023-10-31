@@ -32,6 +32,7 @@ csp = (
         .base_uri("'self'")
         .frame_src("'none'")
         # .style_src("'self'", "'unsafe-inline'", "localhost:*", "maxcdn.bootstrapcdn.com")
+        .script_src("'self'", "'unsafe-inline'", "localhost:*", "maxcdn.bootstrapcdn.com")
     )
 # csp = None
 secure_headers = secure.Secure(csp=csp)
