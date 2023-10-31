@@ -7,8 +7,61 @@
 @import "CorpusVis";
 @import "Histograms";
 
+a {
+  color: black;
+}
+
+.index-container {
+  width: 100%;
+  max-width: 1100px;
+  margin: 5px auto;
+}
+
+a:hover {
+  color: black;
+  font-weight: 500;
+}
+
+h1,
+h2,
+h3 {
+  font-family: inherit;
+}
+
+h3 {
+  font-weight: normal;
+  color: white;
+}
+
+.live-server-link {
+  background-color: rgb(81, 116, 144);
+}
+
+.source-code-link {
+  background-color: rgb(203, 122, 130);
+  padding: inherit
+}
+
+.paper-link {
+  background-color: rgb(152, 152, 152);
+  padding: inherit
+}
+
+.ibm-attribution {
+  font-size: 16pt;
+
+  span {
+    white-space: nowrap;
+  }
+}
+
+.fa {
+  font-size: 80%;
+}
+
 body {
-  font-family: 'IBM Plex Sans';
+  font-family: 'IBM Plex Sans', sans-serif;
+  font-size: 16px;
 }
 
 .layerCheckbox {
@@ -16,7 +69,7 @@ body {
   padding-left: 8px;
   padding-right: 8px;
 
-  &.active{
+  &.active {
     color: #fff;
     background-color: #6c7067;
   }
@@ -81,26 +134,27 @@ label {
   height: 40px;
   margin-bottom: 5px;
 
-  .header-logo{
+  .header-logo {
     height: 20px;
-    display:inline-block;
+    display: inline-block;
     margin-left: 10px;
     margin-top: 5px;
     margin-bottom: 5px;
   }
-  .header-info{
+
+  .header-info {
     font-size: 9pt;
     height: 30px;
-    display:inline-block;
-    float:right;
+    display: inline-block;
+    float: right;
     margin-right: 10px;
     margin-top: 10px;
     //margin-bottom: 5px;
   }
 
 
-  #headertext{
-    text-align: center ;
+  #headertext {
+    text-align: center;
     display: inline-block;
     font-size: 18px;
     margin-left: 30%;
@@ -127,8 +181,9 @@ label {
 #corpus-control-buttons {
   margin-bottom: 1em;
   position: fixed relative;
+
   span {
-    margin-left:5px;
+    margin-left: 5px;
   }
 }
 
@@ -143,6 +198,7 @@ label {
 
 #corpus-querying {
   display: inline-block;
+
   .btn {
     display: inline-block;
   }
@@ -159,13 +215,14 @@ label {
 }
 
 #connector-container {
-  .mat-hover-display{
+  .mat-hover-display {
     pointer-events: none;
     display: block;
     position: absolute;
     visibility: hidden;
     background-color: rgba(200, 200, 200, 0.93);
     font-size: 14px;
+
     p {
       margin: 4px 1px 1px 4px;
       // margin: auto;
@@ -174,13 +231,13 @@ label {
 }
 
 .right-token-hover {
-    border-radius: 1px 8px 8px 8px;
-    text-align: left;
+  border-radius: 1px 8px 8px 8px;
+  text-align: left;
 }
 
 .left-token-hover {
-    border-radius: 8px 1px 8px 8px;
-    text-align: right;
+  border-radius: 8px 1px 8px 8px;
+  text-align: right;
 }
 
 .next-token {

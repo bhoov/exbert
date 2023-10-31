@@ -3,14 +3,14 @@
 
 <head>
     <!-- Global site tag (gtag.js) - Google Analytics -->
-    <script async src="https://www.googletagmanager.com/gtag/js?id=UA-149275901-1" integrity="sha384-eedyWfm666Hcy5lraLs59fScrWdLJc7TRDs3DAnSAFYKw47+fh334l6cUAQ/drRl" crossorigin="anonymous"></script>
+    <!-- <script async src="https://www.googletagmanager.com/gtag/js?id=UA-149275901-1" integrity="sha384-eedyWfm666Hcy5lraLs59fScrWdLJc7TRDs3DAnSAFYKw47+fh334l6cUAQ/drRl" crossorigin="anonymous"></script>
     <script>
         window.dataLayer = window.dataLayer || [];
         function gtag() { dataLayer.push(arguments); }
         gtag('js', new Date());
 
         gtag('config', 'UA-149275901-2');
-    </script>
+    </script> -->
     <meta charset="UTF-8">
     <title>exBERT</title>
     <!--<link rel="stylesheet" href="bootstrap.min.css">-->
@@ -19,42 +19,18 @@
     <link href="https://maxcdn.bootstrapcdn.com/bootswatch/3.3.6/cosmo/bootstrap.min.css" rel="stylesheet"
         integrity="sha384-OiWEn8WwtH+084y4yW2YhhH6z/qTSecHZuk/eiWtnvLtU+Z8lpDsmhOKkex6YARr" crossorigin="anonymous">
     <!--    <link rel="stylesheet" type="text/css" href="css/index.scss">-->
+    <link rel="stylesheet" type="text/css" href="main.css">
     <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=IBM+Plex+Sans:300,400&display=swap" integrity="sha384-Fd2RLXKbIvDBsd9TKkyj5mhGbMJP8HIoHUmnVZsVLacwOqGqc02i62D6drGsvdaC" crossorigin="anonymous">
 
 
     <link rel="shortcut icon" href="./img/exBERT_favicon.png" type="image/png">
-    <style>
-        body {
-            font-family: 'IBM Plex Sans', sans-serif;
-        }
-
-        h1,
-        h2,
-        h3 {
-            font-family: inherit;
-        }
-
-        h3 {
-            font-weight: normal;
-            color: white;
-        }
-
-        a {
-            color: black;
-        }
-
-        a:hover {
-            color: black;
-            font-weight: 500;
-        }
-    </style>
     <meta name="title" content="exBERT" />
     <meta name="description" content="A visual analysis of Transformer Models" />
     <link rel="image_src" href="http://lstm.seas.harvard.edu/small_teaser.png" />
 </head>
 
 <body>
-    <div class="container">
+    <div class="index-container">
         <div class="page-header">
             <h1>
                 <img src="./img/exBERT.png" height="50" />
@@ -130,25 +106,25 @@
 
         <div class="row">
             <div class="col-md-4">
-                <div class="text-center" style="background-color: rgb(81,116,144);">
+                <div class="text-center" >
                     <a href="exBERT.html">
-                        <h3><i class="fa fa-rocket" aria-hidden="true" style="font-size: 80%; "></i> Live Server </h3>
+                        <h3><i class="fa fa-rocket" aria-hidden="true" ></i> Live Server </h3>
                     </a>
                 </div>
 
 
             </div>
             <div class="col-md-4">
-                <div class="text-center" style="background-color: rgb(203,122,130);padding: inherit">
+                <div class="text-center" >
                     <a href="https://github.com/bhoov/exbert">
-                        <h3><i class="fa fa-github" aria-hidden="true" style="font-size: 80%;"></i> Source Code </h3>
+                        <h3><i class="fa fa-github" aria-hidden="true" ></i> Source Code </h3>
                     </a>
                 </div>
             </div>
             <div class="col-md-4">
-                <div class="text-center" style="background-color: rgb(152,152,152);padding: inherit">
+                <div class="text-center" >
                     <a href="https://www.aclweb.org/anthology/2020.acl-demos.22/">
-                        <h3><i class="fa fa-book" aria-hidden="true" style="font-size: 80%;"></i> Paper </h3>
+                        <h3><i class="fa fa-book" aria-hidden="true" ></i> Paper </h3>
                     </a>
                 </div>
             </div>
@@ -176,9 +152,9 @@
         <hr>
 
         <div class="row justify-content-md-center">
-            <!-- <div class="col-xs-offset-2 col-lg-4 text-center" style="font-size: 16pt;"> -->
-            <div class="col-lg-6 text-center" style="font-size: 16pt;">
-                <span style="white-space: nowrap;"><b>IBM</b> Research, Cambridge </span><br>
+            <!-- <div class="col-xs-offset-2 col-lg-4 text-center" > -->
+            <div class="col-lg-6 text-center" >
+                <span ><b>IBM</b> Research, Cambridge </span><br>
                 <b>MIT-IBM</b> Watson <b>AI Lab</b>
             </div>
             <div class="col-xs-3 text-center">
@@ -210,7 +186,7 @@
 
 
         <!-- DISQUS THREAD -->
-        <div id="disqus_thread"></div>
+        <!-- <div id="disqus_thread"></div>
         <script>
 
             /**
@@ -232,7 +208,7 @@
         <noscript>Please enable JavaScript to view the <a href="https://disqus.com/?ref_noscript">comments powered by
                 Disqus.</a></noscript>
 
-    </div>
+    </div> -->
 
 
     <!-- <script id="dsq-count-scr" src="//exbert.disqus.com/count.js" async></script> -->
