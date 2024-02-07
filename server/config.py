@@ -8,7 +8,7 @@ import os
 ROOT = Path(os.path.abspath(__file__)).parent
 
 BASEDATA = ROOT / "data"
-CORPORA = BASEDATA / "corpora"
+CORPORA = ROOT / "corpora"
 os.environ["PYTORCH_PRETRAINED_BERT_CACHE"] = str(BASEDATA / "hf")
 
 # Change this to indicate what data is loaded for searching
